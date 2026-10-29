@@ -1178,6 +1178,8 @@
     .folha > .page{margin-top:0}
     .cover-go{display:none}
   }
+  .ref36{font-size:12px; margin:0 0 8px; width:100%}
+  .ref36 td, .ref36 th{padding:3px 6px}
 
   /* ══ APP VERSUS ══ */
   :root{--j0:#ff3040; --j0d:#5a0a10; --j1:#2a9df4; --j1d:#0a2a4a}
@@ -2792,7 +2794,7 @@
   </div></div>
 </section>
 <section class="folha" id="apendice" data-label="APÊNDICE · CRIE SEU PERSONAGEM">
-<div class="page"><div class="page-header"><span>VERSUS · COMBATES CÔMICOS</span><span>APÊNDICE</span></div><div class="chapter-cover" style="background:var(--estrategista)"><span class="chapter-eyebrow" style="color:#fff">APÊNDICE</span><div class="chapter-num-big" style="color:rgba(255,255,255,.25)">✦</div><h2 style="color:#fff; text-shadow:4px 4px 0 rgba(0,0,0,.3)">CRIE SEU<br>PERSONAGEM</h2><p class="sub" style="color:#fff">Um orçamento simples para criar personagens novos sem quebrar o jogo.</p></div>
+<div class="page"><div class="page-header"><span>VERSUS · COMBATES CÔMICOS</span><span>APÊNDICE</span></div><div class="chapter-cover" style="background:var(--estrategista)"><span class="chapter-eyebrow" style="color:#fff">APÊNDICE</span><div class="chapter-num-big" style="color:rgba(255,255,255,.25)">✦</div><h2 style="color:#fff; text-shadow:4px 4px 0 rgba(0,0,0,.3)">CRIE SEU<br>PERSONAGEM</h2><p class="sub" style="color:#fff">O orçamento que fecha a conta dos 36 personagens. Use o mesmo para criar o seu.</p></div>
   <div class="panels" style="grid-template-columns:1fr 1fr">
     <div class="panel panel-white">
       <div class="section-title">PASSO A PASSO</div>
@@ -2800,36 +2802,46 @@
         <li><strong>Conceito e mecânica própria.</strong> O que só este personagem faz? (Compassos, Cargas, Brasas, Aparatos…)</li>
         <li><strong>Classe e PV</strong> dentro da faixa da classe, sempre em múltiplo de 5.</li>
         <li><strong>Aptidões:</strong> 8 pontos, de 1 a 4 cada. Marque o ATK (Físico ou Destreza).</li>
-        <li><strong>4 habilidades</strong>, no máximo 2 passivas.</li>
+        <li><strong>4 habilidades</strong>, no máximo 2 passivas. Exceção: um personagem feito para a troca de Ataques Básicos pode ter as 4 passivas, desde que a Suprema seja ativa (como Invicto).</li>
         <li><strong>Técnica Suprema.</strong></li>
+        <li><strong>Feche a conta:</strong> some o valor de cada habilidade e compare com o orçamento.</li>
         <li><strong>Teste na mesa</strong> com o melhor trio possível, contra um time conhecido.</li>
       </ol>
-      <div class="callout"><span class="callout-label">PV E PODER</span><p style="margin:0">A cada 5 PV acima do mínimo da classe, tire 2 pontos do orçamento das habilidades.</p></div>
     </div>
     <div class="panel panel-gray">
-      <div class="section-title" style="--accent:var(--blue)">ORÇAMENTO POR CUSTO</div>
+      <div class="section-title" style="--accent:var(--blue)">ORÇAMENTO</div>
       <table>
-        <tr><th>Custo</th><th>Pontos</th></tr>
-        <tr><td>1 ação</td><td class="num">3</td></tr>
-        <tr><td>2 ações</td><td class="num">6</td></tr>
-        <tr><td>Versão aprimorada</td><td class="num">+3</td></tr>
-        <tr><td>Técnica Suprema (3 ações)</td><td class="num">18</td></tr>
-        <tr><td>Técnica Suprema (2 ações)</td><td class="num">12</td></tr>
-        <tr><td>Passiva</td><td class="num">até 3 por rodada</td></tr>
+        <tr><th>Habilidade</th><th>Pontos</th></tr>
+        <tr><td>Ativa de 1 ação</td><td class="num">4</td></tr>
+        <tr><td>Ativa de 2 ações</td><td class="num">7</td></tr>
+        <tr><td>Passiva (valor por rodada)</td><td class="num">3</td></tr>
+        <tr><td>Técnica Suprema de 3 ações</td><td class="num">17</td></tr>
+        <tr><td>Técnica Suprema de 2 ações</td><td class="num">12</td></tr>
+        <tr><td>A cada 5 PV acima do mínimo da classe</td><td class="num">−2</td></tr>
       </table>
-      <p style="font-size:12.5px; margin:0">Uma habilidade está boa se ficar a até 2 pontos do orçamento.</p>
+      <p style="font-size:12.5px; margin:0 0 6px">O orçamento do personagem é a soma das suas 5 habilidades, menos o desconto de PV.</p>
+      <div class="callout"><span class="callout-label">MARGEM</span><p style="margin:0">Cada habilidade pode ficar até <strong>3 pontos</strong> acima ou abaixo do seu orçamento (Suprema, até <strong>5</strong>). O personagem inteiro precisa fechar a até <strong>5 pontos</strong> do orçamento dele.</p></div>
     </div>
   </div>
   <div class="panels" style="grid-template-columns:1fr 1fr">
     <div class="panel panel-yellow">
       <div class="section-title">QUANTO VALE CADA EFEITO</div>
+      <p style="font-size:12px; margin:0 0 6px">Valores para um alvo, durante 1 rodada.</p>
       <table>
-        <tr><td>1 de dano ou 1 PV curado</td><td class="num">1</td></tr>
-        <tr><td>Dano Contínuo 2 por N rodadas</td><td class="num">2×N − 1</td></tr>
-        <tr><td>Perder 1 ação / ganhar 1 ação</td><td class="num">3</td></tr>
-        <tr><td>Imóvel por 1 turno</td><td class="num">2</td></tr>
-        <tr><td>Empurrar, puxar ou arrastar 2+ casas</td><td class="num">2</td></tr>
-        <tr><td>Empurrar 1 casa · ±1 Defesa · ±1 dado · mover-se 2+ casas</td><td class="num">1</td></tr>
+        <tr><td>1 de dano, 1 de Dano Psíquico ou 1 PV curado</td><td class="num">1</td></tr>
+        <tr><td>1 de dano evitado (redução, escudo, desviar o golpe)</td><td class="num">1</td></tr>
+        <tr><td>Dano Contínuo 2, por rodada</td><td class="num">1</td></tr>
+        <tr><td>Perder 1 ação · ganhar 1 ação</td><td class="num">4</td></tr>
+        <tr><td>Imóvel</td><td class="num">2</td></tr>
+        <tr><td>±1 na Defesa · ±1 dado</td><td class="num">2</td></tr>
+        <tr><td>+2 de dano nos ataques durante 1 turno</td><td class="num">2</td></tr>
+        <tr><td>Alvo causa −2 de dano nos ataques</td><td class="num">1</td></tr>
+        <tr><td>±1 casa de deslocamento</td><td class="num">1</td></tr>
+        <tr><td>Empurrar, puxar ou arrastar 1 casa</td><td class="num">1</td></tr>
+        <tr><td>Empurrar, puxar ou arrastar 2 casas ou mais</td><td class="num">2</td></tr>
+        <tr><td>Arremessar o alvo para onde quiser</td><td class="num">3</td></tr>
+        <tr><td>Mover-se ou teleportar-se junto com o efeito</td><td class="num">1 (2 se for 4+ casas)</td></tr>
+        <tr><td>Criar estrutura, ficha ou obstáculo</td><td class="num">2 cada</td></tr>
       </table>
     </div>
     <div class="panel panel-white">
@@ -2837,12 +2849,14 @@
       <table>
         <tr><td>Alcance Adjacente</td><td class="num">−1</td></tr>
         <tr><td>Alcance 4 ou mais</td><td class="num">+1</td></tr>
-        <tr><td>Sem teste contra inimigos</td><td class="num">+1</td></tr>
-        <tr><td>Área pequena (Raio 1, Linha até 4)</td><td class="num">+ metade</td></tr>
-        <tr><td>Área grande ou Todo Tabuleiro</td><td class="num">× 2</td></tr>
-        <tr><td>Cada rodada a mais de duração</td><td class="num">+ o valor</td></tr>
+        <tr><td>Área pequena (Raio 1, Linha, faixa)</td><td class="num">+ metade</td></tr>
+        <tr><td>Área grande (Raio 2 ou mais, Todo Tabuleiro)</td><td class="num">× 2</td></tr>
+        <tr><td>Cada rodada a mais de duração</td><td class="num">+ metade</td></tr>
+        <tr><td>Penalidade no próprio personagem</td><td class="num">− metade dela</td></tr>
+        <tr><td>Efeito que depende de gatilho (armadilha)</td><td class="num">metade</td></tr>
       </table>
-      <div class="example-box"><span class="example-label">EXEMPLO</span><p style="margin:0">Ignição: 5 de dano (5) + Dano Contínuo 2 por 2 rodadas (3) − Adjacente (1) = <strong>7 pontos</strong> para 2 ações (6). Dentro do limite.</p></div>
+      <p style="font-size:12px; margin:0 0 8px">Aplique área e duração sobre a soma dos efeitos, depois o alcance. Arredonde só no final.</p>
+      <div class="example-box"><span class="example-label">EXEMPLOS</span><p style="margin:0 0 6px"><strong>Ignição</strong> (2 ações): 5 de dano (5) + Dano Contínuo por 2 rodadas (2) − Adjacente (1) = <strong>6</strong> de 7.</p><p style="margin:0"><strong>Abalo Sísmico</strong> (Suprema): 8 de dano (8) + perder 1 ação (4) = 12, + metade pelo Raio 1 = <strong>18</strong> de 17.</p></div>
     </div>
   </div>
   <div class="panels" style="grid-template-columns:1fr">
@@ -2855,6 +2869,33 @@
         <li>Use só os termos do Cap. 04. Termo novo precisa ser explicado na própria ficha.</li>
         <li>Todos os números são inteiros.</li>
       </ul>
+    </div>
+  </div></div>
+</section>
+<section class="folha" id="apendice2" data-label="APÊNDICE · EFEITOS ESPECIAIS">
+<div class="page"><div class="page-header"><span>VERSUS · COMBATES CÔMICOS</span><span>APÊNDICE</span></div>
+  <div class="panels" style="grid-template-columns:1fr 1fr">
+    <div class="panel panel-yellow">
+      <div class="section-title">EFEITOS ESPECIAIS</div>
+      <p style="font-size:12px; margin:0 0 6px">Para o que não é dano, cura ou Penalidade comum. Valores por alvo e por rodada, com os mesmos ajustes da página anterior.</p>
+      <table>
+        <tr><td>Atravessar personagens e obstáculos · mudar de forma ou de estado · remover Penalidades</td><td class="num">1</td></tr>
+        <tr><td>Imunidade a um tipo de efeito · alcance maior no Ataque Básico · recurso próprio (Brasas, Cargas, Compassos…)</td><td class="num">2</td></tr>
+        <tr><td>Sobreviver a 0 PV uma vez, ou voltar em outra forma</td><td class="num">4</td></tr>
+        <tr><td>Bloquear uma habilidade do alvo</td><td class="num">4</td></tr>
+        <tr><td>Ilusão (chance de o ataque falhar) · controlar o alvo</td><td class="num">5</td></tr>
+        <tr><td>Copiar uma habilidade</td><td class="num">6</td></tr>
+        <tr><td>Copiar um personagem inteiro</td><td class="num">8</td></tr>
+        <tr><td>Impedir todas as ativas do alvo, ou zerar o dano dele</td><td class="num">8</td></tr>
+        <tr><td>Trégua: ninguém ataca nem sofre dano por 1 rodada</td><td class="num">10</td></tr>
+        <tr><td>Tirar o alvo da partida por 1 rodada</td><td class="num">16</td></tr>
+      </table>
+      <div class="callout"><span class="callout-label">EFEITO NOVO?</span><p style="margin:0">Compare com o efeito mais parecido das duas tabelas. Na dúvida, use o valor mais alto e teste na mesa.</p></div>
+    </div>
+    <div class="panel panel-white">
+      <div class="section-title" style="--accent:var(--blue)">REFERÊNCIA: OS 36 FECHAM</div>
+      <p style="font-size:12px; margin:0 0 6px">Orçamento de cada personagem e quanto as habilidades dele usam pela tabela deste apêndice. Todos ficam dentro da margem de 5 pontos.</p>
+      <table class="ref36"><tr><th>Defensor</th><th>PV</th><th>Orç.</th><th>Usa</th></tr><tr><td>Guardião</td><td class="num">40</td><td class="num">36</td><td class="num">34</td></tr><tr><td>Cambiante</td><td class="num">40</td><td class="num">33</td><td class="num">36</td></tr><tr><td>Cavalo</td><td class="num">35</td><td class="num">32</td><td class="num">34</td></tr><tr><td>Carvão</td><td class="num">45</td><td class="num">34</td><td class="num">33</td></tr><tr><td>Gato Xadrez</td><td class="num">35</td><td class="num">37</td><td class="num">35</td></tr><tr><td>Âncora</td><td class="num">35</td><td class="num">39</td><td class="num">36</td></tr><tr><td>Ignifrost</td><td class="num">40</td><td class="num">36</td><td class="num">31</td></tr><tr><td>Vale</td><td class="num">40</td><td class="num">36</td><td class="num">36</td></tr><tr><td>D.R.I.V.E.</td><td class="num">40</td><td class="num">32</td><td class="num">31</td></tr><tr><td>Gênio</td><td class="num">40</td><td class="num">32</td><td class="num">34</td></tr><tr><td>Oliva</td><td class="num">40</td><td class="num">33</td><td class="num">34</td></tr><tr><td>Invicto</td><td class="num">45</td><td class="num">20</td><td class="num">23</td></tr></table><table class="ref36"><tr><th>Combatente</th><th>PV</th><th>Orç.</th><th>Usa</th></tr><tr><td>Sable</td><td class="num">30</td><td class="num">31</td><td class="num">34</td></tr><tr><td>Predador</td><td class="num">30</td><td class="num">35</td><td class="num">37</td></tr><tr><td>Torre</td><td class="num">30</td><td class="num">36</td><td class="num">37</td></tr><tr><td>Dínamo</td><td class="num">25</td><td class="num">35</td><td class="num">35</td></tr><tr><td>Fantasma</td><td class="num">30</td><td class="num">32</td><td class="num">31</td></tr><tr><td>Ceifadora</td><td class="num">30</td><td class="num">33</td><td class="num">33</td></tr><tr><td>Reator Morto</td><td class="num">35</td><td class="num">37</td><td class="num">40</td></tr><tr><td>Véspera</td><td class="num">30</td><td class="num">35</td><td class="num">38</td></tr><tr><td>Agente do Caos</td><td class="num">35</td><td class="num">26</td><td class="num">31</td></tr><tr><td>Kazan</td><td class="num">35</td><td class="num">34</td><td class="num">38</td></tr><tr><td>Ritmista</td><td class="num">30</td><td class="num">33</td><td class="num">37</td></tr><tr><td>Magnus</td><td class="num">30</td><td class="num">36</td><td class="num">38</td></tr></table><table class="ref36"><tr><th>Apoiador</th><th>PV</th><th>Orç.</th><th>Usa</th></tr><tr><td>Mira</td><td class="num">20</td><td class="num">35</td><td class="num">37</td></tr><tr><td>Sonhadora</td><td class="num">25</td><td class="num">33</td><td class="num">32</td></tr><tr><td>Neodímio</td><td class="num">20</td><td class="num">42</td><td class="num">37</td></tr><tr><td>Betterfly</td><td class="num">25</td><td class="num">30</td><td class="num">33</td></tr><tr><td>Lady Bispo</td><td class="num">20</td><td class="num">29</td><td class="num">25</td></tr><tr><td>Juíza</td><td class="num">25</td><td class="num">33</td><td class="num">34</td></tr><tr><td>Golpista</td><td class="num">25</td><td class="num">36</td><td class="num">39</td></tr><tr><td>Assobio</td><td class="num">25</td><td class="num">33</td><td class="num">33</td></tr><tr><td>Saltadora</td><td class="num">25</td><td class="num">33</td><td class="num">32</td></tr><tr><td>Ninguém</td><td class="num">25</td><td class="num">36</td><td class="num">33</td></tr><tr><td>Forasteiro</td><td class="num">20</td><td class="num">34</td><td class="num">32</td></tr><tr><td>Maligno</td><td class="num">30</td><td class="num">31</td><td class="num">34</td></tr></table>
     </div>
   </div></div>
 </section>
