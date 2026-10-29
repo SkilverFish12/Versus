@@ -3925,7 +3925,7 @@
     hist.push(JSON.stringify(S));
     if (hist.length > 80) hist.shift();
     fn();
-    if (msg) log(msg);
+    if (msg) log(typeof msg === 'function' ? msg() : msg);
     salvar(); render();
   }
   function log(t){ S.log.push({ r: S.rodada, t }); if (S.log.length > 400) S.log.shift(); }
@@ -4296,6 +4296,8 @@
   function eliminar(j, i){
     const c = S.times[j][i];
     c.elim = true; c.pv = 0;
+    caronas(c).forEach(x => { x.carona = null; const v = c.pos && vizinhas(c.pos).find(livre); x.pos = v || c.pos; });
+    if (c.carona) c.carona = null;
     if (S.ativo && S.ativo[0] === j && S.ativo[1] === i) { S.ativo = null; c.agiu = true; passarVez(); }
     if (S.vez !== null && !disponiveis(S.vez).length) passarVez();
     S.med = S.med.map(m => Math.min(5, m + 1));
@@ -4479,7 +4481,11 @@
   const PORTAIS = ['B1', 'B7', 'J1', 'J7'];
   let selTok = null;
   let mostrarTab = store.get('versus-tabuleiro') !== false;
-  const ocupante = id => { for (const j of [0, 1]) for (let i = 0; i < 3; i++) { const c = S.times[j][i]; if (!c.elim && c.pos === id) return [j, i]; } return null; };
+  const ocupante = id => { for (const j of [0, 1]) for (let i = 0; i < 3; i++) { const c = S.times[j][i]; if (!c.elim && !c.carona && c.pos === id) return [j, i]; } return null; };
+  const refDe = c => { for (const j of [0, 1]) { const i = S.times[j].indexOf(c); if (i >= 0) return j + ',' + i; } return null; };
+  const caronas = v => { const r = refDe(v); return [0, 1].flatMap(j => S.times[j].filter(x => !x.elim && x.carona === r)); };
+  function moverPeca(c, id){ c.pos = id; caronas(c).forEach(x => { x.pos = id; }); }
+  const temSobeAi = c => CH[c.k].habs.some(h => !h.c && h.n === 'Sobe Aí');
   function bloqueada(id){ return S.cen === 'nave' && CELL[id].anel <= 1; }
   function marcas(c){
     const h = S.cen && CEN[S.cen].helper, k = [], ce = S.ce, r = S.rodada;
@@ -4526,18 +4532,19 @@
       const n = estNa(e.cell).indexOf(e), off = n * 9;
       toks += '<g class="es j' + e.dono + (estSel === e.id ? ' sel' : '') + '" data-est="' + e.id + '" transform="translate(' + (p.x + off).toFixed(1) + ',' + (p.y - off).toFixed(1) + ')"><polygon points="0,-17 15,-8.5 15,8.5 0,17 -15,8.5 -15,-8.5"/><text y="7">' + (ESTI[e.tipo] || ESTI.Marcador)[1] + '</text></g>';
     });
-    [0, 1].forEach(j => S.times[j].forEach((c, i) => {
-      if (c.elim || !c.pos || !CELL[c.pos]) return;
+    [false, true].forEach(passo => [0, 1].forEach(j => S.times[j].forEach((c, i) => {
+      if (c.elim || !c.pos || !CELL[c.pos] || !!c.carona !== passo) return;
       const p = CELL[c.pos], ch = CH[c.k];
       const sel = selTok && selTok[0] === j && selTok[1] === i;
       const at = S.ativo && S.ativo[0] === j && S.ativo[1] === i;
       const pct = c.pv / c.max;
       const dTxt = !modo && sc && sc.pos && !sel ? '<g class="tk-dist"><circle cx="' + (HS * .62) + '" cy="' + (-HS * .62) + '" r="10"/><text x="' + (HS * .62) + '" y="' + (-HS * .62 + 4) + '">' + dist(sc.pos, c.pos) + '</text></g>' : '';
-      toks += '<g class="tk j' + j + (sel ? ' sel' : '') + (at ? ' at' : '') + (c.agiu ? ' agiu' : '') + (DM.toks.has(j + ',' + i) ? ' alvo' : '') + '" data-tok="' + j + ',' + i + '" transform="translate(' + p.x.toFixed(1) + ',' + p.y.toFixed(1) + ')">' +
+      const tr = c.carona ? 'translate(' + (p.x + 15).toFixed(1) + ',' + (p.y - 15).toFixed(1) + ') scale(.62)' : 'translate(' + p.x.toFixed(1) + ',' + p.y.toFixed(1) + ')';
+      toks += '<g class="tk j' + j + (sel ? ' sel' : '') + (at ? ' at' : '') + (c.agiu ? ' agiu' : '') + (DM.toks.has(j + ',' + i) ? ' alvo' : '') + '" data-tok="' + j + ',' + i + '" transform="' + tr + '">' +
         '<circle class="tk-c" r="' + (HS * .8) + '" style="fill:' + ch.ac + '"/><text class="tk-ic" y="9">' + ch.icon + '</text>' +
         '<rect class="tk-hpb" x="-17" y="' + (HS * .62) + '" width="34" height="6" rx="2"/><rect class="tk-hp ' + (pct <= .3 ? 'bai' : pct <= .6 ? 'med' : '') + '" x="-17" y="' + (HS * .62) + '" width="' + (34 * pct).toFixed(1) + '" height="6" rx="2"/>' +
         (c.imo ? '<text class="tk-st" x="' + (-HS * .66) + '" y="' + (-HS * .45) + '">⛓</text>' : '') + dTxt + '</g>';
-    }));
+    })));
     const nevoa = S.cen === 'sombras' && S.ce.fim !== null && S.ce.fim !== undefined && S.rodada >= S.ce.ini && S.rodada <= S.ce.fim;
     const banco = [0, 1].map(j => {
       const fora = S.times[j].map((c, i) => [c, i]).filter(([c]) => !c.elim && !c.pos);
@@ -4602,7 +4609,7 @@
       if (bloqueada(id)) { toast('O casco da nave bloqueia essa casa', 1600); return; }
       if (ocupante(id)) return;
       const de = c.pos;
-      mudar(() => { c.pos = id; }, CH[c.k].nome + (de ? ' moveu de ' + de + ' para ' + id + ' (' + dist(de, id) + ' casas).' : ' entrou em ' + id + '.'));
+      mudar(() => { if (c.carona) c.carona = null; moverPeca(c, id); }, CH[c.k].nome + (de ? ' moveu de ' + de + ' para ' + id + ' (' + dist(de, id) + ' casas).' : ' entrou em ' + id + '.'));
     }
   });
 
@@ -4625,6 +4632,74 @@
   const DIR6 = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
   const AX = Object.fromEntries(CELLS.map(c => [c.q + ',' + c.r, c.id]));
   let modo = null;   // {t:'mover'} | {t:'basico'} | {t:'hab', h, sup, aprim}
+  const viz = (id, di) => { const c = CELL[id]; return AX[(c.q + DIR6[di][0]) + ',' + (c.r + DIR6[di][1])] || null; };
+  const vizinhas = id => DIR6.map((_, di) => viz(id, di)).filter(Boolean);
+  const livre = id => id && !obstaculo(id) && !ocupante(id);
+  function dirPara(de, para){
+    const A = CELL[de], B = CELL[para], vx = B.x - A.x, vy = B.y - A.y;
+    let best = 0, bv = -Infinity;
+    DIR6.forEach(([dq, dr], di) => { const x = Math.sqrt(3) * (dq + dr / 2), y = 1.5 * dr; const v = (vx * x + vy * y) / Math.hypot(x, y); if (v > bv) { bv = v; best = di; } });
+    return best;
+  }
+  // empurrão em linha reta; quem estiver no caminho vai junto (fila)
+  function empurrar(t, origem, n, opt){
+    const out = [];
+    if (!t.pos || !origem || t.pos === origem) return out;
+    if (t.carona) t.carona = null;
+    if (t.k === 'agentecaos') n = Math.min(n, 1);
+    const di = dirPara(origem, t.pos);
+    const fila = [t];
+    for (let k = 0; k < n; k++) {
+      const frente = fila[fila.length - 1];
+      let prox = viz(frente.pos, di);
+      while (prox && ocupante(prox)) {
+        const [oj, oi] = ocupante(prox), o = S.times[oj][oi];
+        if (fila.includes(o)) break;
+        fila.push(o);
+        out.push(CH[fila[fila.length - 2].k].nome + ' colidiu com ' + CH[o.k].nome);
+        if (opt && opt.colisao) [fila[fila.length - 2], o].forEach(x => { if (refDe(x)[0] != opt.time) dano(x, opt.colisao, out); });
+        prox = viz(o.pos, di);
+      }
+      if (!prox) {
+        const resto = n - k, q = Math.min(4, resto * 2);
+        fila.forEach(x => dano(x, q, out));
+        out.push('queda da arena: ' + q + ' de dano');
+        break;
+      }
+      if (obstaculo(prox)) { out.push('parou num obstáculo'); if (opt && opt.bloqueio) dano(t, opt.bloqueio, out); break; }
+      for (let m = fila.length - 1; m >= 0; m--) moverPeca(fila[m], viz(fila[m].pos, di));
+    }
+    if (opt && opt.bloqueio && out.some(x => /colidiu/.test(x))) dano(t, opt.bloqueio, out);
+    out.unshift(CH[t.k].nome + ' foi para ' + t.pos);
+    return out;
+  }
+  // puxar ou arrastar em direção a um ponto, até ficar adjacente
+  function puxar(t, ponto, n){
+    if (!t.pos || !ponto) return [];
+    if (t.carona) t.carona = null;
+    if (t.k === 'agentecaos') n = Math.min(n, 1);
+    for (let k = 0; k < n && dist(t.pos, ponto) > 1; k++) {
+      const op = vizinhas(t.pos).filter(livre).sort((a, b) => dist(a, ponto) - dist(b, ponto) || Math.hypot(CELL[a].x - CELL[ponto].x, CELL[a].y - CELL[ponto].y) - Math.hypot(CELL[b].x - CELL[ponto].x, CELL[b].y - CELL[ponto].y));
+      if (!op.length || dist(op[0], ponto) >= dist(t.pos, ponto)) break;
+      moverPeca(t, op[0]);
+    }
+    return [CH[t.k].nome + ' foi para ' + t.pos];
+  }
+  function aproximar(c, alvoPos){
+    if (!c.pos || !alvoPos || dist(c.pos, alvoPos) <= 1) return null;
+    const op = vizinhas(alvoPos).filter(livre).sort((a, b) => dist(a, c.pos) - dist(b, c.pos));
+    if (!op.length) return null;
+    moverPeca(c, op[0]); return op[0];
+  }
+  function dano(x, v, out){
+    if (x.elim || !v) return;
+    x.pv = Math.max(0, x.pv - v); out.push(CH[x.k].nome + ' −' + v + ' PV');
+    if (!x.pv) { const [a, b] = refDe(x).split(',').map(Number); eliminar(a, b); }
+  }
+  function aparatoMaisProximo(pos){
+    const ap = (S.est || []).filter(e => e.tipo === 'Aparato').sort((a, b) => dist(a.cell, pos) - dist(b.cell, pos));
+    return ap.length ? ap[0].cell : null;
+  }
   const ativoC = () => S.ativo ? S.times[S.ativo[0]][S.ativo[1]] : null;
   const restam = c => c.acts - c.gastas;
   const lado = h => (h.t.includes('ATAQUE') || h.t.includes('PENALIDADE')) ? ((h.t.includes('RESTAURAÇÃO') || h.t.includes('REFORÇO')) ? 'qualquer' : 'inimigo') : 'aliado';
@@ -4681,13 +4756,24 @@
       '<div class="ac-acoes"><small>AÇÕES</small><div>' + pips + '</div><b>' + r + ' de ' + c.acts + '</b></div></div>';
     if (modo) h += bannerModo();
     h += '<div class="ac-grade">' +
-      btn('data-ac="mover"', '👣', 'MOVER', '1 ação · até ' + desl + ' casas', c.imo ? 'Imóvel' : r < 1 ? 'sem ações' : '') +
+      btn('data-ac="mover"', '👣', 'MOVER', '1 ação · até ' + desl + ' casas', c.carona ? 'no veículo: use DESCER' : c.imo ? 'Imóvel' : r < 1 ? 'sem ações' : '') +
       btn('data-ac="basico"', '👊', 'ATAQUE BÁSICO', '1 ação · adjacente · ' + (ch.atk === 'FIS' ? 'FÍS' : 'DES') + ' ' + ch.apt[atkIdx(ch)] + ' dados', r < 1 ? 'sem ações' : (c.pos && !enem.length) ? 'nenhum inimigo adjacente' : '');
     ch.habs.forEach((hb, k) => {
       if (!hb.c) return;
       const mot = motivo(hb, false);
       h += btn('data-hab="' + k + '"', tipoIcone(hb), hb.n.toUpperCase(), hb.c + (hb.c > 1 ? ' ações' : ' ação') + ' · ' + hb.a.toLowerCase() + ' · ' + (hb.x >= 0 ? 'teste ' + APT[hb.x] : 'sem teste'), mot);
     });
+    // Sobe Aí (veículo)
+    if (temSobeAi(c)) {
+      const viz1 = pecas((pj, pi, x) => pj === j && x !== c && !x.carona && x.pos && c.pos && dist(x.pos, c.pos) === 1);
+      h += btn('data-ac="carona"', '🚗', 'SOBE AÍ', '1 ação · um aliado adjacente sobe', r < 1 ? 'sem ações' : !viz1.length ? 'nenhum aliado adjacente' : '');
+      caronas(c).forEach(x => { h += btn('data-descer="' + refDe(x) + '"', '⬇️', 'DESCER ' + CH[x.k].nome, '1 ação · numa casa adjacente', r < 1 ? 'sem ações' : ''); });
+    } else if (c.carona) {
+      h += btn('data-descer="' + refDe(c) + '"', '⬇️', 'DESCER DO VEÍCULO', '1 ação · numa casa adjacente', r < 1 ? 'sem ações' : '');
+    } else {
+      const v = pecas((pj, pi, x) => pj === j && temSobeAi(x) && x.pos && c.pos && dist(x.pos, c.pos) === 1);
+      if (v.length) { const vc = S.times[v[0][0]][v[0][1]]; h += btn('data-subir="' + v[0].join(',') + '"', '🚗', 'SUBIR NO ' + CH[vc.k].nome, '1 ação · andam juntos', r < 1 ? 'sem ações' : ''); }
+    }
     const sm = motivo(ch.supH, true);
     h += btn('data-hab="sup"', '★', ch.supH.n.toUpperCase(), 'SUPREMA · 3 Medidor + ' + ch.supH.c + ' ações · ' + ch.supH.a.toLowerCase(), sm, ' sup');
     h += '</div>';
@@ -4703,7 +4789,7 @@
   function bannerModo(){
     const c = ativoC(), desl = c ? Math.max(1, 2 + c.ds) : 2;
     const nomeM = modo.t === 'mover' ? '👣 MOVER: toque numa casa amarela (até ' + desl + ' casas)' : modo.t === 'basico' ? '👊 ATAQUE BÁSICO: toque num inimigo adjacente' :
-      modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
+      modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
     const conf = modo.t === 'hab' && (modo.alvosInfo.tipo === 'todos' || modo.alvosInfo.tipo === 'linha') && (modo.dir !== undefined || modo.alvosInfo.tipo === 'todos');
     return '<div class="ac-modo"><span>' + nomeM + '</span>' + (conf ? '<button class="btn-amarelo sm" data-confirmar>USAR ▶</button>' : '') + '<button class="btn-ghost sm" data-cancelar>✕ CANCELAR</button></div>';
   }
@@ -4726,6 +4812,12 @@
     if (b.dataset.ac === 'mover') return iniciarModo({ t: 'mover' });
     if (b.dataset.ac === 'basico') return iniciarModo({ t: 'basico' });
     if (b.dataset.ac === 'estrutura') return abrirEstruturas();
+    if (b.dataset.ac === 'carona') return iniciarModo({ t: 'carona' });
+    if (b.dataset.descer) return iniciarModo({ t: 'descer', quem: b.dataset.descer });
+    if (b.dataset.subir) {
+      const [vj, vi] = b.dataset.subir.split(',').map(Number), v = S.times[vj][vi];
+      return mudar(() => { c.carona = vj + ',' + vi; c.pos = v.pos; c.gastas++; }, '🚗 ' + CH[c.k].nome + ' subiu no ' + CH[v.k].nome + '.');
+    }
     if (b.dataset.hab !== undefined) {
       const sup = b.dataset.hab === 'sup', h = sup ? CH[c.k].supH : CH[c.k].habs[+b.dataset.hab];
       const aprim = !sup && aprimorarMarcado && !!h.p && !c.med && S.med[S.ativo[0]] >= 1;
@@ -4746,6 +4838,8 @@
     } else if (modo.t === 'mover') CELLS.forEach(x => { if (!obstaculo(x.id) && !ocupante(x.id)) out.casas.add(x.id); });
     if (modo.t === 'basico') pecas((j, i, x) => j !== S.ativo[0] && (!c.pos || (x.pos && dist(c.pos, x.pos) === 1))).forEach(p => out.toks.add(p.join(',')));
     if (modo.t === 'estrutura') CELLS.forEach(x => { if (!bloqueada(x.id)) out.casas.add(x.id); });
+    if (modo.t === 'carona') pecas((pj, pi, x) => pj === S.ativo[0] && x !== c && !x.carona && x.pos && c.pos && dist(x.pos, c.pos) === 1).forEach(p => out.toks.add(p.join(',')));
+    if (modo.t === 'descer') { const [qj, qi] = modo.quem.split(',').map(Number), q = S.times[qj][qi]; if (q.pos) vizinhas(q.pos).filter(livre).forEach(id => out.casas.add(id)); }
     if (modo.t === 'hab') {
       const a = modo.alvosInfo;
       if (a.tipo === 'peca' || a.tipo === 'todos') (a.tipo === 'todos' ? modo.sel : a.alvos).forEach(p => out.toks.add(p.join(',')));
@@ -4767,10 +4861,22 @@
     }
     if (!c) { modo = null; return false; }
     const d0 = destaquesModo();
+    if (modo.t === 'carona') {
+      if (!tok || !d0.toks.has(tok)) return true;
+      const [pj, pi] = tok.split(',').map(Number), x = S.times[pj][pi]; modo = null;
+      mudar(() => { x.carona = refDe(c); x.pos = c.pos; c.gastas++; }, '🚗 ' + CH[x.k].nome + ' subiu no ' + CH[c.k].nome + '.');
+      return true;
+    }
+    if (modo.t === 'descer') {
+      if (!cellId || !d0.casas.has(cellId)) return true;
+      const [qj, qi] = modo.quem.split(',').map(Number), q = S.times[qj][qi]; modo = null;
+      mudar(() => { q.carona = null; q.pos = cellId; c.gastas++; }, '⬇️ ' + CH[q.k].nome + ' desceu em ' + cellId + '.');
+      return true;
+    }
     if (modo.t === 'mover') {
       if (!cellId || !d0.casas.has(cellId)) return true;
       const de = c.pos; modo = null;
-      mudar(() => { c.pos = cellId; c.gastas++; }, '👣 ' + CH[c.k].nome + (de ? ' moveu de ' + de + ' para ' + cellId : ' entrou em ' + cellId) + '.');
+      mudar(() => { moverPeca(c, cellId); c.gastas++; }, '👣 ' + CH[c.k].nome + (de ? ' moveu de ' + de + ' para ' + cellId : ' entrou em ' + cellId) + '.');
       return true;
     }
     if (modo.t === 'basico') {
@@ -4820,6 +4926,18 @@
     if (/Imóvel/.test(txt)) e.imo = true;
     const dd2 = /([−-]|\+)(\d+) dados?/.exec(txt); if (dd2) e.dados = (dd2[1] === '+' ? 1 : -1) * +dd2[2];
     const ds = /([−-]|\+)(\d+) casas? de deslocamento/.exec(txt); if (ds) e.desl = (ds[1] === '+' ? 1 : -1) * +ds[2];
+    const base = h.d.replace(/<[^>]+>/g, ''), apr = aprim && h.p ? h.p.replace(/<[^>]+>/g, '') : '';
+    const pRe = /empurr\w*([^.]{0,50}?)(\d+) casas?([^.]{0,25})/i;
+    const pm = pRe.exec(apr) || pRe.exec(base);
+    if (pm && !/lado|fora da faixa/.test(pm[3] + pm[1])) e.empurra = +pm[2];
+    const lm = /(?:puxad|arrastad)\w*[^.]{0,30}?(\d+) casas?/i.exec(apr) || /(?:puxad|arrastad)\w*[^.]{0,30}?(\d+) casas?/i.exec(base);
+    if (lm) e.puxa = +lm[1];
+    if (/(?:puxad|arrastad)\w* para uma casa adjacente/i.test(base)) e.puxa = 99;
+    if (/Aparato mais próximo/.test(base)) e.puxaAparato = true;
+    if (/avança até ficar adjacente|vai até uma casa adjacente|até uma casa adjacente a ele|para ficar adjacente ao alvo/i.test(base)) e.aprox = true;
+    if (/termina na casa onde o alvo estava/i.test(base)) e.ocupar = true;
+    const col = /colidir[^.]*?(\d+) de dano/i.exec(base); if (col) e.colisao = +col[1];
+    const blq = /bloqueado[^.]*?\+(\d+) de dano/i.exec(base); if (blq) e.bloqueio = +blq[1];
     return e;
   }
   function rolarD10(n){ return Array.from({ length: Math.max(1, n) }, () => d(10)); }
@@ -4833,7 +4951,8 @@
     mostrarResultado({
       titulo: '👊 ATAQUE BÁSICO', sub: ch.nome + ' ataca ' + CH[t.k].nome + ' · ' + APT[apt] + ' ' + n + ' dados contra Defesa ' + def,
       dados: v, def, notas, desc: '',
-      linhas: [{ alvo, ok: hits > 0, txt: hits ? hits + (hits > 1 ? ' acertos' : ' acerto') + ' → ' + dano + ' de dano' : 'errou', ef: hits ? [{ k: 'dano', v: dano, on: true, txt: dano + ' de dano' }] : [] }],
+      linhas: [{ alvo, ok: hits > 0, txt: hits ? hits + (hits > 1 ? ' acertos' : ' acerto') + ' → ' + dano + ' de dano' : 'errou', ef: hits ? [{ k: 'dano', v: dano, on: true, txt: dano + ' de dano' }].concat(
+        ch.habs.some(x => !x.c && /acerta um Ataque Básico, empurra/.test(x.d)) && t.pos ? [{ k: 'empurra', v: hits, on: true, txt: '↗ empurrar ' + hits + (hits > 1 ? ' casas' : ' casa') + ' (Manoplas)' }] : []) : [] }],
       custo: 1, nome: null, sup: false, aprim: false
     });
   }
@@ -4863,6 +4982,8 @@
           if (ef.imo) lista.push({ k: 'imo', v: true, on: true, txt: 'fica Imóvel' });
           if (ef.dados && ef.dados < 0) lista.push({ k: 'dados', v: ef.dados, on: true, txt: '−' + (-ef.dados) + ' dado' });
           if (ef.desl && ef.desl < 0) lista.push({ k: 'desl', v: ef.desl, on: true, txt: '−' + (-ef.desl) + ' de deslocamento' });
+          if (t.pos && ef.empurra) lista.push({ k: 'empurra', v: ef.empurra, on: true, txt: '↗ empurrar ' + ef.empurra + (ef.empurra > 1 ? ' casas' : ' casa') });
+          if (t.pos && (ef.puxa || ef.puxaAparato)) lista.push({ k: 'puxa', v: ef.puxa || 5, on: true, txt: '↙ ' + (ef.puxaAparato ? 'arrastar ' + (ef.puxa || 5) + ' casas até o Aparato' : ef.puxa >= 99 ? 'puxar até ficar adjacente' : 'puxar ' + ef.puxa + (ef.puxa > 1 ? ' casas' : ' casa')) });
         } else {
           if (ef.cura) lista.push({ k: 'cura', v: ef.cura, on: true, txt: '+' + ef.cura + ' PV' });
           if (ef.def && ef.def > 0) lista.push({ k: 'def', v: ef.def, on: true, txt: '+' + ef.def + ' na Defesa' });
@@ -4873,15 +4994,22 @@
       }
       linhasR.push({ alvo: al, ok, txt, ef: lista });
     });
-    const extras = [];
+    const extras = [], pre = [];
+    const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
+    if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
+    if (ef.ocupar && alvo1 && linhasR[0].ok) extras.push({ k: 'ocupar', v: alvos[0], on: true, txt: ch.nome + ' termina na casa onde o alvo estava' });
+    if (c.k === 'drive' && h.n === 'Rasante' && m.cel) {
+      const linha = alvosDe(h).casas.filter(([, di]) => di === m.dir).map(([id]) => id);
+      pecas((pj, pi, x) => pj === aj && x !== c && !x.carona && x.pos && linha.some(id => dist(id, x.pos) <= 1)).forEach(p => extras.push({ k: 'carona', v: p, on: false, txt: CH[S.times[p[0]][p[1]].k].nome + ' sobe no veículo (grátis)' }));
+    }
     if (m.cel && h.t.includes('ESTRUTURA')) { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, m.cel], on: true, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + m.cel }); }
-    if (m.cel && h.t.includes('MOBILIDADE') && /aparece|desloca|despenca|avança|termina na|desliza|dispara/i.test(h.d) && !ocupante(m.cel)) extras.push({ k: 'mover', v: m.cel, on: true, txt: 'Mover ' + ch.nome + ' para ' + m.cel });
+    if (m.cel && !ef.ocupar && h.t.includes('MOBILIDADE') && /aparece|desloca|despenca|avança|desliza|dispara/i.test(h.d) && !ocupante(m.cel)) extras.push({ k: 'mover', v: m.cel, on: true, txt: 'Mover ' + ch.nome + ' para ' + m.cel });
     if (!m.cel && h.t.includes('ESTRUTURA') && c.pos && h.a === 'PESSOAL') { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, c.pos], on: false, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + c.pos }); }
     mostrarResultado({
       titulo: (m.sup ? '★ ' : tipoIcone(h) + ' ') + h.n.toUpperCase() + (m.aprim ? ' ⚡' : ''),
       sub: ch.nome + ' · ' + h.c + (h.c > 1 ? ' ações' : ' ação') + (m.sup ? ' + 3 Medidor' : m.aprim ? ' + 1 Medidor' : '') + (precisaTeste ? ' · teste de ' + APT[h.x] + ' com ' + n + (n > 1 ? ' dados' : ' dado') : ' · sem teste'),
       dados: v, def: null, max, notas: [], desc: h.d + (m.aprim && h.p ? '<div class="hab-med"><span class="pill t-med">APRIMORADO</span> ' + h.p + '</div>' : ''),
-      linhas: linhasR, extras, custo: h.c, nome: h.n, sup: m.sup, aprim: m.aprim, semAlvo: !alvos.length && h.a !== 'PESSOAL'
+      linhas: linhasR, extras, pre, ef, origem: (m.cel && /Raio \d/.test(h.d) && tipoAlc(h) === 'ALCANCE') ? m.cel : null, custo: h.c, nome: h.n, sup: m.sup, aprim: m.aprim, semAlvo: !alvos.length && h.a !== 'PESSOAL'
     });
   }
   let res = null;
@@ -4894,11 +5022,12 @@
         (l.ef.length ? '<div class="rs-ef">' + l.ef.map((e, ei) => '<label><input type="checkbox" data-ef="' + li + ',' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + '</label>').join('') + '</div>' : '') + '</div>';
     }).join('');
     if (r.semAlvo) lin += '<p class="rs-nota">Nenhum personagem foi atingido.</p>';
+    if (r.pre && r.pre.length) lin = '<div class="rs-ef extra">' + r.pre.map((e, ei) => '<label><input type="checkbox" data-pre="' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + '</label>').join('') + '</div>' + lin;
     if (r.extras && r.extras.length) lin += '<div class="rs-ef extra">' + r.extras.map((e, ei) => '<label><input type="checkbox" data-ex="' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + '</label>').join('') + '</div>';
     $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>' + r.titulo + '</h3></div><div class="dd-corpo"><p class="rs-sub">' + r.sub + '</p>' +
       (r.notas.length ? '<p class="rs-nota">' + r.notas.join(' · ') + '</p>' : '') + dadosH + lin +
       (r.desc ? '<details class="rs-desc"' + (r.linhas.some(l => l.ok && !l.ef.length) || !r.linhas.length ? ' open' : '') + '><summary>O que a ficha diz</summary><p>' + r.desc + '</p></details>' : '') +
-      '<p class="rs-nota">Marque o que vale e aplique. Empurrões e efeitos especiais você move ou ajusta direto no tabuleiro e na ficha.</p>' +
+      '<p class="rs-nota">Marque o que vale e aplique. Empurrões, puxões e avanços são feitos no tabuleiro sozinhos. O que não estiver na lista, ajuste direto no tabuleiro ou na ficha.</p>' +
       '<div class="rd-rodape" style="padding:10px 0 0"><button class="btn-amarelo" id="rsAplicar">✓ APLICAR</button></div></div>';
     abrir('mAcao');
   }
@@ -4906,6 +5035,7 @@
     const x = e.target;
     if (x.dataset.ef) { const [li, ei] = x.dataset.ef.split(',').map(Number); res.linhas[li].ef[ei].on = x.checked; }
     if (x.dataset.ex) res.extras[+x.dataset.ex].on = x.checked;
+    if (x.dataset.pre) res.pre[+x.dataset.pre].on = x.checked;
   });
   $('#mAcao').addEventListener('click', e => {
     if (e.target.id !== 'rsAplicar') return;
@@ -4917,10 +5047,15 @@
       if (r.nome) { c.usadas = c.usadas || []; c.usadas.push(r.nome); }
       if (r.sup) { S.med[aj] -= 3; c.med = true; c.sup = true; }
       else if (r.aprim) { S.med[aj] -= 1; c.med = true; aprimorarMarcado = false; }
+      (r.pre || []).forEach(p => { if (p.on && p.k === 'aprox') { const t = S.times[p.v[0]][p.v[1]]; const cc = aproximar(c, t.pos); if (cc) msg.push(CH[c.k].nome + ' avançou para ' + cc); } });
+      const antes = {};
+      r.linhas.forEach(l => { antes[l.alvo.join(',')] = S.times[l.alvo[0]][l.alvo[1]].pos; });
+      const posEf = [];
       r.linhas.forEach(l => {
         const t = S.times[l.alvo[0]][l.alvo[1]];
         l.ef.forEach(ef => {
           if (!ef.on || t.elim) return;
+          if (ef.k === 'empurra' || ef.k === 'puxa') { posEf.push([t, ef]); return; }
           if (ef.k === 'dano') { t.pv = Math.max(0, t.pv - ef.v); msg.push(CH[t.k].nome + ' −' + ef.v + ' PV'); if (!t.pv) eliminar(l.alvo[0], l.alvo[1]); }
           if (ef.k === 'cura') { t.pv = Math.min(t.max, t.pv + ef.v); msg.push(CH[t.k].nome + ' +' + ef.v + ' PV'); }
           if (ef.k === 'dc') { t.dcv = Math.max(t.dcv, ef.v[0]); t.dcn = Math.max(t.dcn, ef.v[1]); }
@@ -4931,12 +5066,21 @@
           if (ef.k === 'desl') t.ds = clamp(t.ds + ef.v, -2, 4);
         });
       });
-      (r.extras || []).forEach(ex => {
-        if (!ex.on) return;
-        if (ex.k === 'est') { S.est = S.est || []; S.est.push({ id: Date.now() + '' + d(999), tipo: ex.v[0], cell: ex.v[1], dono: aj }); }
-        if (ex.k === 'mover' && !ocupante(ex.v)) c.pos = ex.v;
+      const orig = r.origem || c.pos;
+      posEf.sort((a, b) => (b[1].k === 'empurra' ? dist(orig, b[0].pos) - dist(orig, a[0].pos) : dist(orig, a[0].pos) - dist(orig, b[0].pos)));
+      posEf.forEach(([t, ef]) => {
+        if (t.elim) return;
+        if (ef.k === 'empurra') msg.push(...empurrar(t, orig, ef.v, { colisao: (r.ef || {}).colisao, bloqueio: (r.ef || {}).bloqueio, time: aj }));
+        else msg.push(...puxar(t, (r.ef || {}).puxaAparato ? aparatoMaisProximo(t.pos) : c.pos, ef.v));
       });
-    }, (r.nome ? (r.sup ? '★ ' : '✨ ') + CH[c.k].nome + ' usou ' + r.nome : '👊 ' + CH[c.k].nome + ' fez um Ataque Básico') + (msg.length ? ': ' + msg.join(', ') : '') + '.');
+      (r.extras || []).sort((a, b) => (a.k === 'carona') - (b.k === 'carona')).forEach(ex => {
+        if (!ex.on) return;
+        if (ex.k === 'ocupar') { const p0 = antes[ex.v.join(',')]; if (p0 && !ocupante(p0)) { moverPeca(c, p0); msg.push(CH[c.k].nome + ' foi para ' + p0); } }
+        if (ex.k === 'carona') { const x = S.times[ex.v[0]][ex.v[1]]; x.carona = refDe(c); x.pos = c.pos; msg.push(CH[x.k].nome + ' subiu no veículo'); }
+        if (ex.k === 'est') { S.est = S.est || []; S.est.push({ id: Date.now() + '' + d(999), tipo: ex.v[0], cell: ex.v[1], dono: aj }); }
+        if (ex.k === 'mover' && !ocupante(ex.v)) moverPeca(c, ex.v);
+      });
+    }, () => (r.nome ? (r.sup ? '★ ' : '✨ ') + CH[c.k].nome + ' usou ' + r.nome : '👊 ' + CH[c.k].nome + ' fez um Ataque Básico') + (msg.length ? ': ' + msg.join(', ') : '') + '.');
     if (r.sup) toast('★ ' + r.nome.toUpperCase() + ' ★', 2200);
   });
 
