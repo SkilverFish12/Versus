@@ -1697,6 +1697,27 @@
     .pt-mesa .ac-grade{grid-template-columns:1fr 1fr}
     .pt-mesa .pt-board .ac-modo{display:none}
   }
+  .rs-ops{margin-top:12px; display:flex; flex-direction:column; gap:6px}
+  .rs-ops > b{font-family:'Bangers',cursive; font-weight:400; letter-spacing:1.5px; font-size:15px}
+  .rs-ops button{text-align:left; border:3px solid #000; background:#fff; padding:6px 10px; cursor:pointer; box-shadow:2px 2px 0 #000}
+  .rs-ops button.on{background:var(--yellow); outline:3px solid var(--red)}
+  .rs-ops strong{display:block; font-family:'Bangers',cursive; font-weight:400; font-size:18px; letter-spacing:1px}
+  .rs-ops small{font-size:12.5px; font-weight:700; color:#444}
+  .rs-red{font-style:normal; font-size:12px; color:var(--blue)}
+  .rec-linha{display:flex; flex-wrap:wrap; gap:5px; margin-top:7px}
+  .rec{display:flex; align-items:center; gap:4px; border:2px solid #000; background:#ffe9c7; padding:2px 4px 2px 7px}
+  .rec label{font-family:'Bangers',cursive; letter-spacing:.5px; font-size:12.5px; margin-right:2px}
+  .rec span{font-family:'Bangers',cursive; font-size:17px; min-width:30px; text-align:center}
+  .rec .mini-btn{width:22px; height:22px; font-size:13px}
+  .estado-tag{display:flex; align-items:center; gap:6px; margin-top:7px; background:var(--dark); color:var(--yellow); border:2px solid #000; padding:3px 4px 3px 9px; font-family:'Bangers',cursive; letter-spacing:1px; font-size:14px}
+  .estado-tag small{font-family:'Comic Neue',cursive; font-weight:700; font-size:11.5px; color:#ddd; letter-spacing:0; flex:1}
+  .ac-linha{display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:0 12px 8px; font-size:13px}
+  .ac-linha b{font-family:'Bangers',cursive; font-weight:400; letter-spacing:1px; font-size:15px}
+  .ac-linha small{font-weight:700; color:#666}
+  .ini-auto{display:flex; gap:10px; align-items:flex-start; margin-top:18px; background:#111; border:2px solid var(--yellow); padding:10px 12px; cursor:pointer}
+  .ini-auto input{width:22px; height:22px; flex:none; margin-top:2px; accent-color:#ffe000}
+  .ini-auto b{display:block; font-family:'Bangers',cursive; font-weight:400; letter-spacing:1.5px; font-size:19px; color:var(--yellow)}
+  .ini-auto small{display:block; color:#bbb; font-weight:700; font-size:12.5px}
 </style>
 </head>
 <body class="em-capa">
@@ -3699,6 +3720,7 @@
         <p class="ini-res" id="iniRes">Ou escolham quem começa:</p>
         <div class="ini-escolha"><button class="btn-j j0" data-prim="0" id="prim0">JOGADOR 1 COMEÇA</button><button class="btn-j j1" data-prim="1" id="prim1">JOGADOR 2 COMEÇA</button></div>
       </div>
+      <label class="ini-auto"><input type="checkbox" id="iniAuto" checked><span><b>🤖 TURNO GUIADO</b><small>O jogo mostra as ações possíveis, checa alcance e ações, rola os dados e aplica os efeitos. Desligado, vocês controlam tudo à mão pelas fichas e pelo dado.</small></span></label>
       <div class="ini-nav"><button class="btn-ghost" data-volta="cenario">◀ CENÁRIO</button><button class="btn-amarelo" id="btnIrDraft" disabled>ESCOLHER TIMES ▶</button></div>
     </div>
   </section>
@@ -3997,6 +4019,7 @@
   function rIniciativa(){
     const c = S.cen ? CEN[S.cen] : null;
     $('#iniCen').innerHTML = 'ARENA: ' + (c ? '<span style="font-size:26px">' + c.icon + '</span><b>' + c.nome + '</b>' : '<b>ARENA COMUM</b>');
+    $('#iniAuto').checked = S.auto !== false;
     $('#nome0').value = S.nomes[0] === 'Jogador 1' ? '' : S.nomes[0];
     $('#nome1').value = S.nomes[1] === 'Jogador 2' ? '' : S.nomes[1];
     atualizarPrim();
@@ -4011,6 +4034,7 @@
   [0, 1].forEach(j => $('#nome' + j).addEventListener('input', e => {
     S.nomes[j] = e.target.value.trim() || 'Jogador ' + (j + 1); salvar(); atualizarPrim();
   }));
+  $('#iniAuto').addEventListener('change', e => { S.auto = e.target.checked; salvar(); });
   $$('[data-prim]').forEach(b => b.addEventListener('click', () => { S.prim = +b.dataset.prim; salvar(); atualizarPrim(); }));
   $('#btnMoeda').addEventListener('click', () => {
     const m = $('#moeda'), r = d(2) - 1;
@@ -4133,7 +4157,7 @@
   // ═════════ 4 · PARTIDA ═════════
   function personagem(k){
     return { k, pv: CH[k].pv, max: CH[k].pv, ab: 0, dn: 0, dd: 0, df: 0, ds: 0, dcv: 0, dcn: 0, imo: false, mar: false,
-             agiu: false, med: false, sup: false, elim: false, duelo: null, acts: 0, gastas: 0, pos: null };
+             agiu: false, med: false, sup: false, elim: false, duelo: null, acts: 0, gastas: 0, pos: null, red: 0, esc: k === 'cavalo' ? 1 : 0, rec: {} };
   }
   function iniciarPartida(){
     const ord = CLASSES.map(c => c[0]);
@@ -4195,7 +4219,7 @@
 
   function defesas(c){
     const ch = CH[c.k];
-    return [0, 1, 2, 3].map(a => clamp(5 + ch.apt[RES[a]] + c.df, 2, 10));
+    return [0, 1, 2, 3].map(a => clamp(5 + ch.apt[RES[a]] + mod(c, 'df'), 2, 10));
   }
   const atkIdx = ch => ch.atk === 'FIS' ? 0 : 1;
   function rPartida(){
@@ -4269,9 +4293,10 @@
       '<div class="cc-b"><div class="pv-linha"><div class="pv-num"><small>PONTOS DE VIDA</small><b>' + c.pv + '</b><i>/' + c.max + '</i></div>' +
       '<div class="pv-btns"><button class="menos" data-pv="' + id + ',-5">−5</button><button class="menos" data-pv="' + id + ',-1">−1</button><button class="mais" data-pv="' + id + ',1">+1</button><button class="mais" data-pv="' + id + ',5">+5</button></div></div>' +
       '<div class="pv-barra"><i class="' + (pct <= 30 ? 'bai' : pct <= 60 ? 'med' : '') + '" style="width:' + pct + '%"></i></div>' + acoes +
-      '<div class="defs">' + defs.map((v, a) => '<div' + (a === ai ? ' class="atk" title="Aptidão de ATK"' : '') + '><b' + (c.df ? ' class="mod"' : '') + '>' + v + '</b><small>DEF vs ' + APT[a] + '</small></div>').join('') + '</div>' +
+      '<div class="defs">' + defs.map((v, a) => '<div' + (a === ai ? ' class="atk" title="Aptidão de ATK"' : '') + '><b' + (mod(c, 'df') ? ' class="mod"' : '') + '>' + v + '</b><small>DEF vs ' + APT[a] + '</small></div>').join('') + '</div>' +
       '<div class="st-grid">' + stepper(j, i, 'ab', 'AÇÕES PRÓX.', c.ab) + stepper(j, i, 'dn', 'DANO', c.dn) + stepper(j, i, 'dd', 'DADOS', c.dd) +
-        stepper(j, i, 'df', 'DEFESA', c.df) + stepper(j, i, 'ds', 'DESLOC.', c.ds) + '</div>' +
+        stepper(j, i, 'df', 'DEFESA', c.df) + stepper(j, i, 'ds', 'DESLOC.', c.ds) + stepper(j, i, 'red', 'REDUÇÃO', c.red || 0) + stepper(j, i, 'esc', 'ESCUDO', c.esc || 0) + '</div>' +
+      recursosCard(j, i, c) +
       '<div class="dc-box' + (c.dcn > 0 ? ' on' : '') + '"><label>🩸 DANO CONTÍNUO</label><button class="mini-btn" data-st="' + id + ',dcv,-1">−</button><span><b style="font-size:16px">' + c.dcv + '</b> dano</span><button class="mini-btn" data-st="' + id + ',dcv,1">+</button>' +
         '<button class="mini-btn" data-st="' + id + ',dcn,-1">−</button><span><b style="font-size:16px">' + c.dcn + '</b> turnos</span><button class="mini-btn" data-st="' + id + ',dcn,1">+</button></div>' +
       '<div class="tg-linha"><button class="tg' + (c.imo ? ' on verm' : '') + '" data-tg="' + id + ',imo">⛓ IMÓVEL</button>' +
@@ -4282,8 +4307,16 @@
         '<button class="btn-med sup" data-gasto="' + id + ',3"' + (c.sup || c.med || S.med[j] < 3 ? ' disabled' : '') + '>★ SUPREMA (3)</button>') + '</div></div>';
   }
   const pega = s => { const [j, i] = s.split(',').map(Number); return [j, i, S.times[j][i]]; };
-  const NOMES_ST = { ab: 'ações do próximo turno', dn: 'bônus de dano', dd: 'bônus de dados', df: 'Defesa', ds: 'deslocamento', dcv: 'Dano Contínuo', dcn: 'turnos de Dano Contínuo' };
-  const LIM = { ab: [-4, 2], dn: [-9, 9], dd: [-4, 4], df: [-6, 6], ds: [-2, 4], dcv: [0, 9], dcn: [0, 9] };
+  const NOMES_ST = { ab: 'ações do próximo turno', dn: 'bônus de dano', dd: 'bônus de dados', df: 'Defesa', ds: 'deslocamento', dcv: 'Dano Contínuo', dcn: 'turnos de Dano Contínuo', red: 'redução de dano', esc: 'escudo' };
+  const LIM = { ab: [-4, 2], dn: [-9, 9], dd: [-4, 4], df: [-6, 6], ds: [-2, 4], dcv: [0, 9], dcn: [0, 9], red: [0, 9], esc: [0, 9] };
+  function recursosCard(j, i, c){
+    const id = j + ',' + i, rs = RECURSOS[c.k] || [];
+    let h = '';
+    if (rs.length) h += '<div class="rec-linha">' + rs.map(([n, mx]) => '<div class="rec"><label>' + (n === 'Estágio' ? 'ESTÁGIO: ' + ESTAGIOS[rec(c, n)].toUpperCase() : n.toUpperCase()) + '</label><button class="mini-btn" data-rec="' + id + ',' + n + ',-1">−</button><span>' + rec(c, n) + (mx < 60 ? '/' + mx : '') + '</span><button class="mini-btn" data-rec="' + id + ',' + n + ',1">+</button></div>').join('') + '</div>';
+    [['estado', c.estado], ['aspecto', c.aspecto]].forEach(([k, e]) => { if (e) h += '<div class="estado-tag">✦ ' + e.nome.toUpperCase() + (modsTxt(e.mods || {}) ? ' <small>' + modsTxt(e.mods) + '</small>' : '') + '<button class="mini-btn" data-estx="' + id + ',' + k + '" title="Remover">✕</button></div>'; });
+    if (c.k === 'genio' && c.pv * 2 <= c.max) h += '<div class="estado-tag">⚠ PROTOCOLO PRESSÃO <small>+2 dano, +1 alcance</small></div>';
+    return h;
+  }
 
   function alterarPV(j, i, dv){
     const c = S.times[j][i]; if (c.elim) return;
@@ -4316,7 +4349,7 @@
     if (ds.pv) { const [j, i, dv] = ds.pv.split(',').map(Number); alterarPV(j, i, dv); }
     else if (ds.st) {
       const [j, i, campo, dv] = ds.st.split(','); const c = S.times[+j][+i];
-      const nv = clamp(c[campo] + +dv, LIM[campo][0], LIM[campo][1]);
+      const nv = clamp((c[campo] || 0) + +dv, LIM[campo][0], LIM[campo][1]);
       if (nv === c[campo]) return;
       mudar(() => {
         c[campo] = nv;
@@ -4324,6 +4357,14 @@
         if (campo === 'dcn' && nv === 0) c.dcv = 0;
         if (campo === 'dcn' && nv > 0 && c.dcv === 0) c.dcv = 2;
       }, CH[c.k].nome + ': ' + NOMES_ST[campo] + ' ' + (nv > 0 && campo !== 'dcn' && campo !== 'dcv' ? '+' : '') + nv + '.');
+    }
+    else if (ds.rec) {
+      const [j, i, n, dv] = ds.rec.split(','); const c = S.times[+j][+i];
+      mudar(() => { setRec(c, n, rec(c, n) + +dv); }, CH[c.k].nome + ': ' + n + ' ' + (rec(c, n) + +dv) + '.');
+    }
+    else if (ds.estx) {
+      const [j, i, k] = ds.estx.split(','); const c = S.times[+j][+i];
+      mudar(() => { c[k] = null; }, CH[c.k].nome + ' saiu do estado.');
     }
     else if (ds.tg) {
       const [j, i, campo] = ds.tg.split(','); const c = S.times[+j][+i];
@@ -4360,7 +4401,8 @@
           msg += ' Dano Contínuo: −' + dano + ' PV.';
           aviso = '🩸 Dano Contínuo: −' + dano + ' PV' + (c.dcn ? ' (faltam ' + c.dcn + ')' : ' (acabou)');
         }
-        c.acts = clamp(3 + c.ab, 1, 5); c.ab = 0; c.gastas = 0; c.usadas = []; modo = null;
+        c.acts = clamp(3 + c.ab, 1, 5); c.ab = 0; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0;
+        if (c.aspecto && c.aspecto.ate === 'turno') c.aspecto = null;
         S.ativo = [j, i]; S.vez = j;
       }, msg);
       if (aviso) toast(aviso);
@@ -4368,8 +4410,7 @@
     else if (ds.fimturno) {
       const [, , c] = pega(ds.fimturno);
       modo = null;
-      mudar(() => { c.agiu = true; S.ativo = null; passarVez(); }, '✓ ' + CH[c.k].nome + ' encerrou o turno.');
-      if (S.vez === null) toast('Todos agiram. Hora de fechar a rodada!');
+      fimDeTurno(c);
     }
     else if (ds.acao) {
       const [j, i, n] = ds.acao.split(',').map(Number); const c = S.times[j][i];
@@ -4430,7 +4471,7 @@
       S.med = S.med.map(m => Math.min(5, m + 1));
       if (rd.nexus === 0 || rd.nexus === 1) { S.med[rd.nexus] = Math.min(5, S.med[rd.nexus] + 1); extras.push('Zona de Poder: +1 Medidor para ' + S.nomes[rd.nexus]); }
       if (rd.onda) extras.push('Onda para ' + DIRS[rd.onda - 1].toLowerCase());
-      S.times.forEach(t => t.forEach(c => { c.agiu = false; c.med = false; c.acts = 0; c.gastas = 0; }));
+      S.times.forEach(t => t.forEach(c => { c.agiu = false; c.med = false; c.acts = 0; c.gastas = 0; if (c.k === 'cavalo') c.esc = Math.max(c.esc || 0, 1); }));
       S.ativo = null;
       S.rodada = r + 1;
       S.vez = iniciador(S.rodada);
@@ -4505,7 +4546,7 @@
     if (!mostrarTab) return;
     if (selTok && (S.times[selTok[0]][selTok[1]].elim)) selTok = null;
     const sc = selTok ? S.times[selTok[0]][selTok[1]] : null;
-    const desl = sc ? Math.max(1, 2 + sc.ds) : 0;
+    const desl = sc ? Math.max(1, 2 + mod(sc, 'ds')) : 0;
     const sul = S.prim, norte = 1 - S.prim;
     const W = HS * Math.sqrt(3) * 11 + 40, H = HS * 1.5 * 10 + HS * 2 + 20;
     let g = '';
@@ -4628,6 +4669,22 @@
   }
   let estNova = null, estSel = null;
 
+  function fimDeTurno(c){
+    let aviso = '';
+    mudar(() => {
+      c.agiu = true; S.ativo = null; passarVez();
+      if (c.k === 'dinamo') setRec(c, 'Dano sofrido', 0);
+      if (c.k === 'reator' && rec(c, 'Cargas') >= 5 && !c.basicoFeito) aviso = '☢️ O núcleo do Reator Morto explode: inimigos no Raio 1 sofrem 10 de dano e as Cargas zeram.';
+    }, '✓ ' + CH[c.k].nome + ' encerrou o turno.');
+    if (aviso) {
+      mudar(() => {
+        setRec(c, 'Cargas', 0);
+        if (c.pos) pecas((pj, pi, x) => refDe(x)[0] !== refDe(c)[0] && x.pos && dist(x.pos, c.pos) <= 1).forEach(([pj, pi]) => sofrerDano(S.times[pj][pi], 10, {}));
+      }, aviso);
+      toast(aviso, 4000);
+    } else if (S.vez === null) toast('Todos agiram. Hora de fechar a rodada!');
+  }
+
   // ═════════ TURNO GUIADO ═════════
   const DIR6 = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
   const AX = Object.fromEntries(CELLS.map(c => [c.q + ',' + c.r, c.id]));
@@ -4693,8 +4750,7 @@
   }
   function dano(x, v, out){
     if (x.elim || !v) return;
-    x.pv = Math.max(0, x.pv - v); out.push(CH[x.k].nome + ' −' + v + ' PV');
-    if (!x.pv) { const [a, b] = refDe(x).split(',').map(Number); eliminar(a, b); }
+    const q = sofrerDano(x, v, {}); out.push(CH[x.k].nome + ' −' + q.real + ' PV');
   }
   function aparatoMaisProximo(pos){
     const ap = (S.est || []).filter(e => e.tipo === 'Aparato').sort((a, b) => dist(a.cell, pos) - dist(b.cell, pos));
@@ -4746,10 +4802,10 @@
   function rPainel(){
     const box = $('#ptAcao');
     const c = ativoC();
-    if (!c || S.fase !== 'partida') { box.hidden = true; box.innerHTML = ''; modo = null; return; }
+    if (!c || S.fase !== 'partida' || S.auto === false) { box.hidden = true; box.innerHTML = ''; modo = null; return; }
     const [j, i] = S.ativo, ch = CH[c.k], r = restam(c);
     const pips = Array.from({ length: c.acts }, (_, n) => '<i class="' + (n < c.gastas ? 'gasta' : '') + '"></i>').join('');
-    const desl = Math.max(1, 2 + c.ds);
+    const desl = Math.max(1, 2 + mod(c, 'ds'));
     const btn = (attr, ico, nome, info, mot, extra) => '<button class="ac-bt' + (extra || '') + '" ' + attr + (mot ? ' disabled' : '') + '><span class="ac-ic">' + ico + '</span><span class="ac-tx"><b>' + nome + '</b><small>' + (mot ? '🚫 ' + mot : info) + '</small></span></button>';
     const enem = pecas((a, b, x) => a !== j && (!c.pos || (x.pos && dist(c.pos, x.pos) === 1)));
     let h = '<div class="ac-topo" style="--tc:var(--j' + j + ');--ac:' + ch.ac + '"><span class="ac-icone">' + ch.icon + '</span><div><small>TURNO DE ' + nomeJ(j).toUpperCase() + '</small><b>' + ch.nome + '</b></div>' +
@@ -4774,12 +4830,18 @@
       const v = pecas((pj, pi, x) => pj === j && temSobeAi(x) && x.pos && c.pos && dist(x.pos, c.pos) === 1);
       if (v.length) { const vc = S.times[v[0][0]][v[0][1]]; h += btn('data-subir="' + v[0].join(',') + '"', '🚗', 'SUBIR NO ' + CH[vc.k].nome, '1 ação · andam juntos', r < 1 ? 'sem ações' : ''); }
     }
+    if (c.k === 'reator') h += btn('data-ac="carga"', '⚛️', 'CARREGAR', '2 ações · +1 Carga (' + rec(c, 'Cargas') + '/5)', r < 2 ? 'ações insuficientes' : rec(c, 'Cargas') >= 5 ? 'Cargas no máximo' : '');
     const sm = motivo(ch.supH, true);
     h += btn('data-hab="sup"', '★', ch.supH.n.toUpperCase(), 'SUPREMA · 3 Medidor + ' + ch.supH.c + ' ações · ' + ch.supH.a.toLowerCase(), sm, ' sup');
     h += '</div>';
     const podeApr = !c.med && S.med[j] >= 1;
     h += '<div class="ac-rodape"><label class="ac-apr' + (podeApr ? '' : ' off') + '"><input type="checkbox" id="acApr"' + (aprimorarMarcado && podeApr ? ' checked' : '') + (podeApr ? '' : ' disabled') + '> ⚡ APRIMORAR a próxima habilidade (1 Medidor)' + (c.med ? ' · já gastou nesta rodada' : S.med[j] < 1 ? ' · sem Medidor' : '') + '</label>' +
       '<button class="btn-ghost sm" data-ac="estrutura">🏗️ ESTRUTURA</button><button class="btn-turno fim" data-fimturno="' + j + ',' + i + '">✓ ENCERRAR TURNO</button></div>';
+    const asp = aspectoDe(ch);
+    if (asp) { const ops = opcoes(asp); h += '<div class="ac-linha"><b>' + asp.n.toUpperCase() + ':</b>' + ops.map(o => '<button class="tg' + (c.aspecto && c.aspecto.nome === o.nome ? ' on' : '') + '" data-aspecto="' + o.nome + '">' + o.nome + '</button>').join('') + '</div>'; }
+    if (c.k === 'kazan') h += '<div class="ac-linha"><b>🔥 BRASAS NO PRÓXIMO TESTE:</b>' + Array.from({ length: rec(c, 'Brasas') + 1 }, (_, q) => '<button class="tg' + ((c.kz || 0) === q ? ' on' : '') + '" data-kz="' + q + '">' + q + '</button>').join('') + '<small>tem ' + rec(c, 'Brasas') + '/3 · +1 dado por Brasa</small></div>';
+    if (c.k === 'ritmista') h += '<div class="ac-linha"><b>🎶 RITMO:</b> ' + ESTAGIOS[rec(c, 'Estágio')] + ' · ' + rec(c, 'Compassos') + '/4 Compassos</div>';
+    if (c.estado) h += '<div class="ac-linha"><b>✦ ESTADO:</b> ' + c.estado.nome + ' <small>' + modsTxt(c.estado.mods || {}) + '</small></div>';
     const pas = ch.habs.filter(x => !x.c);
     if (pas.length) h += '<details class="ac-pas"><summary>Passivas de ' + ch.nome + '</summary>' + pas.map(x => '<p><b>' + x.n + ':</b> ' + x.d + '</p>').join('') + '</details>';
     if (!c.pos) h += '<p class="ac-aviso">Posicione ' + ch.nome + ' no tabuleiro para o jogo checar alcance e alvos.</p>';
@@ -4787,7 +4849,7 @@
   }
   let aprimorarMarcado = false;
   function bannerModo(){
-    const c = ativoC(), desl = c ? Math.max(1, 2 + c.ds) : 2;
+    const c = ativoC(), desl = c ? Math.max(1, 2 + mod(c, 'ds')) : 2;
     const nomeM = modo.t === 'mover' ? '👣 MOVER: toque numa casa amarela (até ' + desl + ' casas)' : modo.t === 'basico' ? '👊 ATAQUE BÁSICO: toque num inimigo adjacente' :
       modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
     const conf = modo.t === 'hab' && (modo.alvosInfo.tipo === 'todos' || modo.alvosInfo.tipo === 'linha') && (modo.dir !== undefined || modo.alvosInfo.tipo === 'todos');
@@ -4807,13 +4869,19 @@
     const b = e.target.closest('button'); if (!b || b.disabled) return;
     const c = ativoC(); if (!c) return;
     if (b.dataset.cancelar !== undefined) return cancelarModo();
-    if (b.dataset.fimturno) { modo = null; mudar(() => { c.agiu = true; S.ativo = null; passarVez(); }, '✓ ' + CH[c.k].nome + ' encerrou o turno.'); if (S.vez === null) toast('Todos agiram. Hora de fechar a rodada!'); return; }
+    if (b.dataset.fimturno) { modo = null; fimDeTurno(c); return; }
     if (b.dataset.confirmar !== undefined) return resolverHab();
     if (b.dataset.ac === 'mover') return iniciarModo({ t: 'mover' });
     if (b.dataset.ac === 'basico') return iniciarModo({ t: 'basico' });
     if (b.dataset.ac === 'estrutura') return abrirEstruturas();
     if (b.dataset.ac === 'carona') return iniciarModo({ t: 'carona' });
     if (b.dataset.descer) return iniciarModo({ t: 'descer', quem: b.dataset.descer });
+    if (b.dataset.ac === 'carga') return mudar(() => { setRec(c, 'Cargas', rec(c, 'Cargas') + 1); c.gastas += 2; }, '⚛️ ' + CH[c.k].nome + ' carregou: ' + (rec(c, 'Cargas') + 1) + ' Carga(s).');
+    if (b.dataset.kz !== undefined) { c.kz = +b.dataset.kz; salvar(); rPainel(); return; }
+    if (b.dataset.aspecto) {
+      const asp = aspectoDe(CH[c.k]), o = opcoes(asp).find(x => x.nome === b.dataset.aspecto);
+      return mudar(() => { c.aspecto = { nome: o.nome, mods: parseMods(o.txt), ate: 'turno' }; }, CH[c.k].nome + ' escolheu ' + o.nome + '.');
+    }
     if (b.dataset.subir) {
       const [vj, vi] = b.dataset.subir.split(',').map(Number), v = S.times[vj][vi];
       return mudar(() => { c.carona = vj + ',' + vi; c.pos = v.pos; c.gastas++; }, '🚗 ' + CH[c.k].nome + ' subiu no ' + CH[v.k].nome + '.');
@@ -4833,7 +4901,7 @@
     const out = { casas: new Set(), toks: new Set() };
     const c = ativoC(); if (!modo || !c) return out;
     if (modo.t === 'mover' && c.pos) {
-      const desl = Math.max(1, 2 + c.ds);
+      const desl = Math.max(1, 2 + mod(c, 'ds'));
       CELLS.forEach(x => { if (dist(c.pos, x.id) <= desl && x.id !== c.pos && !obstaculo(x.id) && !ocupante(x.id)) out.casas.add(x.id); });
     } else if (modo.t === 'mover') CELLS.forEach(x => { if (!obstaculo(x.id) && !ocupante(x.id)) out.casas.add(x.id); });
     if (modo.t === 'basico') pecas((j, i, x) => j !== S.ativo[0] && (!c.pos || (x.pos && dist(c.pos, x.pos) === 1))).forEach(p => out.toks.add(p.join(',')));
@@ -4909,24 +4977,65 @@
     return true;
   }
 
-  // efeitos lidos do texto da ficha
-  function efeitos(h, aprim){
-    const txt = (h.d + ' ' + (aprim && h.p ? h.p : '')).replace(/<[^>]+>/g, '');
+  // ── modificadores: status + estados + recursos ──
+  const RECURSOS = { kazan: [['Brasas', 3]], ritmista: [['Compassos', 4], ['Estágio', 3]], reator: [['Cargas', 5]], forasteiro: [['Amostras', 3]], maligno: [['Peso de Dor', 2]], genio: [['Armadura', 2]], dinamo: [['Dano sofrido', 60]] };
+  const ESTAGIOS = ['—', 'Aquecimento', 'Embalo', 'Apogeu'];
+  const rec = (c, n) => (c.rec && c.rec[n]) || 0;
+  function setRec(c, n, v){ const lim = (RECURSOS[c.k] || []).find(x => x[0] === n); c.rec = c.rec || {}; c.rec[n] = clamp(v, 0, lim ? lim[1] : 99); }
+  function mod(c, k){
+    let v = c[k] || 0;
+    [c.estado, c.aspecto].forEach(e => { if (e && e.mods && e.mods[k]) v += e.mods[k]; });
+    if (c.k === 'ritmista') { const s = rec(c, 'Estágio'); if (k === 'dd' && s >= 1) v += 1; if (k === 'ds' && s >= 2) v += 1; if (k === 'dn' && s >= 3) v += 2; }
+    if (c.k === 'genio' && k === 'dn' && c.pv * 2 <= c.max) v += 2;
+    return v;
+  }
+  const adef = c => [c.estado, c.aspecto].reduce((s, e) => s + ((e && e.mods && e.mods.adef) || 0), 0);
+  function parseMods(txt){
+    const m = {}; let t = txt, x;
+    const a = /alvos[^.]*?([−-])(\d+) na Defesa/.exec(t); if (a) { m.adef = -a[2]; t = t.replace(a[0], ''); }
+    const sg = s => (s === '+' ? 1 : -1);
+    if ((x = /([−+-])(\d+) na Defesa/.exec(t))) m.df = sg(x[1]) * x[2];
+    if ((x = /([−+-])(\d+) de dano/.exec(t))) m.dn = sg(x[1]) * x[2];
+    if ((x = /([−+-])(\d+) dados?/.exec(t))) m.dd = sg(x[1]) * x[2];
+    if ((x = /([−+-])(\d+) casas? de deslocamento/.exec(t))) m.ds = sg(x[1]) * x[2];
+    return m;
+  }
+  const NM = { df: 'Defesa', dn: 'dano', dd: 'dado', ds: 'desloc.', adef: 'Def. dos alvos' };
+  const modsTxt = m => Object.entries(m).filter(([, v]) => v).map(([k, v]) => (v > 0 ? '+' : '−') + Math.abs(v) + ' ' + NM[k]).join(', ');
+  const limpo = s => (s || '').replace(/<[^>]+>/g, '');
+  function opcoes(h){
+    const t = limpo(h.d);
+    if (t.indexOf('•') >= 0) return t.split('•').slice(1).map(s => { const i = s.indexOf(':'); return { nome: s.slice(0, i).trim(), txt: s.slice(i + 1).trim() }; }).filter(o => o.nome && o.nome.length < 30);
+    const m = /Escolha: ([A-ZÀ-Úa-zà-ú]+) \(([^)]+)\) ou ([A-ZÀ-Úa-zà-ú]+) \(([^)]+)\)/.exec(t);
+    if (m) return [{ nome: m[1], txt: m[2] }, { nome: m[3], txt: m[4] }];
+    return null;
+  }
+  const ehEstado = h => h.a === 'PESSOAL' && /dura até usar esta habilidade de novo|usar outra forma/i.test(limpo(h.d));
+  const aspectoDe = ch => ch.habs.find(x => !x.c && /No início de cada turno/.test(limpo(x.d)) && limpo(x.d).indexOf('•') >= 0);
+
+  // efeitos lidos do texto da ficha (ou da opção escolhida)
+  function efeitos(h, aprim, optTxt){
+    const base = optTxt || limpo(h.d), apr = aprim && h.p ? limpo(h.p) : '';
+    const txt = base + ' ' + apr;
     const e = {};
-    const dn = /(\d+) de dano/.exec(h.d.replace(/<[^>]+>/g, ''));
-    if (dn && !/Dano Contínuo \d+ de dano/.test(txt)) e.dano = +dn[1];
-    if (aprim && h.p) { const m = /\+(\d+) de dano/.exec(h.p.replace(/<[^>]+>/g, '')); if (m && e.dano) e.dano += +m[1]; }
+    const dn = /(?<![−+\-\d])(\d+) de dano(?! a menos)/.exec(base);
+    if (dn && !/Dano Contínuo \d+ de dano/.test(txt) && !/causa(?:m)? [−-]/.test(base.slice(Math.max(0, dn.index - 12), dn.index))) e.dano = +dn[1];
+    if (apr) { const m = /\+(\d+) de dano/.exec(apr); if (m && e.dano) e.dano += +m[1]; const m2 = /Causa (\d+) de dano/.exec(apr); if (m2 && e.dano) e.dano = +m2[1]; }
+    if (/Dano Psíquico/.test(base)) e.psi = true;
     const dc = /Dano Contínuo (\d+) por (\d+)/.exec(txt); if (dc) e.dc = [+dc[1], +dc[2]];
     const cu = /(?:cura|recupera|recuperam|curar)[^.]{0,40}?(\d+) PV/i.exec(txt) || /(\d+) PV/.exec(h.t.includes('RESTAURAÇÃO') ? txt : '');
     if (cu && (h.t.includes('RESTAURAÇÃO') || /cura|recupera/i.test(txt))) e.cura = +cu[1];
-    if (aprim && h.p) { const m = /cura (\d+)|(\d+) PV/.exec(h.p.replace(/<[^>]+>/g, '')); if (m && e.cura) e.cura = +(m[1] || m[2]); }
-    const df = /([−-]|\+)(\d+) na Defesa/.exec(txt); if (df) e.def = (df[1] === '+' ? 1 : -1) * +df[2];
+    if (apr) { const m = /cura (\d+)|(\d+) PV/.exec(apr); if (m && e.cura) e.cura = +(m[1] || m[2]); }
+    const sai = /causa(?:m)? [−-](\d+) de dano em seus ataques/.exec(txt); if (sai) e.dnAlvo = -(+sai[1]);
+    const red = /contra (?:ele|ela) causam [−-](\d+) de dano/.exec(txt); if (red) e.red = +red[1];
+    const esc = /(\d+) de dano a menos|sofre (\d+) a menos/.exec(txt); if (esc) e.esc = +(esc[1] || esc[2]);
+    const t2 = txt.replace(/causa(?:m)? [−-]\d+ de dano[^.]*/g, '');
+    const df = /([−-]|\+)(\d+) na Defesa/.exec(t2); if (df) e.def = (df[1] === '+' ? 1 : -1) * +df[2];
     const pa = /perde(?:m)? (\d+) aç/.exec(txt); if (pa) e.acao = -(+pa[1]);
     const ga = /(?:ganha|recebe)(?:m)? \+?(\d+) aç/.exec(txt); if (ga) e.acao = +ga[1];
-    if (/Imóvel/.test(txt)) e.imo = true;
+    if (/Imóve(l|is)/.test(txt) && !/não pode ser|Imóvel nesse período/.test(txt)) e.imo = true;
     const dd2 = /([−-]|\+)(\d+) dados?/.exec(txt); if (dd2) e.dados = (dd2[1] === '+' ? 1 : -1) * +dd2[2];
     const ds = /([−-]|\+)(\d+) casas? de deslocamento/.exec(txt); if (ds) e.desl = (ds[1] === '+' ? 1 : -1) * +ds[2];
-    const base = h.d.replace(/<[^>]+>/g, ''), apr = aprim && h.p ? h.p.replace(/<[^>]+>/g, '') : '';
     const pRe = /empurr\w*([^.]{0,50}?)(\d+) casas?([^.]{0,25})/i;
     const pm = pRe.exec(apr) || pRe.exec(base);
     if (pm && !/lado|fora da faixa/.test(pm[3] + pm[1])) e.empurra = +pm[2];
@@ -4940,44 +5049,96 @@
     const blq = /bloqueado[^.]*?\+(\d+) de dano/i.exec(base); if (blq) e.bloqueio = +blq[1];
     return e;
   }
+  // dano recebido: redução, escudo e recursos ligados a dano
+  function sofrerDano(t, v, o){
+    o = o || {};
+    if (t.elim || v <= 0) return 0;
+    let real = v, nota = [];
+    if (!o.psi) {
+      if (t.red) { real = Math.max(0, real - t.red); nota.push('−' + t.red + ' redução'); }
+      if (t.esc && real > 0) { const a = Math.min(t.esc, real); real -= a; nota.push('escudo −' + a); t.esc = 0; }
+    }
+    t.pv = Math.max(0, t.pv - real);
+    if (t.k === 'dinamo') setRec(t, 'Dano sofrido', rec(t, 'Dano sofrido') + real);
+    if (t.k === 'maligno' && o.ataque && real > 0) setRec(t, 'Peso de Dor', rec(t, 'Peso de Dor') + 1);
+    if (!t.pv) { const [a, b] = refDe(t).split(',').map(Number); eliminar(a, b); }
+    return { real, nota };
+  }
   function rolarD10(n){ return Array.from({ length: Math.max(1, n) }, () => d(10)); }
+  // bônus de dados vindos de recursos (Brasas escolhidas, Peso de Dor)
+  function dadosExtra(c){
+    let n = 0, notas = [];
+    if (c.k === 'kazan' && c.kz) { n += c.kz; notas.push(c.kz + ' Brasa(s): +' + c.kz + ' dado'); }
+    if (c.k === 'maligno' && rec(c, 'Peso de Dor')) { n += rec(c, 'Peso de Dor'); notas.push('Peso de Dor: +' + rec(c, 'Peso de Dor') + ' dado'); }
+    return { n, notas };
+  }
   function ataqueBasico(alvo){
-    const [aj, ai] = S.ativo, c = ativoC(), ch = CH[c.k], t = S.times[alvo[0]][alvo[1]];
-    const apt = atkIdx(ch);
-    let n = ch.apt[apt] + c.dd, bonus = c.dn, def = defesas(t)[apt], notas = [];
+    const [aj] = S.ativo, c = ativoC(), ch = CH[c.k], t = S.times[alvo[0]][alvo[1]];
+    const apt = atkIdx(ch), ex = dadosExtra(c);
+    let n = ch.apt[apt] + mod(c, 'dd') + ex.n, bonus = mod(c, 'dn'), def = clamp(defesas(t)[apt] + adef(c), 2, 10), notas = ex.notas.slice();
     if (S.cen === 'ruptura' && c.duelo) { if (c.duelo === t.k) { n++; bonus += 2; notas.push('duelo: +1 dado e +2 de dano'); } else { bonus -= 2; def = clamp(def + 1, 2, 10); notas.push('fora do duelo: −2 de dano e +1 na Defesa do alvo'); } }
+    if (c.k === 'reator' && rec(c, 'Cargas')) { bonus += 2 * rec(c, 'Cargas'); notas.push(rec(c, 'Cargas') + ' Carga(s): +' + 2 * rec(c, 'Cargas') + ' de dano se acertar'); }
+    if (c.k === 'dinamo' && !c.condUsado && rec(c, 'Dano sofrido') >= 6) { const b = 2 * Math.floor(rec(c, 'Dano sofrido') / 6); bonus += b; notas.push('Condutor Natural: +' + b + ' de dano'); }
+    if (mod(c, 'dn') !== c.dn) notas.push('estado/recurso: ' + (mod(c, 'dn') - c.dn > 0 ? '+' : '') + (mod(c, 'dn') - c.dn) + ' de dano');
     const v = rolarD10(n), hits = v.filter(x => x >= def).length;
     const dano = hits ? Math.max(1, hits * 2 + bonus) : 0;
     mostrarResultado({
       titulo: '👊 ATAQUE BÁSICO', sub: ch.nome + ' ataca ' + CH[t.k].nome + ' · ' + APT[apt] + ' ' + n + ' dados contra Defesa ' + def,
-      dados: v, def, notas, desc: '',
+      dados: v, def, notas, desc: '', hitsBrasa: hits, basico: true,
       linhas: [{ alvo, ok: hits > 0, txt: hits ? hits + (hits > 1 ? ' acertos' : ' acerto') + ' → ' + dano + ' de dano' : 'errou', ef: hits ? [{ k: 'dano', v: dano, on: true, txt: dano + ' de dano' }].concat(
         ch.habs.some(x => !x.c && /acerta um Ataque Básico, empurra/.test(x.d)) && t.pos ? [{ k: 'empurra', v: hits, on: true, txt: '↗ empurrar ' + hits + (hits > 1 ? ' casas' : ' casa') + ' (Manoplas)' }] : []) : [] }],
-      custo: 1, nome: null, sup: false, aprim: false
+      extras: [], pre: [], ef: {}, custo: 1, nome: null, sup: false, aprim: false, ataque: true, usouDados: true
     });
   }
   function resolverHab(){
     const m = modo; modo = null;
-    const c = ativoC(), ch = CH[c.k], h = m.h, [aj] = S.ativo;
-    const ef = efeitos(h, m.aprim);
+    const c = ativoC(), ch = CH[c.k], h = m.h;
+    let ops = opcoes(h);
+    if (c.k === 'reator' && h.n === 'Blindagem Nuclear') ops = rec(c, 'Cargas') ? [{ nome: '1 Carga', txt: '+1 na Defesa', cargas: 1 }].concat(rec(c, 'Cargas') >= 2 ? [{ nome: '2 Cargas', txt: '+2 na Defesa', cargas: 2 }] : []) : [{ nome: 'Sem Cargas', txt: '+1 casa de deslocamento' }];
+    if (c.k === 'reator' && h.n === 'Blindagem Nuclear' && m.aprim) {}
+    const multi = !!(ops && m.aprim && h.p && /as duas|os dois|Os dois|Aplica as duas/.test(limpo(h.p)));
+    const ex = h.x >= 0 ? dadosExtra(c) : { n: 0, notas: [] };
+    const n = h.x >= 0 ? ch.apt[h.x] + mod(c, 'dd') + ex.n : 0;
+    const v = h.x >= 0 ? rolarD10(n) : [];
+    const r = {
+      titulo: (m.sup ? '★ ' : tipoIcone(h) + ' ') + h.n.toUpperCase() + (m.aprim ? ' ⚡' : ''),
+      sub: ch.nome + ' · ' + h.c + (h.c > 1 ? ' ações' : ' ação') + (m.sup ? ' + 3 Medidor' : m.aprim ? ' + 1 Medidor' : '') + (h.x >= 0 ? ' · teste de ' + APT[h.x] + ' com ' + n + (n > 1 ? ' dados' : ' dado') : ' · sem teste'),
+      dados: v, def: null, max: v.length ? Math.max(...v) : 0, notas: ex.notas, desc: h.d + (m.aprim && h.p ? '<div class="hab-med"><span class="pill t-med">APRIMORADO</span> ' + h.p + '</div>' : ''),
+      custo: h.c, nome: h.n, sup: m.sup, aprim: m.aprim, ops, multi, opSel: ops ? [0].concat(multi ? ops.map((_, i) => i).slice(1) : []) : null, m, h, usouDados: h.x >= 0,
+      ataque: h.t.includes('ATAQUE')
+    };
+    montar(r);
+    mostrarResultado(r);
+  }
+  // monta linhas de efeito conforme a opção escolhida
+  function montar(r){
+    const m = r.m, h = r.h, c = ativoC(), ch = CH[c.k], [aj] = S.ativo;
+    const optTxt = r.ops ? r.opSel.map(i => r.ops[i].txt).join(' ') : null;
+    const ef = efeitos(h, r.aprim, optTxt);
+    if (c.k === 'reator' && h.n === 'Fissão Descontrolada' && rec(c, 'Cargas')) { ef.dano = (ef.dano || 0) + 2 * rec(c, 'Cargas'); r.notas = r.notas.concat(rec(c, 'Cargas') + ' Carga(s): +' + 2 * rec(c, 'Cargas') + ' de dano'); }
+    if (c.k === 'kazan' && c.kz && ef.dc) ef.dc = [ef.dc[0], ef.dc[1] + c.kz];
+    const bonusDn = mod(c, 'dn') + ((c.k === 'dinamo' && !c.condUsado && r.ataque) ? 2 * Math.floor(rec(c, 'Dano sofrido') / 6) : 0);
     const alvos = m.sel || [];
-    const precisaTeste = h.x >= 0;
-    const n = precisaTeste ? ch.apt[h.x] + c.dd : 0;
-    const v = precisaTeste ? rolarD10(n) : [];
-    const max = v.length ? Math.max(...v) : 0;
-    const linhasR = [];
-    const self = alvos.length === 1 && alvos[0][0] === S.ativo[0] && alvos[0][1] === S.ativo[1];
-    alvos.forEach(al => {
+    const self = alvos.length === 1 && alvos[0][0] === aj && alvos[0][1] === S.ativo[1];
+    const linhasR = [], extras = [], pre = [];
+    let hitsBrasa = 0;
+    if (ehEstado(h)) {
+      const nome = r.ops ? r.ops[r.opSel[0]].nome : h.n;
+      const mods = parseMods(optTxt || limpo(h.d));
+      if (r.aprim && /Dobra/.test(limpo(h.p || ''))) Object.keys(mods).forEach(k => { mods[k] *= 2; });
+      extras.push({ k: 'estado', v: { nome, mods, hab: h.n }, on: true, txt: 'Entrar em ' + nome + (modsTxt(mods) ? ' (' + modsTxt(mods) + ')' : '') + ' até trocar' });
+    } else alvos.forEach(al => {
       const t = S.times[al[0]][al[1]], inimigo = al[0] !== aj;
       let ok = true, txt = 'sem teste', def = null;
-      if (precisaTeste && inimigo) { def = defesas(t)[h.x]; ok = max >= def; txt = ok ? 'atingido (Defesa ' + def + ')' : 'escapou (Defesa ' + def + ')'; }
+      if (h.x >= 0 && inimigo) { def = clamp(defesas(t)[h.x] + adef(c), 2, 10); ok = r.max >= def; txt = ok ? 'atingido (Defesa ' + def + ')' : 'escapou (Defesa ' + def + ')'; hitsBrasa = Math.max(hitsBrasa, r.dados.filter(x => x >= def).length); }
       else if (!inimigo) txt = self ? 'em si mesmo' : 'aliado';
       const lista = [];
       if (ok) {
         if (inimigo) {
-          if (ef.dano) { const dv = Math.max(1, ef.dano + c.dn); lista.push({ k: 'dano', v: dv, on: true, txt: dv + ' de dano' }); }
+          if (ef.dano) { const dv = Math.max(1, ef.dano + bonusDn); lista.push({ k: 'dano', v: dv, on: true, psi: ef.psi, txt: dv + (ef.psi ? ' de Dano Psíquico' : ' de dano') }); }
           if (ef.dc) lista.push({ k: 'dc', v: ef.dc, on: true, txt: 'Dano Contínuo ' + ef.dc[0] + ' por ' + ef.dc[1] });
           if (ef.def && ef.def < 0) lista.push({ k: 'def', v: ef.def, on: true, txt: '−' + (-ef.def) + ' na Defesa' });
+          if (ef.dnAlvo) lista.push({ k: 'dnAlvo', v: ef.dnAlvo, on: true, txt: 'causa −' + (-ef.dnAlvo) + ' de dano nos ataques' });
           if (ef.acao && ef.acao < 0) lista.push({ k: 'acao', v: ef.acao, on: true, txt: '−' + (-ef.acao) + ' ação no próximo turno' });
           if (ef.imo) lista.push({ k: 'imo', v: true, on: true, txt: 'fica Imóvel' });
           if (ef.dados && ef.dados < 0) lista.push({ k: 'dados', v: ef.dados, on: true, txt: '−' + (-ef.dados) + ' dado' });
@@ -4987,6 +5148,8 @@
         } else {
           if (ef.cura) lista.push({ k: 'cura', v: ef.cura, on: true, txt: '+' + ef.cura + ' PV' });
           if (ef.def && ef.def > 0) lista.push({ k: 'def', v: ef.def, on: true, txt: '+' + ef.def + ' na Defesa' });
+          if (ef.red) lista.push({ k: 'red', v: ef.red, on: true, txt: 'reduz ' + ef.red + ' de dano recebido' });
+          if (ef.esc) lista.push({ k: 'esc', v: ef.esc, on: true, txt: 'escudo: o próximo dano vem com ' + ef.esc + ' a menos' });
           if (ef.acao && ef.acao > 0) lista.push({ k: 'acao', v: ef.acao, on: true, txt: '+' + ef.acao + ' ação' });
           if (ef.dados && ef.dados > 0) lista.push({ k: 'dados', v: ef.dados, on: true, txt: '+' + ef.dados + ' dado' });
           if (ef.desl && ef.desl > 0) lista.push({ k: 'desl', v: ef.desl, on: true, txt: '+' + ef.desl + ' de deslocamento' });
@@ -4994,10 +5157,9 @@
       }
       linhasR.push({ alvo: al, ok, txt, ef: lista });
     });
-    const extras = [], pre = [];
     const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
-    if (ef.ocupar && alvo1 && linhasR[0].ok) extras.push({ k: 'ocupar', v: alvos[0], on: true, txt: ch.nome + ' termina na casa onde o alvo estava' });
+    if (ef.ocupar && alvo1 && linhasR[0] && linhasR[0].ok) extras.push({ k: 'ocupar', v: alvos[0], on: true, txt: ch.nome + ' termina na casa onde o alvo estava' });
     if (c.k === 'drive' && h.n === 'Rasante' && m.cel) {
       const linha = alvosDe(h).casas.filter(([, di]) => di === m.dir).map(([id]) => id);
       pecas((pj, pi, x) => pj === aj && x !== c && !x.carona && x.pos && linha.some(id => dist(id, x.pos) <= 1)).forEach(p => extras.push({ k: 'carona', v: p, on: false, txt: CH[S.times[p[0]][p[1]].k].nome + ' sobe no veículo (grátis)' }));
@@ -5005,31 +5167,42 @@
     if (m.cel && h.t.includes('ESTRUTURA')) { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, m.cel], on: true, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + m.cel }); }
     if (m.cel && !ef.ocupar && h.t.includes('MOBILIDADE') && /aparece|desloca|despenca|avança|desliza|dispara/i.test(h.d) && !ocupante(m.cel)) extras.push({ k: 'mover', v: m.cel, on: true, txt: 'Mover ' + ch.nome + ' para ' + m.cel });
     if (!m.cel && h.t.includes('ESTRUTURA') && c.pos && h.a === 'PESSOAL') { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, c.pos], on: false, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + c.pos }); }
-    mostrarResultado({
-      titulo: (m.sup ? '★ ' : tipoIcone(h) + ' ') + h.n.toUpperCase() + (m.aprim ? ' ⚡' : ''),
-      sub: ch.nome + ' · ' + h.c + (h.c > 1 ? ' ações' : ' ação') + (m.sup ? ' + 3 Medidor' : m.aprim ? ' + 1 Medidor' : '') + (precisaTeste ? ' · teste de ' + APT[h.x] + ' com ' + n + (n > 1 ? ' dados' : ' dado') : ' · sem teste'),
-      dados: v, def: null, max, notas: [], desc: h.d + (m.aprim && h.p ? '<div class="hab-med"><span class="pill t-med">APRIMORADO</span> ' + h.p + '</div>' : ''),
-      linhas: linhasR, extras, pre, ef, origem: (m.cel && /Raio \d/.test(h.d) && tipoAlc(h) === 'ALCANCE') ? m.cel : null, custo: h.c, nome: h.n, sup: m.sup, aprim: m.aprim, semAlvo: !alvos.length && h.a !== 'PESSOAL'
-    });
+    // recursos
+    if (c.k === 'ritmista') {
+      if (/Ápice/.test(h.n) || /entra no Estágio Apogeu/.test(limpo(h.d))) extras.push({ k: 'apice', on: true, txt: '🎶 Entrar no Estágio Apogeu' });
+      const cp = /^(\d+) Compassos?\./.exec(limpo(h.d));
+      if (cp) { const novo = rec(c, 'Compassos') + +cp[1]; extras.push({ k: 'compasso', v: +cp[1], on: true, txt: '🎶 +' + cp[1] + ' Compasso' + (+cp[1] > 1 ? 's' : '') + (novo === 4 ? ' → sobe para ' + ESTAGIOS[Math.min(3, rec(c, 'Estágio') + 1)] : novo > 4 ? ' → passa de 4 e QUEBRA o Ritmo' : ' (' + novo + '/4)') }); }
+    }
+    if (c.k === 'reator' && (h.n === 'Fissão Descontrolada') && rec(c, 'Cargas')) extras.push({ k: 'gastaCargas', v: rec(c, 'Cargas'), on: true, txt: '⚛️ consumir ' + rec(c, 'Cargas') + ' Carga(s)' });
+    if (c.k === 'reator' && h.n === 'Blindagem Nuclear' && r.ops && r.ops[r.opSel[0]].cargas) {
+      const q = r.ops[r.opSel[0]].cargas;
+      extras.push({ k: 'gastaCargas', v: q, on: true, txt: '⚛️ consumir ' + q + ' Carga(s)' });
+      extras.push({ k: 'selfdef', v: q * (r.aprim ? 1 : 1), on: true, txt: ch.nome + ' +' + q + ' na Defesa' });
+    }
+    if (c.k === 'reator' && h.n === 'Blindagem Nuclear' && r.ops && !r.ops[r.opSel[0]].cargas) extras.push({ k: 'selfdesl', v: 1, on: true, txt: ch.nome + ' +1 de deslocamento' });
+    r.linhas = linhasR; r.extras = extras; r.pre = pre; r.ef = ef; r.hitsBrasa = hitsBrasa;
+    r.origem = (m.cel && /Raio \d/.test(h.d) && tipoAlc(h) === 'ALCANCE') ? m.cel : null;
+    r.semAlvo = !alvos.length && h.a !== 'PESSOAL' && !ehEstado(h);
   }
   let res = null;
   function mostrarResultado(r){
     res = r;
     const dadosH = r.dados.length ? '<div class="dd-dados">' + r.dados.map((x, n) => '<i style="animation-delay:' + n * 70 + 'ms" class="' + (r.def !== null ? (x >= r.def ? 'hit' : 'miss') : (x === r.max ? 'hit' : 'miss')) + '">' + x + '</i>').join('') + '</div>' : '';
+    const opsH = r.ops ? '<div class="rs-ops"><b>' + (r.multi ? 'EFEITOS (aprimorado: pode marcar os dois)' : 'ESCOLHA O EFEITO') + '</b>' + r.ops.map((o, i) => '<button data-op="' + i + '" class="' + (r.opSel.includes(i) ? 'on' : '') + '"><strong>' + o.nome + '</strong><small>' + o.txt + '</small></button>').join('') + '</div>' : '';
     let lin = r.linhas.map((l, li) => {
       const t = S.times[l.alvo[0]][l.alvo[1]];
       return '<div class="rs-alvo ' + (l.ok ? 'ok' : 'no') + '"><div class="rs-h"><span>' + CH[t.k].icon + '</span><b>' + CH[t.k].nome + '</b><em>' + l.txt + '</em></div>' +
-        (l.ef.length ? '<div class="rs-ef">' + l.ef.map((e, ei) => '<label><input type="checkbox" data-ef="' + li + ',' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + '</label>').join('') + '</div>' : '') + '</div>';
+        (l.ef.length ? '<div class="rs-ef">' + l.ef.map((e, ei) => '<label><input type="checkbox" data-ef="' + li + ',' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + (e.k === 'dano' && !e.psi && (t.red || t.esc) ? ' <i class="rs-red">(' + [t.red ? 'redução ' + t.red : '', t.esc ? 'escudo ' + t.esc : ''].filter(Boolean).join(', ') + ')</i>' : '') + '</label>').join('') + '</div>' : '') + '</div>';
     }).join('');
     if (r.semAlvo) lin += '<p class="rs-nota">Nenhum personagem foi atingido.</p>';
     if (r.pre && r.pre.length) lin = '<div class="rs-ef extra">' + r.pre.map((e, ei) => '<label><input type="checkbox" data-pre="' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + '</label>').join('') + '</div>' + lin;
     if (r.extras && r.extras.length) lin += '<div class="rs-ef extra">' + r.extras.map((e, ei) => '<label><input type="checkbox" data-ex="' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + '</label>').join('') + '</div>';
     $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>' + r.titulo + '</h3></div><div class="dd-corpo"><p class="rs-sub">' + r.sub + '</p>' +
-      (r.notas.length ? '<p class="rs-nota">' + r.notas.join(' · ') + '</p>' : '') + dadosH + lin +
-      (r.desc ? '<details class="rs-desc"' + (r.linhas.some(l => l.ok && !l.ef.length) || !r.linhas.length ? ' open' : '') + '><summary>O que a ficha diz</summary><p>' + r.desc + '</p></details>' : '') +
+      (r.notas.length ? '<p class="rs-nota">' + r.notas.join(' · ') + '</p>' : '') + dadosH + opsH + lin +
+      (r.desc ? '<details class="rs-desc"' + (r.linhas.some(l => l.ok && !l.ef.length) || (!r.linhas.length && !r.extras.length) ? ' open' : '') + '><summary>O que a ficha diz</summary><p>' + r.desc + '</p></details>' : '') +
       '<p class="rs-nota">Marque o que vale e aplique. Empurrões, puxões e avanços são feitos no tabuleiro sozinhos. O que não estiver na lista, ajuste direto no tabuleiro ou na ficha.</p>' +
       '<div class="rd-rodape" style="padding:10px 0 0"><button class="btn-amarelo" id="rsAplicar">✓ APLICAR</button></div></div>';
-    abrir('mAcao');
+    if ($('#mAcao').hidden) abrir('mAcao');
   }
   $('#mAcao').addEventListener('change', e => {
     const x = e.target;
@@ -5038,15 +5211,34 @@
     if (x.dataset.pre) res.pre[+x.dataset.pre].on = x.checked;
   });
   $('#mAcao').addEventListener('click', e => {
+    const ob = e.target.closest('[data-op]');
+    if (ob) {
+      const i = +ob.dataset.op;
+      if (res.multi) { res.opSel = res.opSel.includes(i) ? res.opSel.filter(x => x !== i) : res.opSel.concat(i); if (!res.opSel.length) res.opSel = [i]; }
+      else res.opSel = [i];
+      montar(res); mostrarResultado(res); return;
+    }
     if (e.target.id !== 'rsAplicar') return;
     fechar('mAcao');
-    const r = res, c = ativoC(), [aj, ai] = S.ativo;
+    const r = res, c = ativoC(), [aj] = S.ativo;
     const msg = [];
     mudar(() => {
       c.gastas = Math.min(c.acts, c.gastas + r.custo);
       if (r.nome) { c.usadas = c.usadas || []; c.usadas.push(r.nome); }
       if (r.sup) { S.med[aj] -= 3; c.med = true; c.sup = true; }
       else if (r.aprim) { S.med[aj] -= 1; c.med = true; aprimorarMarcado = false; }
+      // recursos gastos na rolagem
+      if (r.usouDados) {
+        if (c.k === 'kazan' && c.kz) { setRec(c, 'Brasas', rec(c, 'Brasas') - c.kz); msg.push(c.kz + ' Brasa(s) consumida(s)'); c.kz = 0; }
+        if (c.k === 'maligno' && rec(c, 'Peso de Dor')) setRec(c, 'Peso de Dor', 0);
+      }
+      if (c.k === 'kazan' && r.hitsBrasa) {
+        c.brAc = (c.brAc || 0) + r.hitsBrasa;
+        while (c.brAc >= 3) { c.brAc -= 3; if (rec(c, 'Brasas') < 3) { setRec(c, 'Brasas', rec(c, 'Brasas') + 1); msg.push('🔥 +1 Brasa'); } }
+      }
+      if (r.ataque && c.k === 'dinamo' && !c.condUsado) c.condUsado = true;
+      if (r.basico && c.k === 'reator' && r.linhas[0].ok && rec(c, 'Cargas')) { setRec(c, 'Cargas', 0); c.basicoFeito = true; msg.push('Cargas consumidas'); }
+      if (r.basico && c.k === 'reator') c.basicoFeito = true;
       (r.pre || []).forEach(p => { if (p.on && p.k === 'aprox') { const t = S.times[p.v[0]][p.v[1]]; const cc = aproximar(c, t.pos); if (cc) msg.push(CH[c.k].nome + ' avançou para ' + cc); } });
       const antes = {};
       r.linhas.forEach(l => { antes[l.alvo.join(',')] = S.times[l.alvo[0]][l.alvo[1]].pos; });
@@ -5056,10 +5248,13 @@
         l.ef.forEach(ef => {
           if (!ef.on || t.elim) return;
           if (ef.k === 'empurra' || ef.k === 'puxa') { posEf.push([t, ef]); return; }
-          if (ef.k === 'dano') { t.pv = Math.max(0, t.pv - ef.v); msg.push(CH[t.k].nome + ' −' + ef.v + ' PV'); if (!t.pv) eliminar(l.alvo[0], l.alvo[1]); }
+          if (ef.k === 'dano') { const q = sofrerDano(t, ef.v, { psi: ef.psi, ataque: r.ataque }); msg.push(CH[t.k].nome + ' −' + q.real + ' PV' + (q.nota.length ? ' (' + q.nota.join(', ') + ')' : '')); }
           if (ef.k === 'cura') { t.pv = Math.min(t.max, t.pv + ef.v); msg.push(CH[t.k].nome + ' +' + ef.v + ' PV'); }
           if (ef.k === 'dc') { t.dcv = Math.max(t.dcv, ef.v[0]); t.dcn = Math.max(t.dcn, ef.v[1]); }
           if (ef.k === 'def') t.df = clamp(t.df + ef.v, -6, 6);
+          if (ef.k === 'dnAlvo') t.dn = clamp(t.dn + ef.v, -9, 9);
+          if (ef.k === 'red') t.red = clamp((t.red || 0) + ef.v, 0, 9);
+          if (ef.k === 'esc') t.esc = Math.max(t.esc || 0, ef.v);
           if (ef.k === 'acao') t.ab = clamp(t.ab + ef.v, -4, 2);
           if (ef.k === 'imo') t.imo = true;
           if (ef.k === 'dados') t.dd = clamp(t.dd + ef.v, -4, 4);
@@ -5073,13 +5268,26 @@
         if (ef.k === 'empurra') msg.push(...empurrar(t, orig, ef.v, { colisao: (r.ef || {}).colisao, bloqueio: (r.ef || {}).bloqueio, time: aj }));
         else msg.push(...puxar(t, (r.ef || {}).puxaAparato ? aparatoMaisProximo(t.pos) : c.pos, ef.v));
       });
-      (r.extras || []).sort((a, b) => (a.k === 'carona') - (b.k === 'carona')).forEach(ex => {
+      (r.extras || []).slice().sort((a, b) => (a.k === 'carona') - (b.k === 'carona')).forEach(ex => {
         if (!ex.on) return;
         if (ex.k === 'ocupar') { const p0 = antes[ex.v.join(',')]; if (p0 && !ocupante(p0)) { moverPeca(c, p0); msg.push(CH[c.k].nome + ' foi para ' + p0); } }
         if (ex.k === 'carona') { const x = S.times[ex.v[0]][ex.v[1]]; x.carona = refDe(c); x.pos = c.pos; msg.push(CH[x.k].nome + ' subiu no veículo'); }
         if (ex.k === 'est') { S.est = S.est || []; S.est.push({ id: Date.now() + '' + d(999), tipo: ex.v[0], cell: ex.v[1], dono: aj }); }
         if (ex.k === 'mover' && !ocupante(ex.v)) moverPeca(c, ex.v);
+        if (ex.k === 'estado') { c.estado = ex.v; msg.push(CH[c.k].nome + ' entrou em ' + ex.v.nome); }
+        if (ex.k === 'compasso') {
+          const nv = rec(c, 'Compassos') + ex.v;
+          if (nv === 4) { setRec(c, 'Estágio', rec(c, 'Estágio') + 1); setRec(c, 'Compassos', 0); msg.push('🎶 subiu para ' + ESTAGIOS[rec(c, 'Estágio')]); }
+          else if (nv > 4) { setRec(c, 'Estágio', 0); setRec(c, 'Compassos', 0); msg.push('🎶 quebrou o Ritmo'); }
+          else setRec(c, 'Compassos', nv);
+        }
+        if (ex.k === 'apice') { setRec(c, 'Estágio', 3); msg.push('🎶 Apogeu'); }
+        if (ex.k === 'gastaCargas') setRec(c, 'Cargas', rec(c, 'Cargas') - ex.v);
+        if (ex.k === 'selfdef') c.df = clamp(c.df + ex.v, -6, 6);
+        if (ex.k === 'selfdesl') c.ds = clamp(c.ds + ex.v, -2, 4);
       });
+      // Forasteiro coleta Amostras de habilidades ativas usadas por perto
+      if (r.nome && c.pos) pecas((pj, pi, x) => x.k === 'forasteiro' && x.pos && dist(x.pos, c.pos) <= 3).forEach(([pj, pi]) => { const f = S.times[pj][pi]; if (rec(f, 'Amostras') < 3) { setRec(f, 'Amostras', rec(f, 'Amostras') + 1); msg.push('🛸 +1 Amostra'); } });
     }, () => (r.nome ? (r.sup ? '★ ' : '✨ ') + CH[c.k].nome + ' usou ' + r.nome : '👊 ' + CH[c.k].nome + ' fez um Ataque Básico') + (msg.length ? ': ' + msg.join(', ') : '') + '.');
     if (r.sup) toast('★ ' + r.nome.toUpperCase() + ' ★', 2200);
   });
@@ -5114,8 +5322,8 @@
   function calcAtaque(){
     const [j, i] = dd.atk, c = S.times[j][i], ch = CH[c.k];
     const apt = dd.modo === 'b' ? atkIdx(ch) : +dd.modo;
-    let n = ch.apt[apt] + c.dd + dd.aj;
-    let def = dd.def, alvo = null, notas = [], bonusDano = c.dn;
+    let n = ch.apt[apt] + mod(c, 'dd') + dd.aj;
+    let def = dd.def, alvo = null, notas = [], bonusDano = mod(c, 'dn');
     if (dd.alvo !== '') {
       const [aj, ai] = dd.alvo.split(',').map(Number); alvo = S.times[aj][ai];
       def = defesas(alvo)[apt];
