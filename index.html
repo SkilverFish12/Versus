@@ -1927,7 +1927,7 @@
       <p style="font-size:13px">Se um time tiver menos personagens em jogo, o outro time joga os turnos que sobrarem em sequência no fim da rodada.</p>
       <div class="callout">
         <span class="callout-label">FIM DA RODADA</span>
-        <p style="margin:0">Cada jogador ganha <strong>+1 de Medidor</strong>. Na rodada seguinte, quem começa é o <strong>outro jogador</strong>: a iniciativa alterna toda rodada.</p>
+        <p style="margin:0">Cada jogador ganha <strong>+1 de Medidor</strong>. Na rodada seguinte, a alternância continua: começa quem <strong>não jogou o último turno</strong> da rodada. Assim, ninguém joga dois turnos seguidos na virada da rodada.</p>
       </div>
     </div>
   </div>
@@ -2289,7 +2289,7 @@
         <tr><td>Mover</td><td class="num">1 ação · 2 casas</td></tr>
         <tr><td>Ataque Básico</td><td class="num">1 ação · adjacente</td></tr>
         <tr><td>Habilidade</td><td class="num">custo da ficha · 1×/turno</td></tr>
-        <tr><td>Iniciativa</td><td class="num">alterna a cada rodada</td></tr>
+        <tr><td>Iniciativa</td><td class="num">começa quem não jogou o último turno</td></tr>
       </table>
       <div class="section-title" style="--accent:var(--blue); margin-top:14px">MEDIDOR</div>
       <table>
@@ -3995,7 +3995,8 @@
   const nomeJ = j => esc(S.nomes[j] || 'Jogador ' + (j + 1));
   const corJ = j => 'var(--j' + j + ')';
   const ordem = p => [p, 1 - p, 1 - p, p, p, 1 - p];
-  const iniciador = r => (r % 2 === 1) ? S.prim : 1 - S.prim;
+  // a alternância continua entre rodadas: começa quem não jogou o último turno da rodada anterior
+  const iniciador = r => r === 1 ? S.prim : (r === S.rodada && S.ini != null) ? S.ini : (S.ult != null ? 1 - S.ult : (r % 2 === 1 ? S.prim : 1 - S.prim));
 
   let toastT = null;
   function toast(t, ms){
@@ -4205,7 +4206,7 @@
     hist = [];
     S.times = [0, 1].map(j => S.picks.filter(p => p.j === j).sort((a, b) => ord.indexOf(CH[a.key].classe) - ord.indexOf(CH[b.key].classe)).map(p => personagem(p.key)));
     S.med = [2, 2]; S.rodada = 1; S.ativo = null; S.fim = null; S.ce = {}; S.log = [];
-    S.vez = iniciador(1);
+    S.vez = iniciador(1); S.ini = S.vez; S.ult = null;
     S.fase = 'partida';
     log('Partida começou' + (S.cen ? ' em ' + CEN[S.cen].nome : ' na arena comum') + '. ' + S.nomes[S.prim] + ' tem a iniciativa.');
     eventosInicio();
@@ -4444,7 +4445,7 @@
         }
         c.acts = clamp(3 + c.ab, 1, 5); c.ab = 0; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0;
         if (c.aspecto && c.aspecto.ate === 'turno') c.aspecto = null;
-        S.ativo = [j, i]; S.vez = j;
+        S.ativo = [j, i]; S.vez = j; S.ult = j;
       }, msg);
       if (aviso) toast(aviso);
     }
@@ -4515,8 +4516,9 @@
       S.times.forEach(t => t.forEach(c => { c.agiu = false; c.med = false; c.acts = 0; c.gastas = 0; if (c.k === 'cavalo') c.esc = Math.max(c.esc || 0, 1); }));
       S.ativo = null;
       S.rodada = r + 1;
-      S.vez = iniciador(S.rodada);
+      S.ini = null; S.vez = iniciador(S.rodada);
       if (!disponiveis(S.vez).length) S.vez = 1 - S.vez;
+      S.ini = S.vez;
       log('— Fim da rodada ' + r + '. Medidor +1 para os dois.' + (extras.length ? ' ' + extras.join('; ') + '.' : ''));
       eventosInicio();
     }, null);
