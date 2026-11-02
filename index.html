@@ -1749,6 +1749,7 @@
   .pd-log .pd-man{color:var(--blue); font-weight:700}
   #pdNotas{width:100%; min-height:380px; box-sizing:border-box; border:2px solid #000; padding:8px; font:inherit; font-size:14px; resize:vertical; background:#fff; color:var(--dark)}
   @media (max-width:760px){ .pt-diario{grid-template-columns:1fr} #pdNotas{min-height:200px} }
+  .apts span b.mod{color:var(--red); text-decoration:underline}
 </style>
 </head>
 <body class="em-capa">
@@ -4301,7 +4302,7 @@
 
   function defesas(c){
     const ch = CH[c.k];
-    return [0, 1, 2, 3].map(a => clamp(5 + ch.apt[RES[a]] + mod(c, 'df'), 2, 10));
+    return [0, 1, 2, 3].map(a => clamp(5 + aptE(c, RES[a]) + mod(c, 'df'), 2, 10));
   }
   const atkIdx = ch => ch.atk === 'FIS' ? 0 : 1;
   function rPartida(){
@@ -4376,7 +4377,7 @@
       '<div class="cc-b"><div class="pv-linha"><div class="pv-num"><small>PONTOS DE VIDA</small><b>' + c.pv + '</b><i>/' + c.max + '</i></div>' +
       '<div class="pv-btns"><button class="menos" data-pv="' + id + ',-5">−5</button><button class="menos" data-pv="' + id + ',-1">−1</button><button class="mais" data-pv="' + id + ',1">+1</button><button class="mais" data-pv="' + id + ',5">+5</button></div></div>' +
       '<div class="pv-barra"><i class="' + (pct <= 30 ? 'bai' : pct <= 60 ? 'med' : '') + '" style="width:' + pct + '%"></i></div>' + acoes +
-      '<div class="apts"><label>APTIDÕES</label>' + APT.map((n, a) => '<span' + (a === ai ? ' class="atk" title="Aptidão de ATK"' : '') + '>' + n + ' <b>' + ch.apt[a] + '</b></span>').join('') + '</div>' +
+      '<div class="apts"><label>APTIDÕES</label>' + APT.map((n, a) => '<span' + (a === ai ? ' class="atk" title="Aptidão de ATK"' : '') + '>' + n + ' <b' + (aptE(c, a) !== ch.apt[a] ? ' class="mod"' : '') + '>' + aptE(c, a) + '</b></span>').join('') + '</div>' +
       '<div class="defs">' + defs.map((v, a) => '<div' + (a === ai ? ' class="atk" title="Aptidão de ATK"' : '') + '><b' + (mod(c, 'df') ? ' class="mod"' : '') + '>' + v + '</b><small>DEF vs ' + APT[a] + '</small></div>').join('') + '</div>' +
       '<div class="st-grid">' + stepper(j, i, 'ab', 'AÇÕES PRÓX.', c.ab) + stepper(j, i, 'dn', 'DANO', c.dn) + stepper(j, i, 'dd', 'DADOS', c.dd) +
         stepper(j, i, 'df', 'DEFESA', c.df) + stepper(j, i, 'ds', 'DESLOC.', c.ds) + stepper(j, i, 'red', 'REDUÇÃO', c.red || 0) + stepper(j, i, 'esc', 'ESCUDO', c.esc || 0) + '</div>' +
@@ -4422,6 +4423,7 @@
     add(/(?<!Contínuo \d+ )(?:durante|por|dura) (\d+) rodadas?/i, m => { const ate = S.rodada + (+m[1]) - 1; return { txt: 'no fim da rodada ' + ate, exp: { t: 'rod', ate } }; });
     add(/no próximo turno/i, () => ({ txt: 'no fim do próximo turno de ' + nomeC(alvo), exp: { t: 'fim', ref: refDe(alvo), pula: ehAtivo(alvo) ? 1 : 0 } }));
     add(/no próximo teste/i, () => ({ txt: 'depois do próximo teste de ' + nomeC(alvo) + ' (remova à mão)', exp: { t: 'man' } }));
+    add(/usar outra forma/i, () => ({ txt: 'quando ' + nomeC(autor) + ' usar outra forma', exp: { t: 'man' } }));
     if (!cands.length) return { txt: 'quando for removido', exp: { t: 'man' } };
     cands.sort((a, b) => a[0] - b[0]);
     return cands[0][1];
@@ -5033,7 +5035,7 @@
     if (modo) h += bannerModo();
     h += '<div class="ac-grade">' +
       btn('data-ac="mover"', '👣', 'MOVER', '1 ação · até ' + desl + ' casas', c.carona ? 'no veículo: use DESCER' : c.imo ? 'Imóvel' : r < 1 ? 'sem ações' : '') +
-      btn('data-ac="basico"', '👊', 'ATAQUE BÁSICO', '1 ação · adjacente · ' + (ch.atk === 'FIS' ? 'FÍS' : 'DES') + ' ' + ch.apt[atkIdx(ch)] + ' dados', r < 1 ? 'sem ações' : (c.pos && !enem.length) ? 'nenhum inimigo adjacente' : '');
+      btn('data-ac="basico"', '👊', 'ATAQUE BÁSICO', '1 ação · adjacente · ' + (ch.atk === 'FIS' ? 'FÍS' : 'DES') + ' ' + aptE(c, atkIdx(ch)) + ' dados', r < 1 ? 'sem ações' : (c.pos && !enem.length) ? 'nenhum inimigo adjacente' : '');
     ch.habs.forEach((hb, k) => {
       if (!hb.c) return;
       const mot = motivo(hb, false);
@@ -5209,6 +5211,8 @@
     if (c.k === 'genio' && k === 'dn' && c.pv * 2 <= c.max) v += 2;
     return v;
   }
+  // aptidão efetiva: base da ficha + formas/estados (ex.: formas do Cambiante)
+  function aptE(c, a){ let v = CH[c.k].apt[a]; [c.estado, c.aspecto].forEach(e => { if (e && e.mods && e.mods.apt) v += e.mods.apt[a] || 0; }); return Math.max(0, v); }
   const adef = c => [c.estado, c.aspecto].reduce((s, e) => s + ((e && e.mods && e.mods.adef) || 0), 0);
   function parseMods(txt){
     const m = {}; let t = txt, x;
@@ -5218,10 +5222,12 @@
     if ((x = /([−+-])(\d+) de dano/.exec(t))) m.dn = sg(x[1]) * x[2];
     if ((x = /([−+-])(\d+) dados?/.exec(t))) m.dd = sg(x[1]) * x[2];
     if ((x = /([−+-])(\d+) casas? de deslocamento/.exec(t))) m.ds = sg(x[1]) * x[2];
+    const AN = { 'Físico': 0, 'Destreza': 1, 'Visão': 2, 'Astúcia': 3 }, ra = /([−+-])(\d+) em (Físico|Destreza|Visão|Astúcia)/g;
+    while ((x = ra.exec(txt))) { m.apt = m.apt || [0, 0, 0, 0]; m.apt[AN[x[3]]] += sg(x[1]) * x[2]; }
     return m;
   }
   const NM = { df: 'Defesa', dn: 'dano', dd: 'dado', ds: 'desloc.', adef: 'Def. dos alvos' };
-  const modsTxt = m => Object.entries(m).filter(([, v]) => v).map(([k, v]) => (v > 0 ? '+' : '−') + Math.abs(v) + ' ' + NM[k]).join(', ');
+  const modsTxt = m => Object.entries(m).filter(([k, v]) => v && k !== 'apt').map(([k, v]) => (v > 0 ? '+' : '−') + Math.abs(v) + ' ' + NM[k]).concat((m.apt || []).map((v, a) => v ? (v > 0 ? '+' : '−') + Math.abs(v) + ' ' + APT[a] : '').filter(Boolean)).join(', ');
   const limpo = s => (s || '').replace(/<[^>]+>/g, '');
   function opcoes(h){
     const t = limpo(h.d);
@@ -5297,7 +5303,7 @@
   function ataqueBasico(alvo){
     const [aj] = S.ativo, c = ativoC(), ch = CH[c.k], t = S.times[alvo[0]][alvo[1]];
     const apt = atkIdx(ch), ex = dadosExtra(c);
-    let n = ch.apt[apt] + mod(c, 'dd') + ex.n, bonus = mod(c, 'dn'), def = clamp(defesas(t)[apt] + adef(c), 2, 10), notas = ex.notas.slice();
+    let n = aptE(c, apt) + mod(c, 'dd') + ex.n, bonus = mod(c, 'dn'), def = clamp(defesas(t)[apt] + adef(c), 2, 10), notas = ex.notas.slice();
     if (S.cen === 'ruptura' && c.duelo) { if (c.duelo === t.k) { n++; bonus += 2; notas.push('duelo: +1 dado e +2 de dano'); } else { bonus -= 2; def = clamp(def + 1, 2, 10); notas.push('fora do duelo: −2 de dano e +1 na Defesa do alvo'); } }
     if (c.k === 'reator' && rec(c, 'Cargas')) { bonus += 2 * rec(c, 'Cargas'); notas.push(rec(c, 'Cargas') + ' Carga(s): +' + 2 * rec(c, 'Cargas') + ' de dano se acertar'); }
     if (c.k === 'dinamo' && !c.condUsado && rec(c, 'Dano sofrido') >= 6) { const b = 2 * Math.floor(rec(c, 'Dano sofrido') / 6); bonus += b; notas.push('Condutor Natural: +' + b + ' de dano'); }
@@ -5320,7 +5326,7 @@
     if (c.k === 'reator' && h.n === 'Blindagem Nuclear' && m.aprim) {}
     const multi = !!(ops && m.aprim && h.p && /as duas|os dois|Os dois|Aplica as duas/.test(limpo(h.p)));
     const ex = h.x >= 0 ? dadosExtra(c) : { n: 0, notas: [] };
-    const n = h.x >= 0 ? ch.apt[h.x] + mod(c, 'dd') + ex.n : 0;
+    const n = h.x >= 0 ? aptE(c, h.x) + mod(c, 'dd') + ex.n : 0;
     const v = h.x >= 0 ? rolarD10(n) : [];
     const r = {
       titulo: (m.sup ? '★ ' : tipoIcone(h) + ' ') + h.n.toUpperCase() + (m.aprim ? ' ⚡' : ''),
@@ -5344,6 +5350,7 @@
     const self = alvos.length === 1 && alvos[0][0] === aj && alvos[0][1] === S.ativo[1];
     const linhasR = [], extras = [], pre = [];
     let hitsBrasa = 0;
+    if (c.k === 'cambiante' && h.n === 'Quimera Primordial') extras.push({ k: 'estado', v: { nome: 'Quimera Primordial', mods: { apt: [1, 1, 1, 0], dn: 4, ds: 2 }, hab: h.n }, on: true, txt: 'Entrar na Quimera: as três formas sem perder Astúcia (+1 FÍS, +1 DES, +1 VIS, +4 de dano, +2 desloc.)' });
     if (ehEstado(h)) {
       const nome = r.ops ? r.ops[r.opSel[0]].nome : h.n;
       const mods = parseMods(optTxt || limpo(h.d));
@@ -5562,7 +5569,7 @@
   function calcAtaque(){
     const [j, i] = dd.atk, c = S.times[j][i], ch = CH[c.k];
     const apt = dd.modo === 'b' ? atkIdx(ch) : +dd.modo;
-    let n = ch.apt[apt] + mod(c, 'dd') + dd.aj;
+    let n = aptE(c, apt) + mod(c, 'dd') + dd.aj;
     let def = dd.def, alvo = null, notas = [], bonusDano = mod(c, 'dn');
     if (dd.alvo !== '') {
       const [aj, ai] = dd.alvo.split(',').map(Number); alvo = S.times[aj][ai];
@@ -5585,7 +5592,7 @@
       h += '<div class="dd-campo"><label>QUEM</label><select id="ddAtk">' + lista.map(([a, b]) => '<option value="' + a + ',' + b + '"' + (a === dd.atk[0] && b === dd.atk[1] ? ' selected' : '') + '>' + nomeJ(a) + ' · ' + CH[S.times[a][b].k].nome + '</option>').join('') + '</select></div>' +
         '<div class="dd-campo"><label>ROLAGEM</label><div class="seg"><button data-modo="b" class="' + (dd.modo === 'b' ? 'on' : '') + '">ATAQUE BÁSICO</button>' + APT.map((a, i) => '<button data-modo="' + i + '" class="' + (dd.modo === String(i) ? 'on' : '') + '">TESTE ' + a + '</button>').join('') + '</div></div>' +
         '<div class="dd-campo"><label>ALVO</label><select id="ddAlvo"><option value="">Defesa manual</option>' + S.times[1 - j].map((c, i) => c.elim ? '' : '<option value="' + (1 - j) + ',' + i + '"' + (dd.alvo === (1 - j) + ',' + i ? ' selected' : '') + '>' + CH[c.k].icon + ' ' + CH[c.k].nome + ' (' + c.pv + ' PV)</option>').join('') + '</select></div>' +
-        '<div class="dd-campo"><label>DADOS</label><div class="num-ctl"><button class="mini-btn" data-aj="-1">−</button><b>' + k.n + '</b><button class="mini-btn" data-aj="1">+</button></div><span style="font-size:12px;font-weight:700;color:#666">' + (dd.modo === 'b' ? 'ATK em ' + APT[k.apt] : APT[k.apt]) + ' ' + k.ch.apt[k.apt] + '</span></div>' +
+        '<div class="dd-campo"><label>DADOS</label><div class="num-ctl"><button class="mini-btn" data-aj="-1">−</button><b>' + k.n + '</b><button class="mini-btn" data-aj="1">+</button></div><span style="font-size:12px;font-weight:700;color:#666">' + (dd.modo === 'b' ? 'ATK em ' + APT[k.apt] : APT[k.apt]) + ' ' + aptE(k.c, k.apt) + '</span></div>' +
         '<div class="dd-campo"><label>DEFESA</label><div class="num-ctl">' + (k.alvo ? '<b>' + k.def + '</b><span style="font-size:12px;font-weight:700;color:#666">' + CH[k.alvo.k].nome + ' contra ' + APT[k.apt] + '</span>' : '<button class="mini-btn" data-def="-1">−</button><b>' + k.def + '</b><button class="mini-btn" data-def="1">+</button>') + '</div></div>' +
         (k.notas.length ? '<p style="font-size:12px;font-weight:700;color:var(--blue);margin:0 0 6px">' + k.notas.join(' · ') + '</p>' : '') +
         '<button class="btn-amarelo dd-rolar" id="ddRolar">🎲 ROLAR ' + k.n + 'd10</button><div class="dd-res" id="ddRes"></div>';
