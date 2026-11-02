@@ -1762,6 +1762,7 @@
   .hx.ninho polygon{fill:#cfeef2; stroke:#3a9aaa}
   .hx.estrada polygon{fill:#c9ced4}
   .lg.estrada{background:#c9ced4}
+  .tb-ferr{display:flex; justify-content:center; margin:8px 0 4px} .tb-ferr button{font-size:14px}
 </style>
 </head>
 <body class="em-capa">
@@ -4952,7 +4953,7 @@
         '<div class="tb-bt"><button class="icon-btn" data-tbrolar="' + id + '" title="Rolar">🎲</button><button class="icon-btn" data-ficha="' + sc.k + '" title="Ficha">📄</button>' + (sc.pos ? '<button class="icon-btn" data-tbtirar="' + id + '" title="Tirar do tabuleiro">⤓</button>' : '') + '<button class="icon-btn" data-tbsoltar title="Soltar">✕</button></div></div>';
     } else if (S.times.some(t => t.some(c => !c.elim && !c.pos))) {
       info = '<div class="tb-dica">Toque num personagem do banco e depois numa casa para posicionar. ' + (S.rodada === 1 ? '<b style="color:var(--j' + sul + ')">' + nomeJ(sul) + '</b> começa na borda Sul (K) e <b style="color:var(--j' + norte + ')">' + nomeJ(norte) + '</b> na borda Norte (A).' : '') + '</div>';
-    } else info = '<div class="tb-dica">Toque num personagem para ver o alcance e as distâncias. <button class="btn-ghost sm" data-ac2="estrutura" style="font-size:13px;margin-left:6px">🏗️ ESTRUTURA</button></div>';
+    } else info = '<div class="tb-dica">Toque num personagem para ver o alcance e as distâncias.</div>';
     const leg = [];
     if (!modo && sc && sc.pos) leg.push('<i class="lg alc1"></i>1 ação de Mover', '<i class="lg alc2"></i>2 ações');
     const h = S.cen && CEN[S.cen].helper;
@@ -4968,7 +4969,8 @@
     if (S.cen === 'estrada') leg.push('<i class="lg estrada"></i>Estrada (+1 desloc.' + (S.ce.caminhao ? ', CAMINHÃO: 6 de dano' : '') + ')');
     if (nevoa) leg.push('🌫️ névoa: nada com alcance maior que 2');
     box.innerHTML = info + '<div class="tb-wrap' + (nevoa ? ' nevoa' : '') + '"><svg class="tb-svg" viewBox="' + (-W / 2) + ' ' + (-H / 2) + ' ' + W + ' ' + H + '">' + g + toks + '</svg></div>' +
-      (leg.length ? '<div class="tb-leg">' + leg.map(x => '<span>' + x + '</span>').join('') + '</div>' : '') + banco;
+      (leg.length ? '<div class="tb-leg">' + leg.map(x => '<span>' + x + '</span>').join('') + '</div>' : '') +
+      '<div class="tb-ferr"><button class="btn-ghost sm" data-ac2="estrutura">🏗️ COLOCAR ESTRUTURA</button></div>' + banco;
   }
   $('#ptTabBtn').addEventListener('click', () => { mostrarTab = !mostrarTab; store.set('versus-tabuleiro', mostrarTab); rBoard(); });
   $('#ptBoard').addEventListener('click', e => {
@@ -5156,7 +5158,10 @@
   function rPainel(){
     const box = $('#ptAcao');
     const c = ativoC();
-    if (!c || S.fase !== 'partida' || S.auto === false) { box.hidden = true; box.innerHTML = ''; modo = null; return; }
+    if (!c || S.fase !== 'partida' || S.auto === false) {
+      if (S.fase === 'partida' && modo && modo.t === 'estrutura') { box.hidden = false; box.innerHTML = bannerModo(); return; }
+      box.hidden = true; box.innerHTML = ''; modo = null; return;
+    }
     const [j, i] = S.ativo, ch = CH[c.k], r = restam(c);
     const pips = Array.from({ length: c.acts }, (_, n) => '<i class="' + (n < c.gastas ? 'gasta' : '') + '"></i>').join('');
     const desl = Math.max(1, 2 + mod(c, 'ds'));
@@ -5221,8 +5226,8 @@
   $('#ptAcao').addEventListener('change', e => { if (e.target.id === 'acApr') aprimorarMarcado = e.target.checked; });
   $('#ptAcao').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b || b.disabled) return;
-    const c = ativoC(); if (!c) return;
     if (b.dataset.cancelar !== undefined) return cancelarModo();
+    const c = ativoC(); if (!c) return;
     if (b.dataset.fimturno) { modo = null; fimDeTurno(c); return; }
     if (b.dataset.confirmar !== undefined) return resolverHab();
     if (b.dataset.ac === 'mover') return iniciarModo({ t: 'mover' });
@@ -5253,7 +5258,9 @@
   // destaques do modo no tabuleiro
   function destaquesModo(){
     const out = { casas: new Set(), toks: new Set() };
-    const c = ativoC(); if (!modo || !c) return out;
+    const c = ativoC(); if (!modo) return out;
+    if (modo.t === 'estrutura') { CELLS.forEach(x => { if (!bloqueada(x.id)) out.casas.add(x.id); }); return out; }
+    if (!c) return out;
     if (modo.t === 'mover' && c.pos) {
       const desl = Math.max(1, 2 + mod(c, 'ds'));
       CELLS.forEach(x => { if (dist(c.pos, x.id) <= desl && x.id !== c.pos && !obstaculo(x.id) && !ocupante(x.id)) out.casas.add(x.id); });
@@ -5278,7 +5285,7 @@
       if (!cellId || bloqueada(cellId)) return true;
       const tipo = modo.tipo, dono = modo.dono;
       modo = null;
-      mudar(() => { S.est = S.est || []; S.est.push({ id: Date.now() + '' + d(999), tipo, cell: cellId, dono }); }, ESTI[tipo][1] + ' ' + tipo + ' colocado em ' + cellId + '.');
+      mudar(() => { S.est = S.est || []; const ne = { id: Date.now() + '' + d(999), tipo, cell: cellId, dono }; const hp = { Galho: 'Brotamento', Campo: 'Contendo o Mal', Miasma: 'Miasma' }[tipo]; if (hp) { const a = AURAS[hp]({}, []); a.nome = hp; ne.auras = [a]; ne.hab = hp; } S.est.push(ne); }, ESTI[tipo][1] + ' ' + tipo + ' colocado em ' + cellId + '.');
       rPainel(); return true;
     }
     if (!c) { modo = null; return false; }
