@@ -1750,6 +1750,12 @@
   #pdNotas{width:100%; min-height:380px; box-sizing:border-box; border:2px solid #000; padding:8px; font:inherit; font-size:14px; resize:vertical; background:#fff; color:var(--dark)}
   @media (max-width:760px){ .pt-diario{grid-template-columns:1fr} #pdNotas{min-height:200px} }
   .apts span b.mod{color:var(--red); text-decoration:underline}
+  .hx.aura polygon{stroke-dasharray:4 3; stroke-width:2}
+  .hx.aura.a0 polygon{stroke:#e8323c} .hx.aura.a1 polygon{stroke:#1e88e5}
+  .hx.aura.asel.a0 polygon{fill:#ffd9dc} .hx.aura.asel.a1 polygon{fill:#d5ebfc}
+  .tb-info small.tb-aura{color:inherit; margin-top:2px}
+  .tb-info small.tb-ate{color:#ff6b6b; font-weight:700}
+  .ef-item.ef-aura{background:#f2fbf2}
 </style>
 </head>
 <body class="em-capa">
@@ -4421,7 +4427,8 @@
     add(/até o (?:fim|final) do (?:seu )?próximo turno/i, m => { const x = quemNoTexto(txt.slice(m.index + m[0].length, m.index + m[0].length + 30), autor, alvo); return { txt: 'no fim do próximo turno de ' + nomeC(x), exp: { t: 'fim', ref: refDe(x), pula: ehAtivo(x) ? 1 : 0 } }; });
     add(/até o fim (?:deste|do) turno/i, () => ({ txt: 'no fim deste turno', exp: { t: 'fim', ref: refDe(autor), pula: 0 } }));
     add(/(?<!Contínuo \d+ )(?:durante|por|dura) (\d+) rodadas?/i, m => { const ate = S.rodada + (+m[1]) - 1; return { txt: 'no fim da rodada ' + ate, exp: { t: 'rod', ate } }; });
-    add(/no próximo turno/i, () => ({ txt: 'no fim do próximo turno de ' + nomeC(alvo), exp: { t: 'fim', ref: refDe(alvo), pula: ehAtivo(alvo) ? 1 : 0 } }));
+    add(/no (?:fim|final) do (?:seu )?próximo turno/i, m => { const x = quemNoTexto(txt.slice(m.index + m[0].length, m.index + m[0].length + 30), autor, alvo); return { txt: 'no fim do próximo turno de ' + nomeC(x), exp: { t: 'fim', ref: refDe(x), pula: ehAtivo(x) ? 1 : 0 } }; });
+    add(/(?<!fim do |final do )no próximo turno/i, () => ({ txt: 'no fim do próximo turno de ' + nomeC(alvo), exp: { t: 'fim', ref: refDe(alvo), pula: ehAtivo(alvo) ? 1 : 0 } }));
     add(/no próximo teste/i, () => ({ txt: 'depois do próximo teste de ' + nomeC(alvo) + ' (remova à mão)', exp: { t: 'man' } }));
     add(/usar outra forma/i, () => ({ txt: 'quando ' + nomeC(autor) + ' usar outra forma', exp: { t: 'man' } }));
     if (!cands.length) return { txt: 'quando for removido', exp: { t: 'man' } };
@@ -4459,16 +4466,21 @@
         desfazerMods(x, e); fim.push(e.nome + ' em ' + nomeC(x)); return false;
       });
     }));
+    if (S.est) {
+      S.est = S.est.filter(e => { if (!e.exp || !pred(e, null)) return true; fim.push((e.hab ? e.hab + ' (' + e.tipo + ')' : e.tipo) + ' em ' + e.cell); return false; });
+      S.est.forEach(e => { if (e.auras) e.auras = e.auras.filter(a => { if (!a.exp || !pred(a, null)) return true; fim.push(a.nome + ' no ' + e.tipo + ' em ' + e.cell); return false; }); });
+    }
     if (fim.length) log('⌛ Acabou: ' + fim.join(', ') + '.');
     return fim;
   }
   const expiraIni = ref => expirarEfeitos(e => e.exp.t === 'ini' && e.exp.ref === ref);
   const expiraFim = ref => expirarEfeitos(e => { if (e.exp.t !== 'fim' || e.exp.ref !== ref) return false; if (e.exp.pula > 0) { e.exp.pula--; return false; } return true; });
   const expiraRodada = r => expirarEfeitos(e => e.exp.t === 'rod' && e.exp.ate <= r);
-  const expiraDC = () => expirarEfeitos((e, x) => e.exp.t === 'dc' && !(x.dcn > 0));
+  const expiraDC = () => expirarEfeitos((e, x) => !!x && e.exp.t === 'dc' && !(x.dcn > 0));
   function efeitosCard(j, i, c){
     const id = j + ',' + i, L = c.efs || [];
-    const lista = L.map(e => '<div class="ef-item"><div><b>' + esc(e.nome) + '</b>' + (e.autor ? ' <span class="ef-por">por ' + esc(e.autor) + '</span>' : '') +
+    const daAura = aurasEm(c).filter(([, a, ali]) => textoAura(a, ali)).map(([e, a, ali]) => '<div class="ef-item ef-aura"><div><b>' + esc(a.nome) + '</b> <span class="ef-por">' + (ESTI[e.tipo] || ESTI.Marcador)[1] + ' ' + esc(e.tipo) + ' em ' + e.cell + (e.autorNome ? ' · por ' + esc(e.autorNome) : '') + '</span><small>' + esc(textoAura(a, ali)) + '</small><small class="ef-ate">⌛ enquanto estiver no Raio ' + a.raio + (a.acaba || e.acaba ? ' · acaba ' + esc(a.acaba || e.acaba) : '') + '</small></div></div>').join('');
+    const lista = daAura + L.map(e => '<div class="ef-item"><div><b>' + esc(e.nome) + '</b>' + (e.autor ? ' <span class="ef-por">por ' + esc(e.autor) + '</span>' : '') +
       (e.faz ? '<small>' + esc(e.faz) + '</small>' : '') + '<small class="ef-ate">⌛ acaba ' + esc(e.acaba) + '</small></div>' +
       '<button class="mini-btn" data-efx="' + id + ',' + e.id + '" title="Remover efeito">✕</button></div>').join('');
     return '<div class="ef-box"><div class="ef-h"><label>✦ EFEITOS ATIVOS</label><button class="mini-btn ef-add" data-efnovo="' + id + '" title="Adicionar efeito à mão">+ EFEITO</button></div>' +
@@ -4503,6 +4515,26 @@
     mudar(() => novoEf(alvo, { nome, autor: autor ? nomeC(autor) : '', faz, acaba, exp, mods: {} }),
       '✍ ' + nomeC(alvo) + ' recebeu ' + nome + (autor ? ' (de ' + nomeC(autor) + ')' : '') + (faz ? ': ' + faz : '') + '.');
   });
+  // ── auras das estruturas (Galho, Campo, Aparatos) ──
+  const AURAS = {
+    'Brotamento': r => ({ raio: 1, ali: { df: 1 }, txt: 'Aliados de Vale no Raio 1 do Galho recebem +1 na Defesa.' + (r.aprim ? ' Aprimorado: +2 na Defesa contra o primeiro ataque que cada um sofrer (o +1 extra é ajustado à mão).' : '') }),
+    'Contendo o Mal': () => ({ raio: 2, ini: { ds: -1 }, txt: 'Inimigos dentro do campo (Raio 2) sofrem −1 casa de deslocamento. Nenhum deslocamento atravessa a borda do campo.' }),
+    'Campo Gravitacional': (r, ops) => { const med = ops.includes('Medicinal'), pot = ops.includes('Potencial');
+      return { raio: 1, ali: pot ? { dn: 2 } : {}, cura: med ? 4 : 0, txt: [med ? 'Medicinal: aliados no Raio 1 do Aparato recuperam 4 PV no início de cada turno deles.' : '', pot ? 'Potencial: aliados no Raio 1 do Aparato causam +2 de dano em ataques.' : ''].filter(Boolean).join(' ') }; },
+    'Polos Invertidos': () => ({ raio: 2, ali: { df: 2 }, ini: { df: -2 }, txt: 'No Raio 2 do Aparato, aliados recebem +2 na Defesa e inimigos sofrem −2 na Defesa.' }),
+  };
+  const SEMFIM = ['Aparato', 'Pássaro', 'Bomba', 'Marcador'];
+  const AURA_APAR = ['Campo Gravitacional', 'Polos Invertidos'];
+  const timeDe = c => { const r = refDe(c); return r ? +r[0] : -1; };
+  function aurasEm(c){
+    const out = [];
+    if (!c || !c.pos || !S.est) return out;
+    const tj = timeDe(c);
+    S.est.forEach(e => (e.auras || []).forEach(a => { if (CELL[e.cell] && dist(e.cell, c.pos) <= a.raio) out.push([e, a, e.dono === tj]); }));
+    return out;
+  }
+  function auraMod(c, k){ return aurasEm(c).reduce((v, [, a, ali]) => { const g = ali ? a.ali : a.ini; return v + ((g && g[k]) || 0); }, 0); }
+  const textoAura = (a, ali) => { const g = (ali ? a.ali : a.ini) || {}; const t = modsTxt(g); return [t, ali && a.cura ? '+' + a.cura + ' PV no início do turno' : ''].filter(Boolean).join(', '); };
   // ── histórico e anotações ──
   function rDiario(){
     const b = $('#pdLog'); if (!b) return;
@@ -4621,6 +4653,7 @@
         c.acts = clamp(3 + c.ab, 1, 5); c.ab = 0; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0;
         if (c.aspecto && c.aspecto.ate === 'turno') c.aspecto = null;
         expiraIni(j + ',' + i); expiraDC();
+        { const cu = aurasEm(c).reduce((v, [, a, ali]) => v + (ali ? a.cura || 0 : 0), 0); if (cu && c.pv < c.max) { c.pv = Math.min(c.max, c.pv + cu); msg += ' Campo Medicinal: +' + cu + ' PV.'; } }
         S.ativo = [j, i]; S.vez = j; S.ult = j;
         S.times.forEach(t => t.forEach(x => { if (x.k === 'cavalo' && !x.elim && !x.esc) x.esc = 1; }));
       }, msg);
@@ -4775,6 +4808,7 @@
     for (const c of CELLS) {
       const k = marcas(c);
       if (DM.casas.has(c.id)) k.push(DM.linha ? (DM.linha.has(c.id) ? 'mv' : 'mv2') : 'mv');
+      { const au = (S.est || []).filter(e => e.auras && e.auras.length && CELL[e.cell] && e.cell !== c.id && dist(e.cell, c.id) <= Math.max(...e.auras.map(a => a.raio))); if (au.length) k.push('aura a' + au[0].dono + (au.some(e => e.id === estSel) ? ' asel' : '')); }
       if (S.rodada === 1) { if (c.r === RB) k.push('ini j' + sul); if (c.r === -RB) k.push('ini j' + norte); }
       if (!modo && sc && sc.pos && !sc.imo && !bloqueada(c.id)) { const dd = dist(sc.pos, c.id); if (dd > 0 && dd <= desl) k.push('alc1'); else if (dd > 0 && dd <= desl * 2) k.push('alc2'); }
       const pts = [];
@@ -4792,7 +4826,7 @@
     (S.est || []).forEach(e => {
       const p = CELL[e.cell]; if (!p) return;
       const n = estNa(e.cell).indexOf(e), off = n * 9;
-      toks += '<g class="es j' + e.dono + (estSel === e.id ? ' sel' : '') + '" data-est="' + e.id + '" transform="translate(' + (p.x + off).toFixed(1) + ',' + (p.y - off).toFixed(1) + ')"><polygon points="0,-17 15,-8.5 15,8.5 0,17 -15,8.5 -15,-8.5"/><text y="7">' + (ESTI[e.tipo] || ESTI.Marcador)[1] + '</text></g>';
+      toks += '<g class="es j' + e.dono + (estSel === e.id ? ' sel' : '') + '" data-est="' + e.id + '" transform="translate(' + (p.x + off).toFixed(1) + ',' + (p.y - off).toFixed(1) + ')"><polygon points="0,-17 15,-8.5 15,8.5 0,17 -15,8.5 -15,-8.5"/><text y="7">' + icEst(e) + '</text></g>';
     });
     [false, true].forEach(passo => [0, 1].forEach(j => S.times[j].forEach((c, i) => {
       if (c.elim || !c.pos || !CELL[c.pos] || !!c.carona !== passo) return;
@@ -4817,7 +4851,9 @@
     const es = estSel && (S.est || []).find(e => e.id === estSel);
     if (modo) info = bannerModo();
     else if (es) {
-      info = '<div class="tb-info" style="--tc:var(--j' + es.dono + ')"><span class="tb-ic">' + (ESTI[es.tipo] || ESTI.Marcador)[1] + '</span><div><b>' + es.tipo.toUpperCase() + '</b><small>de ' + nomeJ(es.dono) + ' · em ' + es.cell + ((ESTI[es.tipo] || [])[2] ? ' · obstáculo' : '') + '</small><small>Toque numa casa para mover a estrutura.</small></div>' +
+      const aus = (es.auras || []).map(a => '<small class="tb-aura">✦ <b>' + esc(a.nome) + '</b> · Raio ' + a.raio + ': ' + esc(a.txt) + (a.acaba ? ' ⌛ acaba ' + esc(a.acaba) : '') + '</small>').join('');
+      info = '<div class="tb-info" style="--tc:var(--j' + es.dono + ')"><span class="tb-ic">' + icEst(es) + '</span><div><b>' + es.tipo.toUpperCase() + (es.opc ? ' DE ' + esc(es.opc).toUpperCase() : '') + (es.hab ? ' · ' + esc(es.hab) : '') + '</b><small>' + (es.autorNome ? 'por ' + esc(es.autorNome) + ' · ' : 'de ' + nomeJ(es.dono) + ' · ') + 'em ' + es.cell + ((ESTI[es.tipo] || [])[2] ? ' · obstáculo' : '') + '</small>' +
+        (aus || (es.info ? '<small>' + esc(es.info) + '</small>' : '')) + '<small class="tb-ate">⌛ acaba ' + esc(es.acaba || 'quando for removida') + '</small><small>Toque numa casa para mover a estrutura.</small></div>' +
         '<div class="tb-bt"><button class="icon-btn" data-estdel="' + es.id + '" title="Remover">🗑</button><button class="icon-btn" data-tbsoltar title="Soltar">✕</button></div></div>';
     } else if (sc) {
       const ch = CH[sc.k], id = selTok.join(',');
@@ -4880,6 +4916,7 @@
     ['Galho', '🌿', 1], ['Muralha', '🧊', 1], ['Bomba', '🌋', 0], ['Aparato', '🧲', 0], ['Pássaro', '🐦', 0], ['Fenda', '🌀', 0],
     ['Ilusão', '🃏', 0], ['Fumaça', '💨', 0], ['Pista', '🪩', 0], ['Campo', '🛡️', 0], ['Casa Infernal', '🔥', 0], ['Portal', '🚪', 0], ['Marcador', '📍', 0]];
   const ESTI = Object.fromEntries(EST.map(e => [e[0], e]));
+  const icEst = e => e.tipo === 'Muralha' && e.opc === 'Fogo' ? '🧱' : (ESTI[e.tipo] || ESTI.Marcador)[1];
   const estNa = id => (S.est || []).filter(e => e.cell === id);
   const obstaculo = id => bloqueada(id) || estNa(id).some(e => ESTI[e.tipo] && ESTI[e.tipo][2]);
   function tipoEstrutura(h){
@@ -5000,7 +5037,7 @@
     const [aj] = S.ativo, c = ativoC(), n = h.a === 'ADJACENTE' ? 1 : alcN(h), ta = tipoAlc(h), ld = lado(h);
     const ok = (j) => ld === 'qualquer' || (ld === 'inimigo' ? j !== aj : j === aj);
     const temPos = !!c.pos;
-    if (ta === 'PESSOAL') return { tipo: 'nenhum' };
+    if (ta === 'PESSOAL' || AURA_APAR.includes(h.n)) return { tipo: 'nenhum' };
     if (ta === 'TODO') return { tipo: 'todos', alvos: pecas((j, i, x) => ok(j) && !(j === aj && x === c && ld !== 'aliado')) };
     if (ta === 'RAIO') return { tipo: 'todos', alvos: pecas((j, i, x) => ok(j) && x !== c && (!temPos || (x.pos && dist(c.pos, x.pos) <= n))) };
     if (ta === 'alvo' || ta === 'ALVO') return { tipo: 'peca', alvos: pecas((j, i, x) => ok(j) && (!temPos || (x.pos && dist(c.pos, x.pos) <= n))) };
@@ -5209,6 +5246,7 @@
     [c.estado, c.aspecto].forEach(e => { if (e && e.mods && e.mods[k]) v += e.mods[k]; });
     if (c.k === 'ritmista') { const s = rec(c, 'Estágio'); if (k === 'dd' && s >= 1) v += 1; if (k === 'ds' && s >= 2) v += 1; if (k === 'dn' && s >= 3) v += 2; }
     if (c.k === 'genio' && k === 'dn' && c.pv * 2 <= c.max) v += 2;
+    v += auraMod(c, k);
     return v;
   }
   // aptidão efetiva: base da ficha + formas/estados (ex.: formas do Cambiante)
@@ -5232,6 +5270,8 @@
   function opcoes(h){
     const t = limpo(h.d);
     if (t.indexOf('•') >= 0) return t.split('•').slice(1).map(s => { const i = s.indexOf(':'); return { nome: s.slice(0, i).trim(), txt: s.slice(i + 1).trim() }; }).filter(o => o.nome && o.nome.length < 30);
+    const g = /escolhe: (Gelo) ou (Fogo)\./.exec(t);
+    if (g) return [{ nome: 'Gelo', txt: 'Ao surgir, testa Astúcia contra cada inimigo no Raio 1 da Muralha: quem for atingido fica Resfriado, com −1 casa de deslocamento.' }, { nome: 'Fogo', txt: 'Ao surgir, testa Astúcia contra cada inimigo no Raio 1 da Muralha: quem for atingido fica Aquecido e sofre +1 de dano de cada fonte, exceto Dano Psíquico.' }];
     const m = /Escolha: ([A-ZÀ-Úa-zà-ú]+) \(([^)]+)\) ou ([A-ZÀ-Úa-zà-ú]+) \(([^)]+)\)/.exec(t);
     if (m) return [{ nome: m[1], txt: m[2] }, { nome: m[3], txt: m[4] }];
     return null;
@@ -5346,7 +5386,7 @@
     if (c.k === 'reator' && h.n === 'Fissão Descontrolada' && rec(c, 'Cargas')) { ef.dano = (ef.dano || 0) + 2 * rec(c, 'Cargas'); r.notas = r.notas.concat(rec(c, 'Cargas') + ' Carga(s): +' + 2 * rec(c, 'Cargas') + ' de dano'); }
     if (c.k === 'kazan' && c.kz) { if (/Chamas do Rei|Bomba de Magma/.test(h.n) && ef.dano) { ef.dano += c.kz; r.notas = r.notas.concat(c.kz + ' Brasa(s): +' + c.kz + ' de dano'); } else if (ef.dc) ef.dc = [ef.dc[0], ef.dc[1] + c.kz]; }
     const bonusDn = mod(c, 'dn') + ((c.k === 'dinamo' && !c.condUsado && r.ataque) ? 2 * Math.floor(rec(c, 'Dano sofrido') / 6) : 0);
-    const alvos = m.sel || [];
+    const alvos = AURA_APAR.includes(h.n) ? [] : (m.sel || []);
     const self = alvos.length === 1 && alvos[0][0] === aj && alvos[0][1] === S.ativo[1];
     const linhasR = [], extras = [], pre = [];
     let hitsBrasa = 0;
@@ -5398,6 +5438,12 @@
     if (m.cel && h.t.includes('ESTRUTURA')) { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, m.cel], on: true, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + m.cel }); }
     if (m.cel && !ef.ocupar && h.t.includes('MOBILIDADE') && /aparece|desloca|despenca|avança|desliza|dispara/i.test(h.d) && !ocupante(m.cel)) extras.push({ k: 'mover', v: m.cel, on: true, txt: 'Mover ' + ch.nome + ' para ' + m.cel });
     if (!m.cel && h.t.includes('ESTRUTURA') && c.pos && h.a === 'PESSOAL') { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, c.pos], on: false, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + c.pos }); }
+    if (AURA_APAR.includes(h.n)) {
+      const aps = (S.est || []).filter(z => z.tipo === 'Aparato' && z.dono === aj);
+      aps.forEach((z, n) => extras.push({ k: 'auraApar', v: z.id, on: n === 0, txt: '🧲 Gerar o efeito no Aparato em ' + z.cell }));
+      if (!aps.length) r.notas = r.notas.concat('nenhum Aparato no tabuleiro');
+    }
+    if (h.n === 'Contendo o Mal' && c.pos && !extras.some(x => x.k === 'est')) extras.push({ k: 'est', v: ['Campo', c.pos], on: true, txt: 'Colocar 🛡️ Campo em ' + c.pos + ' (Raio 2)' });
     // recursos
     if (c.k === 'ritmista') {
       if (/Ápice/.test(h.n) || /entra no Estágio Apogeu/.test(limpo(h.d))) extras.push({ k: 'apice', on: true, txt: '🎶 Entrar no Estágio Apogeu' });
@@ -5413,7 +5459,7 @@
     if (c.k === 'reator' && h.n === 'Blindagem Nuclear' && r.ops && !r.ops[r.opSel[0]].cargas) extras.push({ k: 'selfdesl', v: 1, on: true, txt: ch.nome + ' +1 de deslocamento' });
     r.linhas = linhasR; r.extras = extras; r.pre = pre; r.ef = ef; r.hitsBrasa = hitsBrasa;
     r.origem = (m.cel && /Raio \d/.test(h.d) && tipoAlc(h) === 'ALCANCE') ? m.cel : null;
-    r.semAlvo = !alvos.length && h.a !== 'PESSOAL' && !ehEstado(h);
+    r.semAlvo = !alvos.length && h.a !== 'PESSOAL' && !ehEstado(h) && !AURA_APAR.includes(h.n);
   }
   let res = null;
   function mostrarResultado(r){
@@ -5514,7 +5560,23 @@
         if (!ex.on) return;
         if (ex.k === 'ocupar') { const p0 = antes[ex.v.join(',')]; if (p0 && !ocupante(p0)) { moverPeca(c, p0); msg.push(CH[c.k].nome + ' foi para ' + p0); } }
         if (ex.k === 'carona') { const x = S.times[ex.v[0]][ex.v[1]]; x.carona = refDe(c); x.pos = c.pos; msg.push(CH[x.k].nome + ' subiu no veículo'); }
-        if (ex.k === 'est') { S.est = S.est || []; S.est.push({ id: Date.now() + '' + d(999), tipo: ex.v[0], cell: ex.v[1], dono: aj }); }
+        if (ex.k === 'est') {
+          S.est = S.est || [];
+          const du = duracaoEf(limpo(r.desc || ''), c, c), opN = r.ops ? r.opSel.map(i => r.ops[i].nome) : [];
+          const ne = { id: Date.now() + '' + d(999), tipo: ex.v[0], cell: ex.v[1], dono: aj, hab: r.nome || '', autor: refDe(c), autorNome: CH[c.k].nome, opc: opN.join(' + '), acaba: SEMFIM.includes(ex.v[0]) ? 'quando for removida' : du.txt, exp: (du.exp.t === 'man' || SEMFIM.includes(ex.v[0])) ? null : du.exp,
+            info: limpo(r.desc || '').split(/(?<=\.)\s/).slice(0, 3).join(' ') };
+          if (AURAS[r.nome]) { const a = AURAS[r.nome](r, opN); a.nome = r.nome; ne.auras = [a]; }
+          if (ne.tipo === 'Muralha') S.est = S.est.filter(z => !(z.tipo === 'Muralha' && z.autor === ne.autor));
+          S.est.push(ne);
+        }
+        if (ex.k === 'auraApar') {
+          const ap = (S.est || []).find(z => z.id === ex.v); if (ap) {
+            const opN = r.ops ? r.opSel.map(i => r.ops[i].nome) : [], du = duracaoEf(limpo(r.desc || ''), c, c), a = AURAS[r.nome](r, opN);
+            a.nome = r.nome + (opN.length ? ' (' + opN.join(' + ') + ')' : ''); a.acaba = du.txt; a.exp = du.exp.t === 'man' ? null : du.exp;
+            ap.auras = (ap.auras || []).filter(x => !x.nome.startsWith(r.nome)).concat(a);
+            msg.push(a.nome + ' no Aparato em ' + ap.cell);
+          }
+        }
         if (ex.k === 'mover' && !ocupante(ex.v)) moverPeca(c, ex.v);
         if (ex.k === 'estado') {
           c.efs = (c.efs || []).filter(x => !(x.mods && x.mods.est));
