@@ -1991,6 +1991,7 @@
       <p style="color:#ddd">Habilidades podem tirar ou dar ações. Não importa quantos efeitos se somem:</p>
       <div class="callout info"><span class="callout-label">MÍNIMO</span><p style="margin:0; color:var(--dark)">Todo personagem tem <strong>pelo menos 1 ação</strong> no seu turno.</p></div>
       <div class="callout" style="margin-top:8px"><span class="callout-label">MÁXIMO</span><p style="margin:0">Nenhum personagem passa de <strong>5 ações</strong> num turno.</p></div>
+      <div class="callout" style="margin-top:8px"><span class="callout-label">EM DESVANTAGEM</span><p style="margin:0">Enquanto um time tiver <strong>menos personagens vivos</strong> que o adversário, cada personagem dele começa o turno com <strong>+1 ação</strong>.</p></div>
       <p style="color:#bbb; font-size:12.5px; margin:10px 0 0">Ações perdidas ou ganhas valem sempre para o próximo turno do personagem, a não ser que a habilidade diga "neste turno".</p>
     </div>
   </div>
@@ -2346,6 +2347,7 @@
       <div class="section-title" style="--accent:var(--blue)">TURNO</div>
       <table>
         <tr><td>Ações por turno</td><td class="num">3 (mín. 1, máx. 5)</td></tr>
+        <tr><td>Time com menos personagens vivos</td><td class="num">+1 ação</td></tr>
         <tr><td>Mover</td><td class="num">1 ação · 2 casas</td></tr>
         <tr><td>Ataque Básico</td><td class="num">1 ação · adjacente</td></tr>
         <tr><td>Habilidade</td><td class="num">custo da ficha · 1×/turno</td></tr>
@@ -4777,7 +4779,10 @@
           msg += ' Dano Contínuo: −' + dano + ' PV.';
           aviso = '🩸 Dano Contínuo: −' + dano + ' PV' + (c.dcn ? ' (faltam ' + c.dcn + ')' : ' (acabou)');
         }
-        c.acts = clamp(3 + c.ab, 1, 5); c.ab = 0; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0;
+        const vivos = t => S.times[t].filter(x => !x.elim).length;
+        const desv = vivos(j) < vivos(1 - j) ? 1 : 0;
+        if (desv) { msg += ' Em desvantagem: +1 ação.'; aviso = (aviso ? aviso + ' · ' : '') + '⚖️ Em desvantagem: +1 ação'; }
+        c.acts = clamp(3 + c.ab + desv, 1, 5); c.ab = 0; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0;
         if (c.aspecto && c.aspecto.ate === 'turno') c.aspecto = null;
         expiraIni(j + ',' + i); expiraDC();
         if (c.k === 'peste') {
