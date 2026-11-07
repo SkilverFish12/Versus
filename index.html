@@ -1838,8 +1838,8 @@
 .f2-r{padding:14px 16px 18px;display:flex;flex-direction:column;gap:10px;background:repeating-linear-gradient(45deg,#fff,#fff 14px,#faf8ef 14px,#faf8ef 28px)}
 .f2-r .ficha-est{margin-top:2px}
 .f2-hist{display:block;text-align:center;font-family:'Bangers',cursive;letter-spacing:1.5px;font-size:14px;background:var(--dark);color:var(--yellow);border:3px solid #000;padding:6px;text-decoration:none;box-shadow:3px 3px 0 var(--ac)}
-.f2-img{max-height:770px}
-@media (max-width:760px){.f2{grid-template-columns:1fr}.f2-l{border-right:none;border-bottom:4px solid var(--dark)}.f2-img{min-height:460px}}
+@media (max-width:760px){.f2{grid-template-columns:1fr}.f2-l{border-right:none;border-bottom:4px solid var(--dark)}.f2-img{min-height:0;max-width:420px;align-self:center;width:calc(100% - 28px)}}
+.f2-img{flex:none;aspect-ratio:600/1480;min-height:0;height:auto}
 .hs{background:var(--pg);color:#eee;padding:0 0 22px}
 .hs-cab{padding:26px 22px 20px;text-align:center;background:var(--tbg);border-bottom:4px solid var(--dark)}
 .hs-cab .eyebrow{font-family:'Bangers',cursive;letter-spacing:3px;font-size:13px;color:var(--ac2)}
