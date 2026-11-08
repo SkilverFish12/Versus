@@ -1327,6 +1327,20 @@
   .dr-slot.cheio{border-style:solid; border-color:#000; background:var(--ac); color:#fff}
   .dr-slot span{font-size:26px; line-height:1}
   .dr-slot b{font-family:'Bangers',cursive; font-weight:400; font-size:14px; letter-spacing:.5px; line-height:1.05; text-shadow:1px 1px 0 #000}
+
+  .dr-sug{margin:10px 0 4px}
+  .dr-sug:empty{display:none}
+  .dr-sug-j{margin-top:8px}
+  .dr-sug h4{font-family:'Bangers',cursive; font-weight:400; letter-spacing:2px; font-size:18px; color:var(--tc)}
+  .dr-sug h4 small{font-family:inherit; letter-spacing:1px; font-size:13px; color:#aaa; margin-left:6px}
+  .dr-sug-lista{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:8px; margin-top:6px}
+  .dr-eq{border:3px solid #000; background:#1a1a1a; box-shadow:4px 4px 0 #000; padding:8px 10px; color:#eee}
+  .dr-eq b.nm{font-family:'Bangers',cursive; font-weight:400; letter-spacing:1px; font-size:17px; color:var(--yellow)}
+  .dr-eq p{font-size:12.5px; line-height:1.35; margin:4px 0 6px; color:#ccc}
+  .dr-eq-m{display:flex; gap:5px; flex-wrap:wrap}
+  .dr-eq-m button{border:2px solid #000; background:var(--ac); color:#fff; font-family:'Bangers',cursive; letter-spacing:.5px; font-size:13px; padding:3px 7px; cursor:pointer; text-shadow:1px 1px 0 #000}
+  .dr-eq-m button.meu{outline:2px solid var(--yellow)}
+  .dr-eq-m button:disabled{opacity:.35; cursor:default; text-decoration:line-through}
   .dr-cols{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
   .dr-col{border:4px solid var(--c); background:#0e0e0e; box-shadow:6px 6px 0 #000}
   .dr-col h3{background:var(--c); color:#fff; text-align:center; font-family:'Bangers',cursive; font-weight:400; letter-spacing:4px; font-size:20px; padding:6px}
@@ -4207,6 +4221,7 @@
       <div class="dr-ordem" id="drOrdem"></div>
     </div>
     <div class="dr-times" id="drTimes"></div>
+    <div class="dr-sug" id="drSug"></div>
     <div class="dr-cols" id="drCols"></div>
     <div class="dr-nav"><button class="btn-ghost" id="drDesfazer">↶ DESFAZER ESCOLHA</button><button class="btn-ghost" id="drAleatorio">❓ ALEATÓRIO</button><button class="btn-ghost" id="drPularBan">⏭ PULAR BANIMENTO</button><button class="btn-amarelo" id="drConfirmar" disabled>⚡ COMEÇAR PARTIDA ⚡</button></div>
   </section>
@@ -4610,6 +4625,26 @@
   function aptMini(c){
     return c.apt.map((v, i) => '<i' + (i === atkIdx(c) ? ' class="atk"' : '') + '>' + APT[i] + ' ' + v + '</i>').join('');
   }
+
+  // Equipes sugeridas: aparecem embaixo dos times quando o jogador já escolheu alguém
+  const EQUIPES = [{"n": "Colapso", "k": ["ancora", "tharen", "superior"], "i": "Âncora e Superior juntam o time inimigo num ponto só. Tharen castiga com o Estrondo quem não conseguiu sair da área."}, {"n": "Ímã e Faísca", "k": ["ancora", "dinamo", "neo"], "i": "Âncora e Neodímio puxam os inimigos uns contra os outros. Dínamo empurra para as colisões e eletrocuta a fila."}, {"n": "Ninguém Sai Daqui", "k": ["vale", "vespera", "juiza"], "i": "Enraizamento e Custódia deixam os alvos Imóveis, e Véspera rola mais dados contra quem não se mexeu."}, {"n": "Mato Fechado", "k": ["vale", "espreitador", "assobio"], "i": "Galhos, pássaros e armadilhas fecham as rotas do inimigo, enquanto o Espreitador atira de longe em quem ficou preso."}, {"n": "Linha de Frente", "k": ["kael", "torre", "juiza"], "i": "Guardião segura a frente, Torre atira de trás e a Juíza marca o alvo para o Rifle derrubar."}, {"n": "Golpe de Misericórdia", "k": ["kael", "johnny", "ninguem"], "i": "Guardião prende o alvo com a Raiz, Ninguém dá a ação extra e o Predador chega para a Execução."}, {"n": "Mil Formas", "k": ["cambiante", "fantasma", "aquarela"], "i": "Aquarela pinta a casa certa e troca aliados de lugar com o Retrato. Cambiante muda de forma e Fantasma atravessa tudo para cair nas costas do inimigo."}, {"n": "Bando", "k": ["cambiante", "semelhante", "tatuadora"], "i": "As Cópias do Semelhante atacam de graça, e as Presas da Tatuadora deixam cada Ataque Básico mais forte. O Instinto do Cambiante dá dados extras para o bando todo."}, {"n": "Pressão Total", "k": ["cavalo", "ritmista", "ninguem"], "i": "Cavalo salta de alvo em alvo tirando ações, Ninguém acelera o Ritmista e o Ritmo sobe sem parar."}, {"n": "Feridas Abertas", "k": ["cavalo", "magnus", "maligno"], "i": "Os três ficam mais fortes apanhando. Cavalo regenera, Magnus se trata e Maligno divide a dor com o inimigo."}, {"n": "Zona Quente", "k": ["carvao", "magnus", "aquarela"], "i": "Carvão e o campo de Magnus prendem os inimigos perto, e a tinta vermelha da Aquarela faz cada golpe doer mais."}, {"n": "Jogo Longo", "k": ["carvao", "cobrador", "axioma"], "i": "Carvão segura o inimigo no calor enquanto as Dívidas crescem. Axioma faz os acertos inimigos serem rerrolados até a hora da Cobrança."}, {"n": "Puxa e Arremessa", "k": ["gatoxadrez", "maleavel", "betterfly"], "i": "Garra Longa, Pega pra Cá e Arrasto Telecinético. O inimigo nunca fica onde quer."}, {"n": "Isolar o Alvo", "k": ["gatoxadrez", "sable", "saltadora"], "i": "Gato Xadrez puxa o alvo para longe dos aliados dele, Saltadora leva o time para perto e Sable faz a Execução com dano máximo."}, {"n": "Reação Nuclear", "k": ["ignifrost", "reator", "neo"], "i": "A Muralha de Ignifrost segura o inimigo enquanto o Reator carrega. Aquecido e com o Campo Potencial, o golpe final explode."}, {"n": "Fogo Cruzado", "k": ["ignifrost", "kazan", "bispo"], "i": "Ignifrost deixa o alvo Aquecido e cada fonte de dano do Kazan bate mais forte. Lady Bispo corre a arena revertendo os ferimentos."}, {"n": "Corrida Contra o Tempo", "k": ["drive", "ceifadora", "bispo"], "i": "O time mais rápido do jogo: entra, bate e volta. D.R.I.V.E. carrega, Ceifadora caça e Lady Bispo sempre tem um caminho de volta."}, {"n": "Entrega Expressa", "k": ["drive", "johnny", "cupido"], "i": "D.R.I.V.E. leva o Predador até o alvo isolado e sai. Cupido decide de longe quem anda para onde."}, {"n": "Na Corda Bamba", "k": ["genio", "agentecaos", "mira"], "i": "Gênio fica perigoso com metade dos PV, e Mira o mantém nessa faixa. Agente do Caos aguenta qualquer troca ao lado dele."}, {"n": "Pesadelo", "k": ["genio", "vespera", "sonhadora"], "i": "Sonhadora tira ações, Gênio suga o dano dos inimigos e Véspera corta quem ficou parado."}, {"n": "Bombardeio", "k": ["oliva", "torre", "assobio"], "i": "Tudo de longe. A Bolha de Azeitona protege a Torre, a Revoada do Assobio tira Defesa e o X marca quem cai primeiro."}, {"n": "Maré Alta", "k": ["oliva", "maleavel", "saltadora"], "i": "Azeitona veleja levando o time, Maleável arremessa e Saltadora reposiciona. Quem decide o mapa são vocês."}, {"n": "Muralha Viva", "k": ["invicto", "agentecaos", "parlenda"], "i": "O time luta colado. Parlenda cura quem está ao lado, Invicto pune quem chega perto e o Agente do Caos não sai do lugar."}, {"n": "Fortaleza", "k": ["invicto", "tharen", "forasteiro"], "i": "Um bloco que não se move. Forasteiro coleta Amostras no meio da ação, Invicto segura e Tharen castiga quem ficar perto."}, {"n": "Anjo da Guarda", "k": ["relicario", "eclipse", "mira"], "i": "Relicário consagra Breu e Fresta, e Mira ergue escudos. O Combatente frágil sobrevive para fechar a sombra."}, {"n": "Proteção Paga", "k": ["relicario", "cobrador", "tatuadora"], "i": "Se o Cobrador cair, as Dívidas somem. Relicário e as Escamas da Tatuadora existem para isso não acontecer."}, {"n": "Epidemia", "k": ["peste", "sable", "maligno"], "i": "Todo inimigo com uma Penalidade. Peste contagia, Sable fura a Defesa de quem está marcado e Maligno espalha a dor entre eles."}, {"n": "Zona Morta", "k": ["peste", "reator", "cupido"], "i": "O Miasma prende o inimigo, Cupido o leva para onde quiser e a Fissão do Reator explode tudo no Raio 2."}, {"n": "Paciência", "k": ["promessa", "kazan", "axioma"], "i": "Promessa toma os golpes e Axioma faz o inimigo rerrolar os acertos, enquanto Kazan junta Brasas para o fim."}, {"n": "Sem Ações", "k": ["promessa", "ceifadora", "sonhadora"], "i": "Rede Elétrica e Nãna Neném tiram ações do inimigo, e Promessa devolve tudo que chega perto."}, {"n": "Roda na Estrada", "k": ["andarilho", "ritmista", "parlenda"], "i": "O time anda junto. Andarilho e Parlenda curam quem está colado e o Ritmista dança o alvo pela arena."}, {"n": "Sempre em Movimento", "k": ["andarilho", "fantasma", "forasteiro"], "i": "Ninguém fica parado. Andarilho cura quem anda com ele, Fantasma atravessa tudo e Forasteiro desvia a rota do inimigo."}, {"n": "Noite Sem Fim", "k": ["duque", "eclipse", "arquiteto"], "i": "Duque voa para trás da linha inimiga, Breu e Fresta fecham a sombra e o Golpista rouba a Defesa do alvo."}, {"n": "Cerco Total", "k": ["duque", "semelhante", "superior"], "i": "Cópias cercam, o Domínio prende e o Banquete do Duque puxa todos para perto. Contra uma Cobaia, cada golpe das Cópias pesa mais."}, {"n": "Ferro e Faísca", "k": ["bigorna", "dinamo", "arquiteto"], "i": "Bigorna e Dínamo jogam inimigos contra os Blocos de Aço. O Golpista copia o melhor empurrão do turno."}, {"n": "Armadilha Montada", "k": ["bigorna", "espreitador", "betterfly"], "i": "Betterfly arrasta o alvo para as armadilhas e para dentro da cela do Bigorna, e o Espreitador atira em quem está Imóvel."}];
+  function rSugestoes(j, ban){
+    const el = $('#drSug'); if (!el) return;
+    el.innerHTML = ban ? '' : [0, 1].map(t => {
+      const meus = S.picks.filter(p => p.j === t).map(p => p.key);
+      if (!meus.length || meus.length >= 3) return '';
+      const livre = k => meus.includes(k) || (dono(k) === null && !banido(k));
+      const eqs = EQUIPES.map(e => ({ e, n: e.k.filter(k => meus.includes(k)).length, ok: e.k.every(livre) }))
+        .filter(x => x.n && (x.n === meus.length || x.ok))
+        .sort((a, b) => (b.ok - a.ok) || (b.n - a.n)).slice(0, 3);
+      if (!eqs.length) return '';
+      return '<div class="dr-sug-j" style="--tc:var(--j' + t + ')"><h4>EQUIPES SUGERIDAS PARA ' + nomeJ(t).toUpperCase() + '<small>' + (t === j ? 'toque num nome para escolher' : 'na sua vez, toque num nome para escolher') + '</small></h4><div class="dr-sug-lista">' + eqs.map(({ e }) =>
+        '<div class="dr-eq"><b class="nm">' + e.n + '</b><p>' + e.i + '</p><div class="dr-eq-m">' + e.k.map(k => {
+          const c = CH[k], meu = meus.includes(k), pode = t === j && podeEscolher(k), fora = !livre(k);
+          return '<button data-sk="' + k + '" style="--ac:' + c.ac + '"' + (meu ? ' class="meu"' : '') + (fora ? ' disabled' : '') + (pode ? '' : ' data-espera="1"') + '>' + c.icon + ' ' + c.nome + '</button>';
+        }).join('') + '</div></div>').join('') + '</div></div>';
+    }).join('');
+  }
   function rDraft(){
     const ban = emBan(), jb = vezBan();
     const j = vezDraft(), seq = ordem(S.prim), n = S.picks.length;
@@ -4647,6 +4682,7 @@
             '<span class="ti">' + c.icon + '</span><span class="tn">' + c.nome + '</span><span class="tsub">' + c.sub + '</span><span class="tpv">' + c.pv + ' PV</span><span class="tapt">' + aptMini(c) + '</span></div>';
         }).join('') + '</div></div>';
     }).join('');
+    rSugestoes(j, ban);
     $('#drCols').classList.toggle('banindo', ban);
     $('#drConfirmar').disabled = n < 6;
     $('#drDesfazer').disabled = n === 0 && !bans().length;
@@ -4668,6 +4704,7 @@
     if (emBan()) { if (!banido(t.dataset.k)) banir(t.dataset.k); else abrirInfo(t.dataset.k); return; }
     if (podeEscolher(t.dataset.k)) escolher(t.dataset.k); else abrirInfo(t.dataset.k);
   });
+  $('#drSug').addEventListener('click', e => { const b = e.target.closest('[data-sk]'); if (!b || b.disabled) return; if (podeEscolher(b.dataset.sk)) escolher(b.dataset.sk); else abrirInfo(b.dataset.sk); });
   $('#drCols').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.classList.contains('tile')) e.target.click(); });
   $('#drDesfazer').addEventListener('click', () => {
     if (S.picks.length) S.picks.pop(); else if (bans().length) { bans().pop(); S.semBan = false; }
