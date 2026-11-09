@@ -1784,6 +1784,15 @@
   .apts span b.mod{color:var(--red); text-decoration:underline}
   .hx.aura polygon{stroke-dasharray:4 3; stroke-width:2}
 
+  .ef-fichas{border:2px solid #000; background:#fffbe0; padding:6px 8px; margin-bottom:10px}
+  .ef-fichas summary{font-family:'Bangers',cursive; letter-spacing:1px; cursor:pointer; font-size:15px}
+  .ef-fichas summary small{font-family:inherit; font-size:11px; opacity:.7}
+  .ef-fg{margin-top:6px} .ef-fg > b{font-size:12px}
+  .ef-fichas .chip.pas{border-style:dashed}
+  label.pede select{outline:3px solid var(--red)}
+  .ef-contra{display:block; color:#6a3fc4; font-weight:700}
+  .ef-contra.on{color:#c40; }
+
   .hx.cerco polygon{fill:#e3d4ff; stroke:#7a4fd0; stroke-width:2; stroke-dasharray:5 3}
   .hx.cerco.c0 polygon{fill:#f3d2ff} .hx.cerco.c1 polygon{fill:#d8dcff}
   .hx.aura.a0 polygon{stroke:#e8323c} .hx.aura.a1 polygon{stroke:#1e88e5}
@@ -2494,7 +2503,7 @@
         <dd>Passar por casas ocupadas sem parar. Ninguém termina um movimento numa casa ocupada.</dd>
         <dt>"Até o início / fim do próximo turno"</dt>
         <dd>Conta o próximo turno do personagem citado na frase. Se não citar ninguém, é o de quem usou a habilidade.</dd>
-        <dt>Rodada</dt>
+        <dt>Contra um personagem</dt> <dd>Bônus e penalidades que dizem "contra ele", "contra o mesmo personagem" ou "contra Fulano" só valem quando esse personagem está na jogada: Defesa e deslocamento contam no turno dele, e dados e dano contam quando o ataque é contra ele. Na mesa, deixe o marcador do efeito encostado na peça desse personagem. Exemplo: a Armadura Adaptativa do Gênio dá +1 na Defesa só contra quem o acertou, então o bônus vale apenas no turno desse inimigo.</dd> <dt>Rodada</dt>
         <dd>Um ciclo em que todos os personagens em jogo agem uma vez. "Por 2 rodadas" = até o fim da segunda rodada seguinte.</dd>
       </dl>
     </div>
@@ -5134,7 +5143,7 @@
     const id = j + ',' + i, L = c.efs || [];
     const daAura = aurasEm(c).filter(([, a, ali]) => textoAura(a, ali)).map(([e, a, ali]) => '<div class="ef-item ef-aura"><div><b>' + esc(a.nome) + '</b> <span class="ef-por">' + (ESTI[e.tipo] || ESTI.Marcador)[1] + ' ' + esc(e.tipo) + ' em ' + e.cell + (e.autorNome ? ' · por ' + esc(e.autorNome) : '') + '</span><small>' + esc(textoAura(a, ali)) + '</small><small class="ef-ate">⌛ enquanto estiver no Raio ' + a.raio + (a.acaba || e.acaba ? ' · acaba ' + esc(a.acaba || e.acaba) : '') + '</small></div></div>').join('');
     const lista = daAura + L.map(e => '<div class="ef-item"><div><b>' + esc(e.nome) + '</b>' + (e.autor ? ' <span class="ef-por">por ' + esc(e.autor) + '</span>' : '') +
-      (e.faz ? '<small>' + esc(e.faz) + '</small>' : '') + '<small class="ef-ate">⌛ acaba ' + esc(e.acaba) + '</small></div>' +
+      (e.faz ? '<small>' + esc(e.faz) + '</small>' : '') + (e.contra && porRef(e.contra) ? '<small class="ef-contra' + (ativoRef() === e.contra ? ' on' : '') + '">🎯 só contra ' + esc(nomeC(porRef(e.contra))) + (e.cmods ? ' (' + esc(modsTxt(e.cmods)) + ')' : '') + (ativoRef() === e.contra ? ' · valendo agora' : '') + '</small>' : '') + '<small class="ef-ate">⌛ acaba ' + esc(e.acaba) + '</small></div>' +
       '<button class="mini-btn" data-efx="' + id + ',' + e.id + '" title="Remover efeito">✕</button></div>').join('');
     return '<div class="ef-box"><div class="ef-h"><label>✦ EFEITOS ATIVOS</label><button class="mini-btn ef-add" data-efnovo="' + id + '" title="Adicionar efeito à mão">+ EFEITO</button></div>' +
       (lista || '<div class="ef-vazio">Nenhum efeito.</div>') + '</div>';
@@ -5148,18 +5157,58 @@
       .concat(todos.flatMap(([r, n]) => [['i' + r, 'No início do próximo turno de ' + n], ['f' + r, 'No fim do próximo turno de ' + n]]));
     $('#mEfCaixa').innerHTML = '<div class="modal-h"><h3>✦ NOVO EFEITO · ' + CH[alvo.k].icon + ' ' + nomeC(alvo) + '</h3><button class="modal-x" data-fecha>✕</button></div><div class="dd-corpo ef-form">' +
       (efSalvos().length ? '<div class="ef-salvos"><span class="ef-lbl">💾 EFEITOS SALVOS (toque para preencher)</span><div class="ef-pre">' + efSalvos().map((x, n) => '<span class="chip ef-sv"><button type="button" data-efsav="' + n + '">' + esc(x.nome) + '</button><button type="button" class="ef-svx" data-efdel="' + n + '" title="Apagar">✕</button></span>').join('') + '</div></div>' : '') +
+      efFichasHTML(alvo) +
       '<label>EFEITO OU HABILIDADE<input id="efNome" placeholder="Ex.: Sentença"></label>' +
       '<label>QUEM USOU<select id="efQuem"><option value="">Ninguém / cenário</option>' + opQuem + '</select></label>' +
+      '<label>SÓ VALE CONTRA <small style="font-weight:400">(Defesa e deslocamento no turno dele; dados e dano quando atacar ele)</small><select id="efContra"><option value="">Todos (vale sempre)</option>' + opQuem + '</select></label>' +
       '<div class="ef-mods"><span class="ef-lbl">MODIFICADORES (a ficha se ajusta sozinha)</span><div class="ef-pre">' + EF_PRE.map((p, n) => '<button type="button" class="chip" data-efpre="' + n + '">' + p[0] + '</button>').join('') + '</div>' +
         '<div class="ef-steps">' + EF_CAMPOS.map(([k, n]) => '<div class="ef-step"><small>' + n + '</small><button type="button" class="mini-btn" data-efm="' + k + ',-1">−</button><b id="efm-' + k + '">0</b><button type="button" class="mini-btn" data-efm="' + k + ',1">+</button></div>').join('') +
         '<label class="ef-imo"><input type="checkbox" id="efImo"> ⛓ Imóvel</label></div></div>' +
       '<label>O QUE FAZ <small style="font-weight:400">(opcional, completa sozinho)</small><input id="efFaz" placeholder="Ex.: não pode usar Reações"></label>' +
-      '<label>QUANDO ACABA<select id="efAte">' + ate.map(([v, t]) => '<option value="' + v + '">' + t + '</option>').join('') + '</select></label>' +
+      '<label>QUANDO ACABA<select id="efAte"><option value="ficha" hidden id="efAteFicha"></option>' + ate.map(([v, t]) => '<option value="' + v + '">' + t + '</option>').join('') + '</select></label>' +
       '<label class="ef-imo ef-guardar"><input type="checkbox" id="efGuardar"> 💾 Salvar este efeito para usar de novo</label>' +
       '<p class="rs-nota">O efeito aparece na ficha com os modificadores já aplicados e, quando acabar ou for removido, a ficha volta ao normal.</p>' +
       '<div class="rd-rodape" style="padding:10px 0 0"><button class="btn-ghost" data-fecha>CANCELAR</button><button class="btn-amarelo" id="efSalvar" data-alvo="' + alvoRef + '">✓ ADICIONAR</button></div></div>';
     abrir('mEf');
     setTimeout(() => { const n = $('#efNome'); if (n) n.focus(); }, 50);
+  }
+
+  // efeitos das fichas dos personagens em jogo (habilidades, passivas e Supremas, com as opções separadas)
+  let efFichas = [], efFichaSel = null;
+  function efFichasHTML(alvo){
+    efFichas = []; efFichaSel = null;
+    const ar = refDe(alvo), tj = +ar[0];
+    const grupos = [];
+    S.times.forEach((t, j) => t.forEach((x, i) => {
+      const ch = CH[x.k], ref = j + ',' + i, itens = [];
+      ch.habs.concat([ch.supH]).forEach(h => {
+        if (!h) return;
+        const ops = opcoes(h);
+        (ops && ops.length ? ops.map(o => [h.n + ' · ' + o.nome, o.txt]) : [[h.n, limpo(h.d)]]).forEach(([nome, txt]) => {
+          const e = efeitos(h, false, txt), m = {};
+          if (e.def) m.df = e.def; if (e.dados) m.dd = e.dados; if (e.desl) m.ds = e.desl; if (e.dnAlvo) m.dn = e.dnAlvo;
+          const g = /(\+|[−-])(\d+) de dano(?! a menos)/.exec(txt); if (!m.dn && g && /causa|ataques/.test(txt)) m.dn = (g[1] === '+' ? 1 : -1) * +g[2];
+          if (e.red) m.red = e.red;
+          const du = duracaoEf(txt, x, alvo);
+          const contra = /contra (?:ele|ela|o mesmo personagem|o mesmo alvo|quem|esse personagem)|do mesmo personagem/i.test(txt) ? (j === tj ? 'escolher' : ref) : (new RegExp('contra ' + ch.nome.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(txt) ? ref : '');
+          const faz = txt.split(/(?<=\.)\s/).slice(0, 2).join(' ');
+          efFichas.push({ nome, quem: ref, faz, m, imo: !!e.imo, du, contra, pas: !h.c });
+          itens.push('<button type="button" class="chip' + (!h.c ? ' pas' : '') + '" data-effi="' + (efFichas.length - 1) + '" title="' + esc(faz) + '">' + esc(nome) + '</button>');
+        });
+      });
+      grupos.push('<div class="ef-fg"><b>' + ch.icon + ' ' + esc(ch.nome) + '</b><div class="ef-pre">' + itens.join('') + '</div></div>');
+    }));
+    return '<details class="ef-fichas" open><summary>📖 EFEITOS DAS FICHAS DA PARTIDA <small>(toque para preencher; tracejado = passiva)</small></summary>' + grupos.join('') + '</details>';
+  }
+  function efUsarFicha(n){
+    const x = efFichas[n]; if (!x) return; efFichaSel = x;
+    $('#efNome').value = x.nome; $('#efFaz').value = x.faz; $('#efImo').checked = x.imo;
+    $('#efQuem').value = x.quem;
+    EF_CAMPOS.forEach(([k]) => { efM[k] = x.m[k] || 0; }); efMShow();
+    const o = $('#efAteFicha'); o.hidden = false; o.textContent = 'Como na ficha: ' + x.du.txt; $('#efAte').value = 'ficha';
+    const sc = $('#efContra'); sc.value = x.contra && x.contra !== 'escolher' ? x.contra : '';
+    sc.closest('label').classList.toggle('pede', x.contra === 'escolher');
+    if (x.contra === 'escolher') toast('Escolha em SÓ VALE CONTRA quem é o personagem do efeito', 2200);
   }
   const EF_CAMPOS = [['df', 'DEFESA'], ['dd', 'DADOS'], ['dn', 'DANO'], ['ds', 'DESLOC.'], ['red', 'REDUÇÃO']];
   const EF_LIM = { df: [-6, 6], dd: [-4, 4], dn: [-9, 9], ds: [-2, 4], red: [0, 9] };
@@ -5169,6 +5218,7 @@
   const efMTxt = () => modsTxt({ df: efM.df, dd: efM.dd, dn: efM.dn, ds: efM.ds }) + (efM.red ? (modsTxt({ df: efM.df, dd: efM.dd, dn: efM.dn, ds: efM.ds }) ? ', ' : '') + 'Redução ' + efM.red : '');
   function efMShow(){ EF_CAMPOS.forEach(([k]) => { const el = $('#efm-' + k); if (el) { el.textContent = (efM[k] > 0 ? '+' : '') + efM[k]; el.className = efM[k] ? 'on' : ''; } }); }
   $('#mEf').addEventListener('click', e => {
+    const fi = e.target.closest('[data-effi]'); if (fi) { efUsarFicha(+fi.dataset.effi); return; }
     const pre = e.target.closest('[data-efpre]'), st = e.target.closest('[data-efm]');
     const sv = e.target.closest('[data-efsav]'), sd = e.target.closest('[data-efdel]');
     if (sd) { const L = efSalvos(); const x = L.splice(+sd.dataset.efdel, 1)[0]; store.set('versus-efeitos', L); sd.closest('.ef-sv').remove(); toast('Efeito salvo apagado: ' + x.nome, 1400); return; }
@@ -5191,13 +5241,16 @@
     const autor = porRef($('#efQuem').value), escrito = $('#efFaz').value.trim(), faz = [mt, escrito].filter(Boolean).join(' · '), v = $('#efAte').value;
     if ($('#efGuardar') && $('#efGuardar').checked) { const L = efSalvos().filter(x => x.nome !== nome); L.push({ nome, faz: escrito, m: Object.assign({}, efM), imo, ate: v, quem: $('#efQuem').value }); store.set('versus-efeitos', L.slice(-30)); }
     let exp = { t: 'man' }, acaba = 'quando for removido';
-    if (v[0] === 'r') { const ate = S.rodada + +v[1]; exp = { t: 'rod', ate }; acaba = 'no fim da rodada ' + ate; }
+    if (v === 'ficha' && efFichaSel) { exp = JSON.parse(JSON.stringify(efFichaSel.du.exp)); acaba = efFichaSel.du.txt; }
+    else if (v[0] === 'r') { const ate = S.rodada + +v[1]; exp = { t: 'rod', ate }; acaba = 'no fim da rodada ' + ate; }
     else if (v[0] === 'i') { const x = porRef(v.slice(1)); exp = { t: 'ini', ref: v.slice(1) }; acaba = 'no início do próximo turno de ' + nomeC(x); }
     else if (v[0] === 'f') { const x = porRef(v.slice(1)); exp = { t: 'fim', ref: v.slice(1), pula: ehAtivo(x) ? 1 : 0 }; acaba = 'no fim do próximo turno de ' + nomeC(x); }
     fechar('mEf');
+    const contra = $('#efContra').value, cmods = {};
+    if (contra) ['df', 'dd', 'dn', 'ds'].forEach(k => { if (mods[k]) { cmods[k] = mods[k]; delete mods[k]; } });
     mudar(() => {
       Object.keys(mods).forEach(k => { if (k === 'imo') alvo.imo = true; else { const L = LIM[k]; alvo[k] = clamp((alvo[k] || 0) + mods[k], L[0], L[1]); } });
-      novoEf(alvo, { nome, autor: autor ? nomeC(autor) : '', faz, acaba, exp, mods });
+      novoEf(alvo, Object.assign({ nome, autor: autor ? nomeC(autor) : '', faz, acaba, exp, mods }, contra ? { contra, cmods } : {}));
     },
       '✍ ' + nomeC(alvo) + ' recebeu ' + nome + (autor ? ' (de ' + nomeC(autor) + ')' : '') + (faz ? ': ' + faz : '') + '.');
   });
@@ -6103,9 +6156,13 @@
     if (k === 'ds' && temTat(c, 'Asas')) v += 1;
     if (k === 'ds' && temTat(c, 'Asas Avessas')) v -= 1;
     if (k === 'dd' && temTat(c, 'Olho Roxo') && !c.olhoRoxo) v -= 1;
-    v += auraMod(c, k) + cenMod(c, k);
+    v += auraMod(c, k) + cenMod(c, k) + contraMod(c, k);
     return v;
   }
+  // efeitos que só valem contra um personagem: Defesa/deslocamento no turno dele; dados/dano quando o portador ataca ele
+  const ativoRef = () => S.ativo ? S.ativo.join(',') : null;
+  function contraMod(c, k){ if (k !== 'df' && k !== 'ds') return 0; const a = ativoRef(); if (!a) return 0; return (c.efs || []).reduce((v, e) => v + (e.contra && e.cmods && e.contra === a ? (e.cmods[k] || 0) : 0), 0); }
+  function contraAlvo(c, t, k){ const r = refDe(t); return (c.efs || []).reduce((v, e) => v + (e.contra && e.cmods && e.contra === r ? (e.cmods[k] || 0) : 0), 0); }
   function cenMod(c, k){
     let v = 0;
     if (!S.cen || !S.ce) return 0;
@@ -6227,7 +6284,7 @@
     const [aj] = S.ativo, c = ativoC(), ch = CH[c.k], t = S.times[alvo[0]][alvo[1]];
     const esp = c.k === 'espreitador', dEsp = esp && c.pos && t.pos ? dP(c.pos, t) : 1, longe = esp && dEsp > 1, covarde = esp && (dEsp >= 4 || t.imo);
     const apt = longe ? 2 : atkIdx(ch), ex = dadosExtra(c);
-    let n = aptE(c, apt) + dadosCen(c, apt) + mod(c, 'dd') + ex.n, bonus = mod(c, 'dn'), def = clamp(defesas(t)[apt] + adef(c), 2, 10), notas = ex.notas.slice();
+    let n = aptE(c, apt) + dadosCen(c, apt) + mod(c, 'dd') + contraAlvo(c, t, 'dd') + ex.n, bonus = mod(c, 'dn') + contraAlvo(c, t, 'dn'), def = clamp(defesas(t)[apt] + adef(c), 2, 10), notas = ex.notas.slice();
     if (S.cen === 'ruptura' && c.duelo) { if (c.duelo === t.k) { n++; bonus += 2; notas.push('duelo: +1 dado e +2 de dano'); } else { bonus -= 2; def = clamp(def + 1, 2, 10); notas.push('fora do duelo: −2 de dano e +1 na Defesa do alvo'); } }
     if (c.k === 'reator' && rec(c, 'Cargas')) { bonus += 2 * rec(c, 'Cargas'); notas.push(rec(c, 'Cargas') + ' Carga(s): +' + 2 * rec(c, 'Cargas') + ' de dano se acertar'); }
     if (c.k === 'dinamo' && !c.condUsado && rec(c, 'Dano sofrido') >= 6) { const b = 2 * Math.floor(rec(c, 'Dano sofrido') / 6); bonus += b; notas.push('Condutor Natural: +' + b + ' de dano'); }
