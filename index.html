@@ -1793,6 +1793,8 @@
   .ef-contra{display:block; color:#6a3fc4; font-weight:700}
   .ef-contra.on{color:#c40; }
 
+  .hx.dominio polygon{fill:#e9d6ff; stroke:#5b2bb5; stroke-width:3}
+  .hx.dominio.d0 polygon{fill:#f5c9e6} .hx.dominio.d1 polygon{fill:#cdd3ff}
   .hx.cerco polygon{fill:#e3d4ff; stroke:#7a4fd0; stroke-width:2; stroke-dasharray:5 3}
   .hx.cerco.c0 polygon{fill:#f3d2ff} .hx.cerco.c1 polygon{fill:#d8dcff}
   .hx.aura.a0 polygon{stroke:#e8323c} .hx.aura.a1 polygon{stroke:#1e88e5}
@@ -5266,7 +5268,7 @@
       if (gra) return { raio: 2, ali: { ds: 2 }, ini: {}, txt: 'Gravidade: no Raio 2 do Aparato, aliados recebem +2 casas de deslocamento e inimigos ficam Imóveis.' + fim };
       return { raio: 2, ali: { df: 2 }, ini: { df: -2 }, txt: 'Blindagem: no Raio 2 do Aparato, aliados recebem +2 na Defesa e inimigos sofrem −2 na Defesa.' + fim }; },
   };
-  const SEMFIM = ['Aparato', 'Pássaro', 'Bomba', 'Marcador', 'Armadilha', 'Cópia'];
+  const SEMFIM = ['Aparato', 'Pássaro', 'Bomba', 'Marcador', 'Armadilha', 'Cópia', 'Domínio'];
   const AURA_APAR = ['Campo Magnético', 'Polos Invertidos'];
   const timeDe = c => { const r = refDe(c); return r ? +r[0] : -1; };
   function aurasEm(c){
@@ -5456,6 +5458,7 @@
         c.acts = clamp(3 + c.ab + desv, 1, 5); c.ab = 0; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0; c.rErros = 0; c.rDano = 0; c.cupCura = false;
         if (c.aspecto && c.aspecto.ate === 'turno') c.aspecto = null;
         expiraIni(j + ',' + i); expiraDC();
+        if (c.k === 'superior') { const L = (S.est || []).filter(z => z.tipo === 'Domínio' && z.dono === j); if (L.length) { S.est = S.est.filter(z => z !== L[0]); msg += ' Domínio mais antigo desfeito (' + L[0].cell + ').'; } }
         if (c.k === 'peste') {
           const nC = S.times[1 - j].filter(x => !x.elim && (x.efs || []).some(e => /^(Toque Pestilente|Miasma|Os Olhos da Morte)$/.test(e.nome) && e.mods && e.mods.df)).length;
           if (nC) { msg += ' A Colheita: ' + nC + ' inimigo(s) Contagiado(s), +' + 3 * nC + ' PV para distribuir (o que sobrar vai para PV guardados, máx. 6).'; aviso = (aviso ? aviso + ' · ' : '') + '🌾 A Colheita: +' + 3 * nC + ' PV para distribuir'; }
@@ -5620,6 +5623,8 @@
     if (S.cen === 'fazenda' && MATO.includes(c.id[0])) k.push(S.rodada > 4 ? 'mato alagado' : 'mato');
     return k;
   }
+  function limitarDominio(dono){ const L = (S.est || []).filter(z => z.tipo === 'Domínio' && z.dono === dono); if (L.length > 6) { const sai = L.slice(0, L.length - 6); S.est = S.est.filter(z => !sai.includes(z)); return sai.map(z => z.cell); } return []; }
+  const dominioEm = id => (S.est || []).find(z => z.tipo === 'Domínio' && z.cell === id);
   // Cerco de Um Só: casas em linha reta entre dois corpos do Semelhante, ou dentro da área (triângulo ou quadrado) dos corpos
   function cercoCasas(){
     const out = {};
@@ -5667,6 +5672,7 @@
     for (const c of CELLS) {
       const k = marcas(c);
       if (CER[c.id] !== undefined) k.push('cerco c' + CER[c.id]);
+      { const dm = dominioEm(c.id); if (dm) k.push('dominio d' + dm.dono); }
       if (DM.casas.has(c.id)) k.push(DM.linha ? (DM.linha.has(c.id) ? 'mv' : 'mv2') : 'mv');
       { const au = (S.est || []).filter(e => e.auras && e.auras.length && CELL[e.cell] && e.cell !== c.id && dist(e.cell, c.id) <= Math.max(...e.auras.map(a => a.raio))); if (au.length) k.push('aura a' + au[0].dono + (au.some(e => e.id === estSel) ? ' asel' : '')); }
       if (S.rodada === 1) { if (c.r === RB) k.push('ini j' + sul); if (c.r === -RB) k.push('ini j' + norte); }
@@ -5801,7 +5807,7 @@
   // ═════════ ESTRUTURAS ═════════
   const EST = [
     ['Galho', '🌿', 1], ['Muralha', '🧊', 1], ['Bomba', '🌋', 0], ['Aparato', '🧲', 0], ['Pássaro', '🐦', 0], ['Fenda', '🌀', 0],
-    ['Ilusão', '🃏', 0], ['Fumaça', '💨', 0], ['Pista', '🪩', 0], ['Campo', '🛡️', 0], ['Casa Infernal', '🔥', 0], ['Portal', '🚪', 0], ['Lápide', '🪦', 1], ['Miasma', '🦠', 0], ['Tempestade', '⛈️', 0], ['Nuvem', '☁️', 0], ['Retrato', '🖼️', 1], ['Tinta', '🎨', 0], ['Armadilha', '🪤', 0], ['Cópia', '👥', 0], ['Marcador', '📍', 0]];
+    ['Ilusão', '🃏', 0], ['Fumaça', '💨', 0], ['Pista', '🪩', 0], ['Campo', '🛡️', 0], ['Casa Infernal', '🔥', 0], ['Portal', '🚪', 0], ['Lápide', '🪦', 1], ['Miasma', '🦠', 0], ['Tempestade', '⛈️', 0], ['Nuvem', '☁️', 0], ['Retrato', '🖼️', 1], ['Tinta', '🎨', 0], ['Armadilha', '🪤', 0], ['Cópia', '👥', 0], ['Domínio', '🌌', 0], ['Marcador', '📍', 0]];
   const ESTI = Object.fromEntries(EST.map(e => [e[0], e]));
   const ARMI = { 'Mandíbula': '🪤', 'Laço': '➰', 'Espinhos Envenenados': '🌵', 'Explosiva': '💣' };
   const icEst = e => e.tipo === 'Armadilha' ? (ARMI[(e.opc || '').split(' + ')[0]] || '🪤') : e.tipo === 'Muralha' && e.opc === 'Fogo' ? '🧱' : (ESTI[e.tipo] || ESTI.Marcador)[1];
@@ -6011,9 +6017,9 @@
   function bannerModo(){
     const c = ativoC(), desl = c ? Math.max(1, 2 + mod(c, 'ds')) : 2;
     const nomeM = modo.t === 'mover' ? '👣 MOVER: toque numa casa amarela (até ' + desl + ' casas)' : modo.t === 'basico' ? '👊 ATAQUE BÁSICO: toque num inimigo adjacente' :
-      modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
+      modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo + (modo.resta ? ' (faltam até ' + modo.resta + (modo.alc ? ', a até ' + modo.alc + ' casas do Superior' : '') + ')' : '') : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
     const conf = modo.t === 'hab' && (modo.alvosInfo.tipo === 'todos' || modo.alvosInfo.tipo === 'linha') && (modo.dir !== undefined || modo.alvosInfo.tipo === 'todos');
-    return '<div class="ac-modo"><span>' + nomeM + '</span>' + (conf ? '<button class="btn-amarelo sm" data-confirmar>USAR ▶</button>' : '') + '<button class="btn-ghost sm" data-cancelar>✕ CANCELAR</button></div>';
+    return '<div class="ac-modo"><span>' + nomeM + '</span>' + (modo.t === 'estrutura' && modo.resta ? '<button class="btn-amarelo sm" data-cancelar>✓ PRONTO</button>' : '') + (conf ? '<button class="btn-amarelo sm" data-confirmar>USAR ▶</button>' : '') + '<button class="btn-ghost sm" data-cancelar>✕ CANCELAR</button></div>';
   }
   const tipoIcone = h => h.t.includes('ATAQUE') ? '💥' : h.t.includes('PENALIDADE') ? '🌀' : h.t.includes('RESTAURAÇÃO') ? '💚' : h.t.includes('ESTRUTURA') ? '🏗️' : h.t.includes('MOBILIDADE') ? '💨' : h.t.includes('REFORÇO') ? '🛡️' : '✨';
   function textoModo(m){
@@ -6086,8 +6092,10 @@
     if (modo.t === 'estrutura') {
       if (!cellId || bloqueada(cellId)) return true;
       const tipo = modo.tipo, dono = modo.dono;
-      modo = null;
-      mudar(() => { S.est = S.est || []; const ne = { id: Date.now() + '' + d(999), tipo, cell: cellId, dono }; const hp = { Galho: 'Brotamento', Campo: 'Contendo o Mal', Miasma: 'Miasma' }[tipo]; if (hp) { const a = AURAS[hp]({}, []); a.nome = hp; ne.auras = [a]; ne.hab = hp; } S.est.push(ne); }, ESTI[tipo][1] + ' ' + tipo + ' colocado em ' + cellId + '.');
+      if (modo.de && dist(modo.de, cellId) > (modo.alc || 99)) { toast('Fora do alcance (até ' + modo.alc + ' casas)', 1400); return true; }
+      if (tipo === 'Domínio' && dominioEm(cellId)) return true;
+      if (modo.resta > 1) { modo.resta--; } else modo = null;
+      mudar(() => { S.est = S.est || []; const ne = { id: Date.now() + '' + d(999), tipo, cell: cellId, dono, acaba: tipo === 'Domínio' ? 'quando for desfeito' : undefined }; const hp = { Galho: 'Brotamento', Campo: 'Contendo o Mal', Miasma: 'Miasma' }[tipo]; if (hp) { const a = AURAS[hp]({}, []); a.nome = hp; ne.auras = [a]; ne.hab = hp; } S.est.push(ne); if (tipo === 'Domínio') limitarDominio(dono); }, ESTI[tipo][1] + ' ' + tipo + ' colocado em ' + cellId + '.');
       rPainel(); return true;
     }
     if (!c) { modo = null; return false; }
@@ -6156,6 +6164,7 @@
     if (k === 'ds' && temTat(c, 'Asas')) v += 1;
     if (k === 'ds' && temTat(c, 'Asas Avessas')) v -= 1;
     if (k === 'dd' && temTat(c, 'Olho Roxo') && !c.olhoRoxo) v -= 1;
+    if (k === 'ds' && c.pos) { const dm = dominioEm(c.pos); if (dm) v += dm.dono === timeDe(c) ? 1 : -1; }
     v += auraMod(c, k) + cenMod(c, k) + contraMod(c, k);
     return v;
   }
@@ -6597,6 +6606,7 @@
           if (AURAS[r.nome]) { const a = AURAS[r.nome](r, opN); a.nome = r.nome; ne.auras = [a]; }
           if (ne.tipo === 'Muralha') S.est = S.est.filter(z => !(z.tipo === 'Muralha' && z.autor === ne.autor));
           S.est.push(ne);
+          if (ne.tipo === 'Domínio') { const sai = limitarDominio(ne.dono); if (sai.length) msg.push('Domínio desfeito em ' + sai.join(', ')); }
           if (ne.tipo === 'Cópia') { const mi = S.est.filter(z => z.tipo === 'Cópia' && z.dono === ne.dono); if (mi.length > 3) { S.est = S.est.filter(z => z !== mi[0]); msg.push('a Cópia mais antiga (' + mi[0].cell + ') se desfez'); } }
           if (ne.tipo === 'Armadilha') { const mi = S.est.filter(z => z.tipo === 'Armadilha' && z.autor === ne.autor); if (mi.length > 3) { S.est = S.est.filter(z => z !== mi[0]); msg.push('a armadilha mais antiga (' + mi[0].cell + ') se desfez'); } }
         }
@@ -6628,6 +6638,7 @@
       if (r.nome && c.pos) pecas((pj, pi, x) => x.k === 'forasteiro' && x.pos && dist(x.pos, c.pos) <= 3).forEach(([pj, pi]) => { const f = S.times[pj][pi]; if (rec(f, 'Amostras') < 3) { setRec(f, 'Amostras', rec(f, 'Amostras') + 1); msg.push('🛸 +1 Amostra'); } });
     }, () => (r.nome ? (r.sup ? '★ ' : '✨ ') + CH[c.k].nome + ' usou ' + r.nome : '👊 ' + CH[c.k].nome + ' fez um Ataque Básico') + (msg.length ? ': ' + msg.join(', ') : '') + '.');
     if (r.sup) toast('★ ' + r.nome.toUpperCase() + ' ★', 2200);
+    if (r.nome === 'Domínio Gravitacional' && c.pos) setTimeout(() => { iniciarModo({ t: 'estrutura', tipo: 'Domínio', dono: aj, resta: 5, alc: 4, de: c.pos }); toast('Marque as outras casas de Domínio: até 2 no total por 1 ação, até 6 por 2 ações', 3200); }, 60);
   });
 
   // ── paleta de estruturas ──
