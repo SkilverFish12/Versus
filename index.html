@@ -1855,6 +1855,10 @@
 .dr-cols.banindo .tile:not(.banido):not(.off) .tc{box-shadow:0 0 0 3px #d42a2a, 3px 4px 0 3px #000}
 @media (max-width:700px){ .dr-sub .dr-grid{grid-template-columns:repeat(4,1fr)} .tile .tc{width:70px; height:70px} .tile .tc .ti{font-size:32px} .tile .tn{font-size:12.5px} }
 @media (max-width:380px){ .dr-sub .dr-grid{grid-template-columns:repeat(3,1fr)} }
+.dr-sub .dr-grid{display:flex; flex-wrap:wrap; justify-content:center}
+.dr-sub .dr-grid > .tile{flex:0 0 calc(33.333% - 4px); box-sizing:border-box}
+@media (max-width:700px){ .dr-sub .dr-grid > .tile{flex-basis:calc(25% - 4px)} }
+@media (max-width:380px){ .dr-sub .dr-grid > .tile{flex-basis:calc(33.333% - 4px)} }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Amatic+SC&family=Audiowide&family=Black+Ops+One&family=Bungee&family=Butcherman&family=Caveat+Brush&family=Cherry+Swash&family=Cinzel:wght@400;700&family=Cinzel+Decorative&family=Creepster&family=Eater&family=Exo+2:wght@400;700&family=Fascinate&family=Fredericka+the+Great&family=Grenze+Gotisch&family=Limelight&family=Lobster&family=Lora:wght@400;700&family=Marcellus+SC&family=MedievalSharp&family=Metal+Mania&family=Michroma&family=Monoton&family=New+Rocker&family=Nosifer&family=Orbitron&family=Oswald:wght@400;700&family=Pacifico&family=Pirata+One&family=Playfair+Display:ital,wght@0,400;0,700;1,900&family=Racing+Sans+One&family=Righteous&family=Rubik+Beastly&family=Rubik+Bubbles&family=Rubik+Burned&family=Rubik+Glitch&family=Rubik+Moonrocks&family=Rubik+Wet+Paint&family=Russo+One&family=Rye&family=Saira+Stencil+One&family=Sancreek&family=Special+Elite&family=Teko:wght@400;700&family=Tilt+Warp&family=Uncial+Antiqua&family=UnifrakturMaguntia&family=Zen+Dots&display=swap" rel="stylesheet"><style>
 /* ═══ FICHA COM IMAGEM + PÁGINA DE HISTÓRIA ═══ */
