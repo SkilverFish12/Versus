@@ -1715,6 +1715,13 @@
   .pt-cen[hidden]{display:none}
   .hx.mv2 polygon{fill:#fff3b0; stroke:#a08000}
   .pt-board .ac-modo{margin:-12px -12px 10px; border:none; border-bottom:3px solid #000}
+  @media (min-width:860px) and (max-width:1099px){
+    .pt-mesa{display:grid; grid-template-columns:340px minmax(0,1fr); gap:10px; align-items:start}
+    .pt-mesa:has(> .pt-acao[hidden]){display:block}
+    .pt-mesa:has(> .pt-board[hidden]){display:block}
+    .pt-mesa .pt-acao{position:sticky; top:150px; max-height:calc(100vh - 160px); overflow-y:auto; margin-bottom:0}
+    .pt-mesa .pt-board .ac-modo{display:none}
+  }
   @media (min-width:1100px){
     .pt-mesa{display:grid; grid-template-columns:410px minmax(0,1fr); gap:14px; align-items:start}
     .pt-mesa:has(> .pt-acao[hidden]){display:block}
@@ -1840,6 +1847,36 @@
   @media (max-width:480px){ .ef-steps{grid-template-columns:repeat(2, minmax(0,1fr))} }
   .tk-ir{font:800 11px/1 system-ui,sans-serif; text-anchor:middle; fill:#fff; paint-order:stroke; stroke:#000; stroke-width:3px; pointer-events:none}
   .tk.tk2 .tk-c{opacity:.78; stroke-dasharray:4 3}
+  .vez-pips{display:inline-flex; gap:5px; margin-left:10px; vertical-align:middle}
+  .vez-pips i, .ac-acoes i[data-acao2]{width:20px; height:20px; border-radius:50%; background:var(--yellow); border:2px solid #fff; cursor:pointer; display:inline-block}
+  .vez-pips i.gasta, .ac-acoes i.gasta{background:#333; border-color:#555}
+  .pt-info .emb-i{width:22px; height:22px}
+  b.rl{color:#b8001f; font-weight:900}
+  .ef-item small b.rl{color:#c4002a}
+  .ef-prev{margin:4px 0 8px; font-size:13px; line-height:1.35; background:#fff8d8; border:2px dashed #000; padding:6px 8px}
+  .chip.bem{border-color:#1d8a3a; background:#e4f7e8} .chip.mal{border-color:#b8001f; background:#fde7ea}
+  .ac-stat{padding:8px 12px; border-bottom:3px solid #000; background:#fff}
+  .as-pv{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .as-pv > b{font-family:'Bangers',cursive; font-weight:400; font-size:30px; line-height:1}
+  .as-pv > b small{font-size:15px; color:#555}
+  .as-bar{flex:1; min-width:90px; height:12px; background:#ddd; border:2px solid #000; position:relative}
+  .as-bar i{position:absolute; inset:0 auto 0 0; background:#2bb24c} .as-bar i.med{background:#e8b400} .as-bar i.bai{background:#d42020}
+  .as-tags{flex-basis:100%; font-size:12px; font-weight:700; color:#333}
+  .as-def{display:grid; grid-template-columns:repeat(4,1fr); gap:4px; margin-top:6px}
+  .as-def span{text-align:center; border:2px solid #000; background:#f3f3f3; padding:2px 0}
+  .as-def span.on{background:#fff2a8}
+  .as-def b{display:block; font-family:'Bangers',cursive; font-weight:400; font-size:20px; line-height:1.05}
+  .as-def small{font-size:10px; font-weight:700; color:#555}
+  .as-efs{margin:6px 0 0; padding-left:16px; font-size:12.5px; line-height:1.3}
+  .as-efs li{margin-bottom:3px} .as-efs em{font-style:normal; color:#7a3cff; font-weight:700} .as-efs small{color:#777}
+  .ac-alvos{padding:6px 12px 8px; border-bottom:3px solid #000; background:#f6f1e4}
+  .ac-alvos > small{font-family:'Bangers',cursive; letter-spacing:1.5px; font-size:13px} .ac-alvos > small em{font-family:'Comic Neue',sans-serif; font-style:normal; letter-spacing:0; font-size:11px; color:#555}
+  .aa-l{display:flex; align-items:center; gap:8px; margin-top:5px}
+  .aa-ic{font-size:24px; line-height:1} .aa-ic .emb-i{width:30px; height:30px}
+  .aa-n{flex:1; min-width:0} .aa-n b{display:block; font-family:'Bangers',cursive; font-weight:400; font-size:15px; letter-spacing:.5px; line-height:1} .aa-n small{font-size:11.5px; font-weight:700; color:#444}
+  .aa-d{display:flex; gap:3px} .aa-d i{font-style:normal; width:24px; text-align:center; border:2px solid #000; background:#eee; font-family:'Bangers',cursive; font-size:15px; color:#666}
+  .aa-d i.on{background:#ffe000; color:#000; font-size:19px; width:30px}
+  .es-dist circle{fill:#000; stroke:#ffe000; stroke-width:2} .es-dist text{font-size:12px}
   .emb-i{width:1.25em; height:1.25em; border-radius:50%; display:inline-block; vertical-align:middle; object-fit:contain; filter:drop-shadow(1px 2px 0 rgba(0,0,0,.6))}
   .banco-tk .emb-i{width:34px; height:34px}
   .dr-slot .emb-i{width:44px; height:44px}
@@ -4988,6 +5025,18 @@
     return [0, 1, 2, 3].map(a => clamp(5 + aptE(c, RES[a]) + mod(c, 'df'), 2, 10));
   }
   const atkIdx = ch => ({ FIS: 0, DES: 1, VIS: 2, AST: 3 })[ch.atk] ?? 1;
+  // bolinhas de ação clicáveis (barra de cima e painel do turno)
+  function pipsAcao(c, j, i, cls){
+    return '<span class="' + cls + '">' + Array.from({ length: c.acts }, (_, n) => '<i class="' + (n < c.gastas ? 'gasta' : '') + '" data-acao2="' + j + ',' + i + ',' + n + '" title="Toque para gastar ou devolver"></i>').join('') + '</span>';
+  }
+  document.addEventListener('click', e => {
+    const p = e.target.closest('[data-acao2]'); if (!p) return;
+    const [j, i, n] = p.dataset.acao2.split(',').map(Number); const c = S.times && S.times[j] && S.times[j][i]; if (!c) return;
+    c.gastas = n < c.gastas ? n : n + 1; salvar(); render();
+  });
+  // destaca no texto dos efeitos as informações importantes (como o negrito das fichas)
+  const RX_REALCE = /[+−-]\s?\d+\s(?:de dano|na Defesa|de Defesa|Defesa|dados?|casas?(?: de deslocamento)?|PV|ações?|ação|FÍS|DES|VIS|AST|em (?:Físico|Destreza|Visão|Astúcia))|Dano Contínuo \d+(?: por \d+ rodadas?)?|Redução \d+|\d+ de dano|\d+ PV|(?:por|durante) \d+ rodadas?|\b(?:Imóvel|Cercad[oa]s?|Marcad[oa]s?|Cobaia|Aquecido|Resfriado|Apaixonad[oa]s?|Monstro de Sangue|Física [0-9]|Físico \d)\b/g;
+  const realce = t => esc(t || '').replace(RX_REALCE, '<b class="rl">$&</b>');
   function rPartida(){
     const r = S.rodada;
     rDiario();
@@ -4996,7 +5045,7 @@
     $('#ptInicia').innerHTML = 'Iniciativa: <b style="color:' + corJ(ini) + '">' + nomeJ(ini) + '</b>';
     if (S.ativo) {
       const c = S.times[S.ativo[0]][S.ativo[1]];
-      $('#ptVez').innerHTML = 'Em turno: <b style="color:' + corJ(S.ativo[0]) + '">' + CH[c.k].icon + ' ' + CH[c.k].nome + '</b>';
+      $('#ptVez').innerHTML = 'Em turno: <b style="color:' + corJ(S.ativo[0]) + '">' + icoH(c.k, c) + ' ' + CH[c.k].nome + '</b>' + pipsAcao(c, S.ativo[0], S.ativo[1], 'vez-pips');
     } else if (S.vez !== null) {
       $('#ptVez').innerHTML = 'Vez de: <b style="color:' + corJ(S.vez) + '">' + nomeJ(S.vez) + '</b> · escolha quem joga';
     } else {
@@ -5167,7 +5216,7 @@
     const id = j + ',' + i, L = c.efs || [];
     const daAura = aurasEm(c).filter(([, a, ali]) => textoAura(a, ali)).map(([e, a, ali]) => '<div class="ef-item ef-aura"><div><b>' + esc(a.nome) + '</b> <span class="ef-por">' + (ESTI[e.tipo] || ESTI.Marcador)[1] + ' ' + esc(e.tipo) + ' em ' + e.cell + (e.autorNome ? ' · por ' + esc(e.autorNome) : '') + '</span><small>' + esc(textoAura(a, ali)) + '</small><small class="ef-ate">⌛ enquanto estiver no Raio ' + a.raio + (a.acaba || e.acaba ? ' · acaba ' + esc(a.acaba || e.acaba) : '') + '</small></div></div>').join('');
     const lista = daAura + L.map(e => '<div class="ef-item"><div><b>' + esc(e.nome) + '</b>' + (e.autor ? ' <span class="ef-por">por ' + esc(e.autor) + '</span>' : '') +
-      (e.faz ? '<small>' + esc(e.faz) + '</small>' : '') + (e.contra && porRef(e.contra) ? '<small class="ef-contra' + (ativoRef() === e.contra ? ' on' : '') + '">🎯 só contra ' + esc(nomeC(porRef(e.contra))) + (e.cmods ? ' (' + esc(modsTxt(e.cmods)) + ')' : '') + (ativoRef() === e.contra ? ' · valendo agora' : '') + '</small>' : '') + '<small class="ef-ate">⌛ acaba ' + esc(e.acaba) + '</small></div>' +
+      (e.faz ? '<small>' + realce(e.faz) + '</small>' : '') + (e.contra && porRef(e.contra) ? '<small class="ef-contra' + (ativoRef() === e.contra ? ' on' : '') + '">🎯 só contra ' + esc(nomeC(porRef(e.contra))) + (e.cmods ? ' (' + esc(modsTxt(e.cmods)) + ')' : '') + (ativoRef() === e.contra ? ' · valendo agora' : '') + '</small>' : '') + '<small class="ef-ate">⌛ acaba ' + esc(e.acaba) + '</small></div>' +
       '<button class="mini-btn" data-efx="' + id + ',' + e.id + '" title="Remover efeito">✕</button></div>').join('');
     return '<div class="ef-box"><div class="ef-h"><label>✦ EFEITOS ATIVOS</label><button class="mini-btn ef-add" data-efnovo="' + id + '" title="Adicionar efeito à mão">+ EFEITO</button></div>' +
       (lista || '<div class="ef-vazio">Nenhum efeito.</div>') + '</div>';
@@ -5208,16 +5257,29 @@
       ch.habs.concat([ch.supH]).forEach(h => {
         if (!h) return;
         const ops = opcoes(h);
-        (ops && ops.length ? ops.map(o => [h.n + ' · ' + o.nome, o.txt]) : [[h.n, limpo(h.d)]]).forEach(([nome, txt]) => {
+        const base = ops && ops.length ? ops.map(o => [h.n + ' · ' + o.nome, o.txt]) : [[h.n, limpo(h.d)]];
+        const partes = [];
+        base.forEach(([nome, txt]) => {
+          const cl = txt.split(/(?<=\.)\s+|;\s+|,\s+e\s+(?=(?:o|a|os|as|ele|ela)\s)/);
+          const bom = q => !/sofre|perde|inimigos? (?:causa|tem|têm)/i.test(q) && /\+\s?\d/.test(q);
+          const P = cl.filter(bom), N = cl.filter(q => !bom(q));
+          const temMod = q => /[+−-]\s?\d+\s(?:de dano|na Defesa|dados?|casas?)|Imóvel/.test(q);
+          if (P.length && N.some(temMod)) { partes.push([nome + ' · no inimigo', N.join(' '), 'mal']); partes.push([nome + ' · bônus de ' + ch.nome, P.join(' '), 'bem']); }
+          else partes.push([nome, txt, '']);
+        });
+        partes.forEach(([nome, txt, lado]) => {
           const e = efeitos(h, false, txt), m = {};
           if (e.def) m.df = e.def; if (e.dados) m.dd = e.dados; if (e.desl) m.ds = e.desl; if (e.dnAlvo) m.dn = e.dnAlvo;
           const g = /(\+|[−-])(\d+) de dano(?! a menos)/.exec(txt); if (!m.dn && g && /causa|ataques/.test(txt)) m.dn = (g[1] === '+' ? 1 : -1) * +g[2];
           if (e.red) m.red = e.red;
           const du = duracaoEf(txt, x, alvo);
-          const contra = /contra (?:ele|ela|o mesmo personagem|o mesmo alvo|quem|esse personagem)|do mesmo personagem/i.test(txt) ? (j === tj ? 'escolher' : ref) : (new RegExp('contra ' + ch.nome.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(txt) ? ref : '');
+          let contra = /contra (?:ele|ela|o mesmo personagem|o mesmo alvo|quem|esse personagem)|do mesmo personagem/i.test(txt) ? (j === tj ? 'escolher' : ref) : (new RegExp('contra (?:o |a )?' + ch.nome.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(txt) ? ref : '');
+          if (lado === 'bem') contra = /contra (?:os ataques )?(?:dele|dela|o Cercado|o marcado|o alvo|ele|ela)/i.test(txt) ? 'escolher' : '';
+          if (lado === 'bem') { Object.keys(m).forEach(k => { if (m[k] < 0) delete m[k]; }); }
+          if (lado === 'mal') { Object.keys(m).forEach(k => { if (k !== 'red' && m[k] > 0 && k !== 'dn') delete m[k]; }); }
           const faz = txt.split(/(?<=\.)\s/).slice(0, 2).join(' ');
           efFichas.push({ nome, quem: ref, faz, m, imo: !!e.imo, du, contra, pas: !h.c });
-          itens.push('<button type="button" class="chip' + (!h.c ? ' pas' : '') + '" data-effi="' + (efFichas.length - 1) + '" title="' + esc(faz) + '">' + esc(nome) + '</button>');
+          itens.push('<button type="button" class="chip' + (!h.c ? ' pas' : '') + (lado === 'bem' ? ' bem' : lado === 'mal' ? ' mal' : '') + '" data-effi="' + (efFichas.length - 1) + '" title="' + esc(faz) + '">' + esc(nome) + '</button>');
         });
       });
       grupos.push('<div class="ef-fg"><b>' + ch.icon + ' ' + esc(ch.nome) + '</b><div class="ef-pre">' + itens.join('') + '</div></div>');
@@ -5226,6 +5288,7 @@
   }
   function efUsarFicha(n){
     const x = efFichas[n]; if (!x) return; efFichaSel = x;
+    { let pv = $('#efPrev'); const f = $('#efFaz'); if (!pv && f) { pv = document.createElement('p'); pv.id = 'efPrev'; pv.className = 'ef-prev'; (f.closest('label') || f).insertAdjacentElement('afterend', pv); } if (pv) pv.innerHTML = '📖 ' + realce(x.faz); }
     $('#efNome').value = x.nome; $('#efFaz').value = x.faz; $('#efImo').checked = x.imo;
     $('#efQuem').value = x.quem;
     EF_CAMPOS.forEach(([k]) => { efM[k] = x.m[k] || 0; }); efMShow();
@@ -5714,7 +5777,7 @@
     (S.est || []).forEach(e => {
       const p = CELL[e.cell]; if (!p) return;
       const n = estNa(e.cell).indexOf(e), off = n * 9;
-      toks += '<g class="es j' + e.dono + (estSel === e.id ? ' sel' : '') + '" data-est="' + e.id + '" transform="translate(' + (p.x + off).toFixed(1) + ',' + (p.y - off).toFixed(1) + ')"><polygon points="0,-17 15,-8.5 15,8.5 0,17 -15,8.5 -15,-8.5"/><text y="7">' + icEst(e) + '</text></g>';
+      toks += '<g class="es j' + e.dono + (estSel === e.id ? ' sel' : '') + '" data-est="' + e.id + '" transform="translate(' + (p.x + off).toFixed(1) + ',' + (p.y - off).toFixed(1) + ')"><polygon points="0,-17 15,-8.5 15,8.5 0,17 -15,8.5 -15,-8.5"/><text y="7">' + icEst(e) + '</text>' + (!modo && sc && sc.pos && sc.pos !== e.cell && !ocupante(e.cell) ? '<g class="tk-dist es-dist"><circle cx="15" cy="-15" r="9"/><text x="15" y="-11">' + dist(sc.pos, e.cell) + '</text></g>' : '') + '</g>';
     });
     let selos = '';
     [false, true].forEach(passo => [0, 1].forEach(j => S.times[j].forEach((c, i) => {
@@ -5995,12 +6058,13 @@
       box.hidden = true; box.innerHTML = ''; modo = null; return;
     }
     const [j, i] = S.ativo, ch = CH[c.k], r = restam(c);
-    const pips = Array.from({ length: c.acts }, (_, n) => '<i class="' + (n < c.gastas ? 'gasta' : '') + '"></i>').join('');
+    const pips = Array.from({ length: c.acts }, (_, n) => '<i class="' + (n < c.gastas ? 'gasta' : '') + '" data-acao2="' + j + ',' + i + ',' + n + '"></i>').join('');
     const desl = Math.max(1, 2 + mod(c, 'ds'));
     const btn = (attr, ico, nome, info, mot, extra) => '<button class="ac-bt' + (extra || '') + '" ' + attr + (mot ? ' disabled' : '') + '><span class="ac-ic">' + ico + '</span><span class="ac-tx"><b>' + nome + '</b><small>' + (mot ? '🚫 ' + mot : info) + '</small></span></button>';
     const enem = pecas((a, b, x) => alvoBasico(c, a, x));
     let h = '<div class="ac-topo" style="--tc:var(--j' + j + ');--ac:' + ch.ac + '"><span class="ac-icone">' + icoH(c.k, c) + '</span><div><small>TURNO DE ' + nomeJ(j).toUpperCase() + '</small><b>' + ch.nome + '</b></div>' +
       '<div class="ac-acoes"><small>AÇÕES</small><div>' + pips + '</div><b>' + r + ' de ' + c.acts + '</b></div></div>';
+    h += statusTurno(c, j, i);
     if (modo) h += bannerModo();
     h += '<div class="ac-grade">' +
       btn('data-ac="mover"', '👣', 'MOVER', '1 ação · até ' + desl + ' casas', c.carona ? 'no veículo: use DESCER' : c.imo ? 'Imóvel' : r < 1 ? 'sem ações' : '') +
@@ -6038,6 +6102,22 @@
     if (pas.length) h += '<details class="ac-pas"><summary>Passivas de ' + ch.nome + '</summary>' + pas.map(x => '<p><b>' + x.n + ':</b> ' + x.d + '</p>').join('') + '</details>';
     if (!c.pos) h += '<p class="ac-aviso">Posicione ' + ch.nome + ' no tabuleiro para o jogo checar alcance e alvos.</p>';
     box.innerHTML = h; box.hidden = false;
+  }
+  function statusTurno(c, j, i){
+    const ch = CH[c.k], ai = atkIdx(ch), dfs = defesas(c), AP = ['FÍS', 'DES', 'VIS', 'AST'];
+    const pct = c.max ? Math.max(0, Math.min(100, Math.round(100 * c.pv / c.max))) : 0;
+    const efs = (c.efs || []).map(e => '<li><b>' + esc(e.nome) + '</b>' + (e.faz ? ' · ' + realce(e.faz) : '') + (e.contra && porRef(e.contra) ? ' <em>🎯 só contra ' + esc(nomeC(porRef(e.contra))) + '</em>' : '') + ' <small>⌛ ' + esc(e.acaba || '') + '</small></li>').join('') +
+      aurasEm(c).filter(([, a, ali]) => textoAura(a, ali)).map(([e, a, ali]) => '<li><b>' + esc(a.nome) + '</b> · ' + realce(textoAura(a, ali)) + '</li>').join('');
+    const tags = [c.imo ? '⛓ Imóvel' : '', mod(c, 'ds') ? 'desloc. ' + (2 + mod(c, 'ds')) : '', mod(c, 'dd') ? (mod(c, 'dd') > 0 ? '+' : '') + mod(c, 'dd') + ' dado' : '', mod(c, 'dn') ? (mod(c, 'dn') > 0 ? '+' : '') + mod(c, 'dn') + ' dano' : ''].filter(Boolean);
+    let h = '<div class="ac-stat">' +
+      '<div class="as-pv"><b>' + c.pv + '<small>/' + c.max + ' PV</small></b><span class="as-bar"><i class="' + (pct <= 30 ? 'bai' : pct <= 60 ? 'med' : '') + '" style="width:' + pct + '%"></i></span>' + (tags.length ? '<span class="as-tags">' + tags.join(' · ') + '</span>' : '') + '</div>' +
+      '<div class="as-def">' + dfs.map((v, a) => '<span' + (a === ai ? ' class="on"' : '') + '><b>' + v + '</b><small>DEF vs ' + AP[a] + '</small></span>').join('') + '</div>' +
+      (efs ? '<ul class="as-efs">' + efs + '</ul>' : '') + '</div>';
+    const ini = S.times[1 - j].map((t, ti) => [t, ti]).filter(([t]) => !t.elim);
+    if (ini.length) h += '<div class="ac-alvos"><small>DEFESA DOS INIMIGOS <em>(contra ' + AP[ai] + ' em destaque)</em></small>' + ini.map(([t]) => { const d = defesas(t);
+      return '<div class="aa-l"><span class="aa-ic">' + icoH(t.k, t) + '</span><span class="aa-n"><b>' + CH[t.k].nome + '</b><small>' + t.pv + '/' + t.max + ' PV' + (c.pos && t.pos ? ' · ' + dist(c.pos, t.pos) + ' casa' + (dist(c.pos, t.pos) === 1 ? '' : 's') : '') + (t.imo ? ' · ⛓' : '') + '</small></span>' +
+        '<span class="aa-d">' + d.map((v, a) => '<i' + (a === ai ? ' class="on"' : '') + ' title="Defesa contra ' + AP[a] + '">' + v + '</i>').join('') + '</span></div>'; }).join('') + '</div>';
+    return h;
   }
   let aprimorarMarcado = false;
   function bannerModo(){
@@ -6390,6 +6470,7 @@
     const linhasR = [], extras = [], pre = [];
     let hitsBrasa = 0;
     if (c.k === 'kael' && h.n === 'Marca Titânica') { delete ef.dano; delete ef.cura; const nt = 'O dano e a cura dos selos só acontecem na condição descrita: aplique à mão.'; if (!r.notas.includes(nt)) r.notas = r.notas.concat(nt); }
+    if (c.k === 'magnus' && h.n === 'Eu Escolho o Monstro') extras.push({ k: 'estado', v: { nome: 'Monstro de Sangue', mods: { apt: [Math.max(0, 4 - ch.apt[0]), 0, 0, 0], dn: 2 }, hab: h.n, dtx: 'por 2 rodadas' }, on: true, txt: 'Virar o Monstro de Sangue por 2 rodadas (Físico 4, +2 de dano nos Ataques Básicos)' });
     if (c.k === 'cambiante' && h.n === 'Quimera Primordial') extras.push({ k: 'estado', v: { nome: 'Quimera Primordial', mods: { apt: [1, 1, 1, 0], dn: 4, ds: 2 }, hab: h.n }, on: true, txt: 'Entrar na Quimera: as três formas sem perder Astúcia (+1 FÍS, +1 DES, +1 VIS, +4 de dano, +2 desloc.)' });
     if (ehEstado(h)) {
       const nome = r.ops ? r.ops[r.opSel[0]].nome : h.n;
@@ -6648,7 +6729,7 @@
         if (ex.k === 'estado') {
           c.efs = (c.efs || []).filter(x => !(x.mods && x.mods.est));
           c.estado = ex.v; msg.push(CH[c.k].nome + ' entrou em ' + ex.v.nome);
-          const du = duracaoEf(limpo(r.desc || ''), c, c);
+          const du = duracaoEf(ex.v.dtx || limpo(r.desc || ''), c, c);
           novoEf(c, { nome: ex.v.nome, autor: CH[c.k].nome, faz: modsTxt(ex.v.mods || {}) || 'ver ficha', acaba: du.txt, exp: du.exp, mods: { est: true } });
         }
         if (ex.k === 'compasso') {
