@@ -1675,6 +1675,12 @@
   .es.j0 polygon{stroke:var(--j0)} .es.j1 polygon{stroke:var(--j1)}
   .es.sel polygon{stroke:#ffe000; stroke-width:5}
   .es text{font-size:17px; text-anchor:middle; pointer-events:none}
+  .es-selo{cursor:pointer}
+  .es-selo circle{fill:#fff; stroke-width:2.5; filter:drop-shadow(1px 1px 0 rgba(0,0,0,.7))}
+  .es-selo.j0 circle{stroke:var(--j0)} .es-selo.j1 circle{stroke:var(--j1)}
+  .es-selo.sel circle{fill:var(--yellow)}
+  .es-selo text{font-size:12px; text-anchor:middle; pointer-events:none}
+
   .est-grade{display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:8px; margin-top:8px}
   .est-grade button{display:flex; flex-direction:column; align-items:center; gap:2px; border:3px solid #000; background:#fff; box-shadow:3px 3px 0 #000; padding:8px 4px; cursor:pointer; font-family:'Bangers',cursive; letter-spacing:1px; font-size:15px}
   .est-grade button:hover{background:var(--yellow)}
@@ -5694,8 +5700,12 @@
       const n = estNa(e.cell).indexOf(e), off = n * 9;
       toks += '<g class="es j' + e.dono + (estSel === e.id ? ' sel' : '') + '" data-est="' + e.id + '" transform="translate(' + (p.x + off).toFixed(1) + ',' + (p.y - off).toFixed(1) + ')"><polygon points="0,-17 15,-8.5 15,8.5 0,17 -15,8.5 -15,-8.5"/><text y="7">' + icEst(e) + '</text></g>';
     });
+    let selos = '';
     [false, true].forEach(passo => [0, 1].forEach(j => S.times[j].forEach((c, i) => {
       if (c.elim || !c.pos || !CELL[c.pos] || !!c.carona !== passo) return;
+      if (!c.carona) [c.pos].concat(c.k === 'eclipse' && c.pos2 ? [c.pos2] : []).forEach(cel => { const L = estNa(cel); if (!L.length || !CELL[cel]) return; const q = CELL[cel];
+        L.slice(0, 3).forEach((e, n) => { const x = q.x + HS * .72, y = q.y - HS * .05 + n * 17;
+          selos += '<g class="es-selo j' + e.dono + (estSel === e.id ? ' sel' : '') + '" data-est="' + e.id + '" transform="translate(' + x.toFixed(1) + ',' + y.toFixed(1) + ')"><title>' + esc(e.tipo) + '</title><circle r="9.5"/><text y="4.5">' + icEst(e) + '</text></g>'; }); });
       const p = CELL[c.pos], ch = CH[c.k];
       const sel = selTok && selTok[0] === j && selTok[1] === i;
       const at = S.ativo && S.ativo[0] === j && S.ativo[1] === i;
@@ -5757,7 +5767,7 @@
     if (S.cen === 'fazenda') leg.push('🌾 Mato Alto (+1 Defesa contra Projéteis' + (S.rodada > 4 ? '; alagado: +1 casa para entrar' : '') + ')');
     if (S.cen === 'estrada') leg.push('<i class="lg estrada"></i>Estrada (+1 desloc.' + (S.ce.caminhao ? ', CAMINHÃO: 6 de dano' : '') + ')');
     if (nevoa) leg.push('🌫️ névoa: nada com alcance maior que 2');
-    box.innerHTML = info + '<div class="tb-wrap' + (nevoa ? ' nevoa' : '') + '"><svg class="tb-svg" viewBox="' + (-W / 2) + ' ' + (-H / 2) + ' ' + W + ' ' + H + '">' + g + toks + '</svg></div>' +
+    box.innerHTML = info + '<div class="tb-wrap' + (nevoa ? ' nevoa' : '') + '"><svg class="tb-svg" viewBox="' + (-W / 2) + ' ' + (-H / 2) + ' ' + W + ' ' + H + '">' + g + toks + selos + '</svg></div>' +
       (leg.length ? '<div class="tb-leg">' + leg.map(x => '<span>' + x + '</span>').join('') + '</div>' : '') +
       '<div class="tb-ferr"><button class="btn-ghost sm" data-ac2="estrutura">🏗️ COLOCAR ESTRUTURA</button></div>' + banco;
   }
