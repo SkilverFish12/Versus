@@ -6536,7 +6536,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'troca') {
       const z = (S.est || []).find(y => y.tipo === 'Cópia' && y.dono === S.ativo[0] && y.cell === cellId); if (!z) return true;
       modo = null; const de = c.pos;
-      mudar(() => { moverPeca(c, z.cell); z.cell = de; }, '👥 ' + CH[c.k].nome + ' trocou de lugar com a Cópia (' + de + ' ↔ ' + c.pos + ').');
+      mudar(() => { moverPeca(c, z.cell); z.cell = de; }, () => '👥 ' + CH[c.k].nome + ' trocou de lugar com a Cópia (' + de + ' ↔ ' + c.pos + ').');
       if (filaPos.length) setTimeout(proximoPos, 50);
       return true;
     }
