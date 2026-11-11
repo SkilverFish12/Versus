@@ -6801,6 +6801,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (temTat(c, 'Presas Avessas')) { bonus -= 1; notas.push('Presas Avessas: −1 de dano'); }
     if (temTat(c, 'Olho Roxo')) c.olhoRoxo = true;
     if (c.k === 'andarilho' && rec(c, 'Embalo') >= 3) { bonus += 2; notas.push('Embalo: +2 de dano'); }
+    if (contraAlvo(c, t, 'dn')) notas.push('efeito contra ' + CH[t.k].nome + ': ' + (contraAlvo(c, t, 'dn') > 0 ? '+' : '') + contraAlvo(c, t, 'dn') + ' de dano');
     if (mod(c, 'dn') !== c.dn) notas.push('estado/recurso: ' + (mod(c, 'dn') - c.dn > 0 ? '+' : '') + (mod(c, 'dn') - c.dn) + ' de dano');
     if (longe) notas.push('Tiro de Tocaia: Ataque Básico com Visão de longe (🎯 Projétil), 0 de dano');
     if (covarde) notas.push('Caça Covarde: +2 de dano (' + (dEsp >= 4 ? 'alvo a ' + dEsp + ' casas' : 'alvo Imóvel') + ')');
@@ -6863,6 +6864,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const self = alvos.length === 1 && alvos[0][0] === aj && alvos[0][1] === S.ativo[1];
     const linhasR = [], extras = [], pre = [];
     let hitsBrasa = 0;
+    if (h.n === 'Foco Absoluto' && alvos.length && alvos[0][0] !== aj) { delete ef.def; delete ef.dados; delete ef.dano; const tf = S.times[alvos[0][0]][alvos[0][1]];
+      extras.push({ k: 'foco', v: alvos[0], aprim: r.aprim, on: true, txt: 'Foco em ' + CH[tf.k].nome + ': −1 na Defesa contra ' + ch.nome + (r.aprim ? ', +2 de dano de ' + ch.nome + ' contra ele' : '') + '; ' + ch.nome + ' tem −1 dado contra outros inimigos' }); }
     if (c.k === 'kael' && h.n === 'Marca Titânica') { delete ef.dano; delete ef.cura; delete ef.empurra; delete ef.desl; if (r.ops && r.opSel.some(i => r.ops[i].nome === 'Céus')) { const nc = 'Céus: depois de aplicar, toque na casa ao lado do alvo para onde ele vai ser empurrado (3 casas).'; if (!r.notas.includes(nc)) r.notas = r.notas.concat(nc); } const nt = 'O dano e a cura dos selos só acontecem na condição descrita: aplique à mão.'; if (!r.notas.includes(nt)) r.notas = r.notas.concat(nt); }
     if (c.k === 'magnus' && h.n === 'Eu Escolho o Monstro') extras.push({ k: 'estado', v: { nome: 'Monstro de Sangue', mods: { apt: [Math.max(0, 4 - ch.apt[0]), 0, 0, 0], dn: 2 }, hab: h.n, dtx: 'até o fim do seu próximo turno' }, on: true, txt: 'Virar o Monstro de Sangue até o fim do próximo turno (Físico 4, +2 de dano nos Ataques Básicos, sem habilidades)' });
     if (c.k === 'assobio' && h.n === 'O Canto Final') extras.push({ k: 'estado', v: { nome: 'O Canto Final', mods: { apt: [0, 0, Math.max(0, 4 - ch.apt[2]), 0] }, hab: h.n, dtx: 'durante 2 rodadas' }, on: true, txt: 'Assobio fica com Visão 4 durante 2 rodadas' });
@@ -6908,7 +6911,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       }
       if (ok) {
         if (inimigo) {
-          if (ef.dano) { const dv = Math.max(1, ef.dano + bonusDn); lista.push({ k: 'dano', v: dv, on: true, psi: ef.psi, txt: dv + (ef.psi ? ' de Dano Psíquico' : ' de dano') }); }
+          if (ef.dano) { const dv = Math.max(1, ef.dano + bonusDn + contraAlvo(c, t, 'dn')); lista.push({ k: 'dano', v: dv, on: true, psi: ef.psi, txt: dv + (ef.psi ? ' de Dano Psíquico' : ' de dano') }); }
           if (ef.dc) lista.push({ k: 'dc', v: ef.dc, on: true, txt: 'Dano Contínuo ' + ef.dc[0] + ' por ' + ef.dc[1] });
           if (ef.def && ef.def < 0) lista.push({ k: 'def', v: ef.def, on: true, txt: '−' + (-ef.def) + ' na Defesa' });
           if (ef.dnAlvo) lista.push({ k: 'dnAlvo', v: ef.dnAlvo, on: true, txt: 'causa −' + (-ef.dnAlvo) + ' de dano nos ataques' });
@@ -7112,6 +7115,11 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       });
       (r.extras || []).slice().sort((a, b) => (a.k === 'carona') - (b.k === 'carona')).forEach(ex => {
         if (!ex.on) return;
+        if (ex.k === 'foco') { const t = S.times[ex.v[0]][ex.v[1]], tr = refDe(t), cr = refDe(c), exp = { t: 'ini', ref: cr }, acaba = 'no início do próximo turno de ' + CH[c.k].nome, nm = CH[c.k].nome;
+          novoEf(t, { nome: 'Foco Absoluto', autor: nm, faz: '−1 na Defesa contra ' + nm + (ex.aprim ? ' · sofre +2 de dano de ' + nm : ''), acaba, exp, contra: cr, cmods: { df: -1 }, mods: {} });
+          c.dd = clamp(c.dd - 1, -4, 4);
+          novoEf(c, { nome: 'Foco Absoluto', autor: nm, faz: '−1 dado contra outros inimigos' + (ex.aprim ? ' · +2 de dano contra ' + CH[t.k].nome : ''), acaba, exp, mods: { dd: -1 }, contra: tr, cmods: ex.aprim ? { dd: 1, dn: 2 } : { dd: 1 } });
+          msg.push(nm + ' fixou a mira em ' + CH[t.k].nome); }
         if (ex.k === 'ocupar') { const p0 = antes[ex.v.join(',')]; if (p0 && !ocupante(p0)) { moverPeca(c, p0); msg.push(CH[c.k].nome + ' foi para ' + p0); } }
         if (ex.k === 'carona') { const x = S.times[ex.v[0]][ex.v[1]]; x.carona = refDe(c); x.pos = c.pos; msg.push(CH[x.k].nome + ' subiu no veículo'); }
         if (ex.k === 'est') {
