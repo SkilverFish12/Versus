@@ -5652,7 +5652,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (temTat(c, 'Raiz') && c.pv < c.max) { c.pv = Math.min(c.max, c.pv + 2); msg += ' Raiz: +2 PV.'; aviso = (aviso ? aviso + ' · ' : '') + '🌱 Raiz: +2 PV'; }
         if (temTat(c, 'Raiz Avessa')) { sofrerDano(c, 2, {}); msg += ' Raiz Avessa: −2 PV.'; aviso = (aviso ? aviso + ' · ' : '') + '🥀 Raiz Avessa: −2 PV'; }
         c.olhoRoxo = false;
-        c.acts = clamp(3 + c.ab + desv, 1, 5); c.ab = 0; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0; c.rErros = 0; c.rDano = 0; c.cupCura = false; c.escP = null; c.leitura = false;
+        c.acts = clamp(3 + c.ab + desv, 1, 5); c.ab = 0; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0; c.rErros = 0; c.rDano = 0; c.cupCura = false; c.escP = null; c.leitura = false; c.copAtk = [];
         if (c.aspecto && c.aspecto.ate === 'turno') c.aspecto = null;
         expiraIni(j + ',' + i); expiraDC();
         if (c.k === 'superior') { const L = (S.est || []).filter(z => z.tipo === 'Domínio' && z.dono === j); if (L.length) { S.est = S.est.filter(z => z !== L[0]); msg += ' Domínio mais antigo desfeito (' + L[0].cell + ').'; } }
@@ -6227,8 +6227,16 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   const H_TOCAIA = { n: 'Tiro de Tocaia', t: ['ATAQUE'], a: 'TODO TABULEIRO', c: 0, x: 2, d: 'No início do turno, sem gastar ação: teste de Visão contra todos os inimigos a 4 casas ou mais. Quem for atingido sofre 4 de dano (2 do tiro e +2 da Caça Covarde).', p: null, k: '🎯 Projétil', m: '' };
   const tocaiaAlvos = c => pecas((j, i, x) => j !== S.ativo[0] && x.pos && c.pos && dP(c.pos, x) >= 4);
   const PASM = { gatoxadrez: ['Movimentação Aguçada', 2, 'até 2 casas no começo do turno'], andarilho: ['Recompensando a Caminhada', 0, 'um Mover por turno'], johnny: ['Instinto Predatório', 2, 'até 2 casas em direção a um inimigo com Dano Contínuo'], promessa: ['Voto de Proteção', 3, 'até 3 casas em direção a um aliado que foi atacado'] };
+  // Todos Sou Eu: cada Cópia dá 1 Ataque Básico grátis por turno num inimigo adjacente a ela
+  const copiasLivres = c => (S.est || []).filter(z => z.tipo === 'Cópia' && z.dono === S.ativo[0] && z.cell && !(c.copAtk || []).includes(z.id));
+  const copiaAlvos = c => pecas((j, i, x) => j !== S.ativo[0] && x.pos && copiasLivres(c).some(z => dP(z.cell, x) === 1));
+  // Sem Aberturas: Invicto inimigo do personagem em turno
+  const invictoContra = () => { const aj = S.ativo[0], i = S.times[1 - aj].findIndex(x => !x.elim && x.k === 'invicto'); return i < 0 ? null : [1 - aj, i]; };
   function botoesPassivas(c, btn){
     let h = '';
+    if (c.k === 'semelhante') { const nl = copiasLivres(c).length; h += btn('data-pasv="copias"', '👥', 'CÓPIAS ATACAM', 'passiva · sem ação · Todos Sou Eu · ' + nl + (nl === 1 ? ' Cópia livre' : ' Cópias livres'), !nl ? 'nenhuma Cópia livre' : !copiaAlvos(c).length ? 'nenhum inimigo adjacente a uma Cópia' : ''); }
+    const iv = invictoContra();
+    if (iv) { const x = S.times[iv[0]][iv[1]]; h += btn('data-pasv="invicto"', '🥊', 'SEM ABERTURAS', 'Invicto ataca ' + CH[c.k].nome + ' (entrou ou saiu do Raio 1 dele) · gasta 1 ação do próximo turno de Invicto', x.ab <= -2 ? 'Invicto já gastou 2 ações do próximo turno' : ''); }
     const usou = n => (c.usadas || []).includes(n);
     if (c.k === 'espreitador') { const L = tocaiaAlvos(c); h += btn('data-pasv="tocaia"', '🎯', 'TIRO DE TOCAIA', 'passiva · sem ação · VIS contra todos a 4+ casas · 4 de dano', usou('Tiro de Tocaia') ? 'já usado neste turno' : c.pos && !L.length ? 'nenhum inimigo a 4 casas ou mais' : ''); }
     const pm = PASM[c.k];
@@ -6344,7 +6352,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function bannerModo(){
     const c = ativoC(), desl = (modo && modo.desl) || (c ? Math.max(1, 2 + mod(c, 'ds')) : 2);
     const nomeM = modo.t === 'mover' ? '👣 ' + (modo.gratis ? 'MOVER GRÁTIS (' + modo.gratis + ')' : 'MOVER') + ': toque numa casa amarela (até ' + desl + ' casas)' : modo.t === 'basico' ? '👊 ATAQUE BÁSICO: toque num inimigo adjacente' :
-      modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo + (modo.resta ? ' (faltam até ' + modo.resta + (modo.alc ? ', a até ' + modo.alc + ' casas' + (modo.tipo === 'Domínio' ? ' do Superior' : '') : '') + ')' : '') : modo.t === 'atkEst' ? '🎯 ATACAR ESTRUTURA: toque na casa da estrutura' : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
+      modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo + (modo.resta ? ' (faltam até ' + modo.resta + (modo.alc ? ', a até ' + modo.alc + ' casas' + (modo.tipo === 'Domínio' ? ' do Superior' : '') : '') + ')' : '') : modo.t === 'copiaAtk' ? '👥 CÓPIAS ATACAM: toque num inimigo adjacente a uma Cópia livre' : modo.t === 'atkEst' ? '🎯 ATACAR ESTRUTURA: toque na casa da estrutura' : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
     const conf = modo.t === 'hab' && (modo.alvosInfo.tipo === 'todos' || modo.alvosInfo.tipo === 'linha') && (modo.dir !== undefined || modo.alvosInfo.tipo === 'todos');
     return '<div class="ac-modo"><span>' + nomeM + '</span>' + (modo.t === 'estrutura' && modo.resta ? '<button class="btn-amarelo sm" data-cancelar>✓ PRONTO</button>' : '') + (conf ? '<button class="btn-amarelo sm" data-confirmar>USAR ▶</button>' : '') + '<button class="btn-ghost sm" data-cancelar>✕ CANCELAR</button></div>';
   }
@@ -6372,6 +6380,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b.dataset.descer) return iniciarModo({ t: 'descer', quem: b.dataset.descer });
     if (b.dataset.ac === 'pagar') return mudar(() => { c.div = divDe(c) - 1; c.gastas += 1; }, '💰 ' + CH[c.k].nome + ' pagou 1 Dívida (' + (divDe(c) - 1) + ' restante(s)).');
     if (b.dataset.ac === 'carga') return mudar(() => { setRec(c, 'Cargas', rec(c, 'Cargas') + 1); c.gastas += 2; }, '⚛️ ' + CH[c.k].nome + ' carregou: ' + (rec(c, 'Cargas') + 1) + ' Carga(s).');
+    if (b.dataset.pasv === 'copias') return iniciarModo({ t: 'copiaAtk' });
+    if (b.dataset.pasv === 'invicto') { const iv = invictoContra(); return ataqueBasico(S.ativo.slice(), { atk: iv, custo: 0, pagaProx: true, tit: 'SEM ABERTURAS' }); }
     if (b.dataset.pasv === 'tocaia') { const L = c.pos ? tocaiaAlvos(c) : pecas((j, i, x) => j !== S.ativo[0]); modo = { t: 'hab', h: H_TOCAIA, sup: false, aprim: false, alvosInfo: { tipo: 'todos', alvos: L }, sel: L }; return resolverHab(); }
     if (b.dataset.pasv === 'mover') { const pm = PASM[c.k]; return iniciarModo({ t: 'mover', gratis: pm[0], desl: pm[1] || undefined }); }
     if (b.dataset.ac === 'atkest') return iniciarModo({ t: 'atkEst', alvos: estAtacaveis(c).map(z => z.cell) });
@@ -6410,6 +6420,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'basico') pecas((j, i, x) => alvoBasico(c, j, x)).forEach(p => out.toks.add(p.join(',')));
     if (modo.t === 'estrutura') CELLS.forEach(x => { if (!bloqueada(x.id)) out.casas.add(x.id); });
     if (modo.t === 'atkEst') modo.alvos.forEach(id => out.casas.add(id));
+    if (modo.t === 'copiaAtk') { copiaAlvos(c).forEach(p => out.toks.add(p.join(','))); copiasLivres(c).forEach(z => out.casas.add(z.cell)); }
     if (modo.t === 'carona') pecas((pj, pi, x) => pj === S.ativo[0] && x !== c && !x.carona && x.pos && c.pos && dist(x.pos, c.pos) === 1).forEach(p => out.toks.add(p.join(',')));
     if (modo.t === 'descer') { const [qj, qi] = modo.quem.split(',').map(Number), q = S.times[qj][qi]; if (q.pos) vizinhas(q.pos).filter(livre).forEach(id => out.casas.add(id)); }
     if (modo.t === 'hab') {
@@ -6436,6 +6447,13 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     }
     if (!c) { modo = null; return false; }
     const d0 = destaquesModo();
+    if (modo.t === 'copiaAtk') {
+      if (!tok || !d0.toks.has(tok)) return true;
+      const al = tok.split(',').map(Number), t = S.times[al[0]][al[1]], z = copiasLivres(c).find(y => dP(y.cell, t) === 1); modo = null;
+      if (!z) return true;
+      c.copAtk = (c.copAtk || []).concat(z.id); salvar(); rBoard(); rPainel();
+      ataqueBasico(al, { custo: 0, tit: 'CÓPIA EM ' + z.cell }); return true;
+    }
     if (modo.t === 'atkEst') {
       const id = cellId || (tok && S.times[+tok[0]][+tok[2]].pos);
       if (!id || !modo.alvos.includes(id)) return true;
@@ -6632,8 +6650,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (c.k === 'maligno' && rec(c, 'Peso de Dor')) { n += rec(c, 'Peso de Dor'); notas.push('Peso de Dor: +' + rec(c, 'Peso de Dor') + ' dado'); }
     return { n, notas };
   }
-  function ataqueBasico(alvo){
-    const [aj] = S.ativo, c = ativoC(), ch = CH[c.k], t = S.times[alvo[0]][alvo[1]];
+  function ataqueBasico(alvo, o){
+    o = o || {}; const atkR = o.atk || null, aj = atkR ? atkR[0] : S.ativo[0], c = atkR ? S.times[atkR[0]][atkR[1]] : ativoC(), ch = CH[c.k], t = S.times[alvo[0]][alvo[1]];
     const esp = c.k === 'espreitador', dEsp = esp && c.pos && t.pos ? dP(c.pos, t) : 1, longe = esp && dEsp > 1, covarde = esp && (dEsp >= 4 || t.imo);
     const apt = longe ? 2 : atkIdx(ch), ex = dadosExtra(c);
     let n = aptE(c, apt) + dadosCen(c, apt) + mod(c, 'dd') + contraAlvo(c, t, 'dd') + ex.n, bonus = mod(c, 'dn') + contraAlvo(c, t, 'dn'), def = clamp(defesas(t)[apt] + adef(c), 2, 10), notas = ex.notas.slice();
@@ -6657,7 +6675,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         titulo: '💘 AMOR AMBÍGUO', sub: ch.nome + ' dispara em ' + CH[t.k].nome + ' · VIS ' + n + ' dados, cura com 6 ou mais',
         dados: v, def: 6, notas: notas.concat(['1 vez por turno: cada dado com 6 ou mais cura 3 PV']), desc: '', basico: true, cupCura: true,
         linhas: [{ alvo, ok: cu > 0, txt: cu ? ok6 + (ok6 > 1 ? ' dados' : ' dado') + ' → cura ' + cu + ' PV' : 'nenhum dado chegou a 6', ef: cu ? [{ k: 'cura', v: cu, on: true, txt: 'cura ' + cu + ' PV' }] : [] }],
-        extras: [], pre: [], ef: {}, custo: 1, nome: null, sup: false, aprim: false, ataque: false, usouDados: true
+        extras: [], pre: [], ef: {}, custo: o.custo !== undefined ? o.custo : 1, atkRef: atkR, pagaProx: !!o.pagaProx, nome: null, sup: false, aprim: false, ataque: false, usouDados: true
       });
     }
     const hits = v.filter(x => x >= def).length;
@@ -6665,11 +6683,11 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const incont = c.k === 'axioma' && v.includes(10);
     if (incont) notas.push('Incontestável: tirou 10, o alvo perde os bônus na Defesa e 1 ação');
     mostrarResultado({
-      titulo: '👊 ATAQUE BÁSICO', sub: ch.nome + ' ataca ' + CH[t.k].nome + ' · ' + APT[apt] + ' ' + n + ' dados contra Defesa ' + def,
+      titulo: '👊 ATAQUE BÁSICO' + (o.tit ? ' · ' + o.tit : ''), sub: ch.nome + ' ataca ' + CH[t.k].nome + ' · ' + APT[apt] + ' ' + n + ' dados contra Defesa ' + def,
       dados: v, def, notas, desc: '', hitsBrasa: hits, basico: true,
       linhas: [{ alvo, ok: hits > 0, txt: hits ? hits + (hits > 1 ? ' acertos' : ' acerto') + ' → ' + dano + ' de dano' : 'errou', ef: (incont ? [{ k: 'acao', v: -1, on: true, txt: 'Incontestável: −1 ação no próximo turno' }] : []).concat(c.k === 'peste' && hits ? [{ k: 'contagio', v: 1, on: true, txt: 'Toque Pestilente: Contagiado (−1 na Defesa e curas −2) por 2 rodadas' }] : []).concat(hits && dano ? [{ k: 'dano', v: dano, on: true, txt: dano + ' de dano' }].concat(
         ch.habs.some(x => !x.c && /acerta um Ataque Básico, empurra/.test(x.d)) && t.pos ? [{ k: 'empurra', v: hits, on: true, txt: '↗ empurrar ' + hits + (hits > 1 ? ' casas' : ' casa') + ' (Manoplas)' }] : []) : []) }],
-      extras: [], pre: [], ef: {}, custo: 1, nome: null, sup: false, aprim: false, ataque: true, usouDados: true
+      extras: [], pre: [], ef: {}, custo: o.custo !== undefined ? o.custo : 1, atkRef: atkR, pagaProx: !!o.pagaProx, nome: null, sup: false, aprim: false, ataque: true, usouDados: true
     });
   }
   function resolverHab(){
@@ -6849,10 +6867,11 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     }
     if (e.target.id !== 'rsAplicar') return;
     fechar('mAcao');
-    const r = res, c = ativoC(), [aj] = S.ativo;
+    const r = res, c = r.atkRef ? S.times[r.atkRef[0]][r.atkRef[1]] : ativoC(), [aj] = r.atkRef || S.ativo;
     const msg = [];
     mudar(() => {
       c.gastas = Math.min(c.acts, c.gastas + r.custo);
+      if (r.pagaProx) { c.ab = clamp((c.ab || 0) - 1, -4, 2); msg.push(CH[c.k].nome + ' gastou 1 ação do próximo turno'); }
       if (r.nome) { c.usadas = c.usadas || []; c.usadas.push(r.nome); }
       if (r.sup) { S.med[aj] -= 3; c.med = true; c.sup = true; }
       else if (r.aprim) { S.med[aj] -= 1; c.med = true; aprimorarMarcado = false; }
