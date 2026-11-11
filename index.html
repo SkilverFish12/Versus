@@ -6222,7 +6222,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     S.times.flat().forEach(x => { const sai = (x.efs || []).filter(e => e.nome === nome && e.autor === autor); sai.forEach(e => desfazerMods(x, e)); if (sai.length) x.efs = x.efs.filter(e => !sai.includes(e)); });
     c.escP = ref; c.leitura = false;
     if (c.k === 'vale') { t.df = clamp(t.df + 1, -6, 6); novoEf(t, { nome, autor, faz: '+1 na Defesa', acaba, exp: ate, mods: { df: 1 } }); }
-    if (c.k === 'relicario') novoEf(t, { nome, autor, faz: 'Consagrado: sofre só metade do dano (arredonda para baixo); Relicário sofre o resto −2 (adjacente: pode tomar tudo, −2). Dano Psíquico não divide.', acaba, exp: ate, mods: {} });
+    if (c.k === 'relicario') novoEf(t, { nome, autor, faz: 'Consagrado: sofre só metade do dano (arredonda para baixo); Relicário sofre o resto −2 (automático). Dano Psíquico não divide.', acaba, exp: ate, mods: {}, guarda: { tipo: 'consagrado', ref: refDe(c) } });
     if (c.k === 'arquiteto') novoEf(c, { nome, autor, faz: '+1 dado em todos os testes contra ' + CH[t.k].nome, acaba, exp: ate, contra: ref, cmods: { dd: 1 }, mods: {} });
     if (c.k === 'ninguem') novoEf(c, { nome, autor, faz: '+1 na Defesa contra ' + CH[t.k].nome, acaba, exp: ate, contra: ref, cmods: { df: 1 }, mods: {} });
   }
@@ -6235,9 +6235,20 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   const copiaAlvos = c => pecas((j, i, x) => j !== S.ativo[0] && x.pos && copiasLivres(c).some(z => dP(z.cell, x) === 1));
   // Sem Aberturas: Invicto inimigo do personagem em turno
   const invictoContra = () => { const aj = S.ativo[0], i = S.times[1 - aj].findIndex(x => !x.elim && x.k === 'invicto'); return i < 0 ? null : [1 - aj, i]; };
+  function aplicarGuarda(q, t, tipo, red){
+    const nm = tipo === 'fardo' ? 'Fardo Aceito' : 'Interceptação', exp = { t: 'ini', ref: refDe(q) };
+    t.efs = (t.efs || []).filter(e => !(e.guarda && e.guarda.tipo === tipo));
+    novoEf(t, { nome: nm, autor: CH[q.k].nome, faz: tipo === 'fardo' ? 'o primeiro dano vai para ' + CH[q.k].nome + (red ? ' (−' + red + ')' : '') : 'o primeiro dano vem com 4 a menos; D.R.I.V.E. sofre esses 4', acaba: 'no início do próximo turno de ' + CH[q.k].nome, exp, mods: {}, guarda: { tipo, ref: refDe(q), red } });
+    let mv = '';
+    if (tipo === 'inter' && q.pos && t.pos && dP(q.pos, t) > 1) { const cs = vizinhas(t.pos).filter(id => livre(id)).sort((a, b) => dist(q.pos, a) - dist(q.pos, b)); if (cs[0]) { moverPeca(q, cs[0]); mv = ', e D.R.I.V.E. foi para ' + cs[0]; } }
+    return CH[q.k].nome + ' protege ' + CH[t.k].nome + mv;
+  }
+  const GUARDA_FORA = { drive: ['Interceptação', 'inter', 4, '🚗'], maligno: ['Fardo Aceito', 'fardo', 2, '🖤'] };
+  const guardasFora = () => { const aj = S.ativo[0], out = []; S.times[1 - aj].forEach((x, i) => { if (!x.elim && GUARDA_FORA[x.k]) out.push([1 - aj, i]); }); return out; };
   function botoesPassivas(c, btn){
     let h = '';
     if (c.k === 'semelhante') { const nl = copiasLivres(c).length; h += btn('data-pasv="copias"', '👥', 'CÓPIAS ATACAM', 'passiva · sem ação · Todos Sou Eu · ' + nl + (nl === 1 ? ' Cópia livre' : ' Cópias livres'), !nl ? 'nenhuma Cópia livre' : !copiaAlvos(c).length ? 'nenhum inimigo adjacente a uma Cópia' : ''); }
+    guardasFora().forEach(([j, i]) => { const x = S.times[j][i], g = GUARDA_FORA[x.k]; h += btn('data-guardafora="' + j + ',' + i + '"', g[3], g[0].toUpperCase() + ' (' + CH[x.k].nome + ')', 'fora do turno · antes do ataque rolar · gasta 1 ação do próximo turno de ' + CH[x.k].nome, x.ab <= -2 ? CH[x.k].nome + ' já gastou 2 ações do próximo turno' : x.guardaR === S.rodada ? 'já usada nesta rodada' : ''); });
     const iv = invictoContra();
     if (iv) { const x = S.times[iv[0]][iv[1]]; h += btn('data-pasv="invicto"', '🥊', 'SEM ABERTURAS', 'Invicto ataca ' + CH[c.k].nome + ' (entrou ou saiu do Raio 1 dele) · gasta 1 ação do próximo turno de Invicto', x.ab <= -2 ? 'Invicto já gastou 2 ações do próximo turno' : ''); }
     const usou = n => (c.usadas || []).includes(n);
@@ -6438,7 +6449,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function bannerModo(){
     const c = ativoC(), desl = (modo && modo.desl) || (c ? Math.max(1, 2 + mod(c, 'ds')) : 2);
     const nomeM = modo.t === 'mover' ? '👣 ' + (modo.gratis ? 'MOVER GRÁTIS (' + modo.gratis + ')' : 'MOVER') + ': toque numa casa amarela (até ' + desl + ' casas)' : modo.t === 'basico' ? '👊 ATAQUE BÁSICO: toque num inimigo adjacente' :
-      modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo + (modo.resta ? ' (faltam até ' + modo.resta + (modo.alc ? ', a até ' + modo.alc + ' casas' + (modo.tipo === 'Domínio' ? ' do Superior' : '') : '') + ')' : '') : (modo.t === 'empDir' || modo.t === 'arremesso' || modo.t === 'teleporte' || modo.t === 'troca' || (modo.t === 'mover' && modo.tit)) ? modo.tit : modo.t === 'ceus' ? '☁️ CÉUS: toque na casa ao lado do alvo na direção do empurrão (3 casas)' : modo.t === 'copiaAtk' ? '👥 CÓPIAS ATACAM: toque num inimigo adjacente a uma Cópia livre' : modo.t === 'atkEst' ? '🎯 ATACAR ESTRUTURA: toque na casa da estrutura' : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
+      modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo + (modo.resta ? ' (faltam até ' + modo.resta + (modo.alc ? ', a até ' + modo.alc + ' casas' + (modo.tipo === 'Domínio' ? ' do Superior' : '') : '') + ')' : '') : (modo.t === 'empDir' || modo.t === 'arremesso' || modo.t === 'teleporte' || modo.t === 'troca' || modo.t === 'guardaFora' || (modo.t === 'mover' && modo.tit)) ? modo.tit : modo.t === 'ceus' ? '☁️ CÉUS: toque na casa ao lado do alvo na direção do empurrão (3 casas)' : modo.t === 'copiaAtk' ? '👥 CÓPIAS ATACAM: toque num inimigo adjacente a uma Cópia livre' : modo.t === 'atkEst' ? '🎯 ATACAR ESTRUTURA: toque na casa da estrutura' : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
     const conf = modo.t === 'hab' && (modo.alvosInfo.tipo === 'todos' || modo.alvosInfo.tipo === 'linha') && (modo.dir !== undefined || modo.alvosInfo.tipo === 'todos');
     return '<div class="ac-modo"><span>' + nomeM + '</span>' + (modo.t === 'estrutura' && modo.resta ? '<button class="btn-amarelo sm" data-cancelar>✓ PRONTO</button>' : '') + (conf ? '<button class="btn-amarelo sm" data-confirmar>USAR ▶</button>' : '') + '<button class="btn-ghost sm" data-cancelar>✕ CANCELAR</button></div>';
   }
@@ -6467,6 +6478,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b.dataset.ac === 'pagar') return mudar(() => { c.div = divDe(c) - 1; c.gastas += 1; }, '💰 ' + CH[c.k].nome + ' pagou 1 Dívida (' + (divDe(c) - 1) + ' restante(s)).');
     if (b.dataset.ac === 'carga') return mudar(() => { setRec(c, 'Cargas', rec(c, 'Cargas') + 1); c.gastas += 2; }, '⚛️ ' + CH[c.k].nome + ' carregou: ' + (rec(c, 'Cargas') + 1) + ' Carga(s).');
     if (b.dataset.pasv === 'copias') return iniciarModo({ t: 'copiaAtk' });
+    if (b.dataset.guardafora) { const q = b.dataset.guardafora.split(',').map(Number), x = S.times[q[0]][q[1]], g = GUARDA_FORA[x.k]; return iniciarModo({ t: 'guardaFora', quem: q, alc: g[2], tipo: g[1], tit: g[3] + ' ' + g[0] + ': toque no aliado de ' + CH[x.k].nome + ' (até ' + g[2] + ' casas)' }); }
     if (b.dataset.pasv === 'invicto') { const iv = invictoContra(); return ataqueBasico(S.ativo.slice(), { atk: iv, custo: 0, pagaProx: true, tit: 'SEM ABERTURAS' }); }
     if (b.dataset.pasv === 'tocaia') { const L = c.pos ? tocaiaAlvos(c) : pecas((j, i, x) => j !== S.ativo[0]); modo = { t: 'hab', h: H_TOCAIA, sup: false, aprim: false, alvosInfo: { tipo: 'todos', alvos: L }, sel: L }; return resolverHab(); }
     if (b.dataset.pasv === 'mover') { const pm = PASM[c.k]; return iniciarModo({ t: 'mover', gratis: pm[0], desl: pm[1] || undefined }); }
@@ -6507,6 +6519,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'estrutura') CELLS.forEach(x => { if (!bloqueada(x.id)) out.casas.add(x.id); });
     if (modo.t === 'atkEst') modo.alvos.forEach(id => out.casas.add(id));
     if (modo.t === 'ceus') { const t = S.times[modo.alvo[0]][modo.alvo[1]]; if (t.pos) vizinhas(t.pos).forEach(id => out.casas.add(id)); }
+    if (modo.t === 'guardaFora') { const q = S.times[modo.quem[0]][modo.quem[1]]; S.times[modo.quem[0]].forEach((x, i) => { if (x !== q && !x.elim && x.pos && (!q.pos || dP(q.pos, x) <= modo.alc)) out.toks.add(modo.quem[0] + ',' + i); }); }
     if (modo.t === 'troca') (S.est || []).filter(z => z.tipo === 'Cópia' && z.dono === S.ativo[0] && z.cell).forEach(z => out.casas.add(z.cell));
     if (modo.t === 'empDir') { const t = S.times[modo.alvo[0]][modo.alvo[1]]; if (t.pos) vizinhas(t.pos).forEach(id => out.casas.add(id)); }
     if (modo.t === 'arremesso') { const t = S.times[modo.alvo[0]][modo.alvo[1]]; if (t.pos) DIR6.forEach((_, di) => { let p = t.pos; for (let k = 0; k < modo.alc; k++) { const nx = viz(p, di); if (!nx) break; out.casas.add(nx); p = nx; } }); }
@@ -6539,6 +6552,12 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     }
     if (!c) { modo = null; return false; }
     const d0 = destaquesModo();
+    if (modo.t === 'guardaFora') {
+      if (!tok || !d0.toks.has(tok)) return true;
+      const q = S.times[modo.quem[0]][modo.quem[1]], tt = tok.split(',').map(Number), t = S.times[tt[0]][tt[1]], tipo = modo.tipo; modo = null;
+      let m = ''; mudar(() => { q.ab = clamp(q.ab - 1, -4, 2); q.guardaR = S.rodada; m = aplicarGuarda(q, t, tipo, 0); }, () => '🛡️ ' + m + ' (fora do turno: −1 ação no próximo turno).');
+      return true;
+    }
     if (modo.t === 'troca') {
       const z = (S.est || []).find(y => y.tipo === 'Cópia' && y.dono === S.ativo[0] && y.cell === cellId); if (!z) return true;
       modo = null; const de = c.pos;
@@ -6765,6 +6784,12 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (t.k === 'axioma' && o.psi) return { real: 0, nota: ['Axioma é imune a Dano Psíquico'] };
     let real = v, nota = [];
     if (o.ataque) { const xa = (t.dr || 0) + auraMod(t, 'dr'); if (xa > 0) { real += xa; nota.push('+' + xa + ' dano sofrido'); } }
+    { const g = (t.efs || []).find(e => e.guarda && !o.desvio), q = g && porRef(g.guarda.ref);
+      if (g && q && !q.elim && q !== t) {
+        if (g.guarda.tipo === 'fardo') { t.efs = t.efs.filter(e => e !== g); const v2 = Math.max(0, real - (g.guarda.red || 0)); const r2 = sofrerDano(q, v2, { psi: o.psi, desvio: true }); return { real: 0, nota: ['Fardo Aceito: ' + CH[q.k].nome + ' sofreu ' + r2.real + ' no lugar' + (g.guarda.red ? ' (−' + g.guarda.red + ')' : '')] }; }
+        if (g.guarda.tipo === 'inter') { t.efs = t.efs.filter(e => e !== g); const a = Math.min(4, real); real -= a; const r2 = sofrerDano(q, a, { desvio: true }); nota.push('Interceptação: −' + a + ', D.R.I.V.E. sofreu ' + r2.real); }
+        if (g.guarda.tipo === 'consagrado' && !o.psi && real > 0) { const meio = Math.floor(real / 2), resto = real - meio; real = meio; const r2 = sofrerDano(q, Math.max(0, resto - 2), { desvio: true }); nota.push('Consagrado: metade, ' + CH[q.k].nome + ' sofreu ' + r2.real + ' (resto −2)'); }
+      } }
     if (!o.psi) {
       if (t.red) { real = Math.max(0, real - t.red); nota.push('−' + t.red + ' redução'); }
       if (t.esc && real > 0) { const a = Math.min(t.esc, real); real -= a; nota.push('escudo −' + a); t.esc = 0; }
@@ -6870,6 +6895,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const self = alvos.length === 1 && alvos[0][0] === aj && alvos[0][1] === S.ativo[1];
     const linhasR = [], extras = [], pre = [];
     let hitsBrasa = 0;
+    if ((h.n === 'Interceptação' || h.n === 'Fardo Aceito') && alvos.length && alvos[0][0] === aj) { delete ef.esc; delete ef.dano; delete ef.red;
+      extras.push({ k: 'guarda', v: alvos[0], tipo: h.n === 'Fardo Aceito' ? 'fardo' : 'inter', red: h.n === 'Fardo Aceito' && r.aprim ? 4 : 0, on: true, txt: h.n === 'Fardo Aceito' ? 'O primeiro dano que o aliado sofrer vai para Maligno' + (r.aprim ? ' (−4)' : '') : 'D.R.I.V.E. vai para o lado do aliado; o primeiro dano nele vem com 4 a menos, e D.R.I.V.E. sofre esses 4' }); }
     if (h.n === 'Petrificação') { delete ef.def; if (r.aprim) extras.push({ k: 'petrAli', on: true, txt: 'Aliados adjacentes ao Guardião recebem +1 na Defesa até o início do próximo turno dele' }); }
     if (h.n === 'Foco Absoluto' && alvos.length && alvos[0][0] !== aj) { delete ef.def; delete ef.dados; delete ef.dano; const tf = S.times[alvos[0][0]][alvos[0][1]];
       extras.push({ k: 'foco', v: alvos[0], aprim: r.aprim, on: true, txt: 'Foco em ' + CH[tf.k].nome + ': −1 na Defesa contra ' + ch.nome + (r.aprim ? ', +2 de dano de ' + ch.nome + ' contra ele' : '') + '; ' + ch.nome + ' tem −1 dado contra outros inimigos' }); }
@@ -7123,6 +7150,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       });
       (r.extras || []).slice().sort((a, b) => (a.k === 'carona') - (b.k === 'carona')).forEach(ex => {
         if (!ex.on) return;
+        if (ex.k === 'guarda') msg.push(aplicarGuarda(c, S.times[ex.v[0]][ex.v[1]], ex.tipo, ex.red));
         if (ex.k === 'petrAli') S.times[aj].forEach(x => { if (x !== c && !x.elim && x.pos && c.pos && dP(c.pos, x) === 1) { x.df = clamp(x.df + 1, -6, 6); novoEf(x, { nome: 'Petrificação', autor: CH[c.k].nome, faz: '+1 na Defesa', acaba: 'no início do próximo turno de ' + CH[c.k].nome, exp: { t: 'ini', ref: refDe(c) }, mods: { df: 1 } }); msg.push(CH[x.k].nome + ' +1 na Defesa'); } });
         if (ex.k === 'foco') { const t = S.times[ex.v[0]][ex.v[1]], tr = refDe(t), cr = refDe(c), exp = { t: 'ini', ref: cr }, acaba = 'no início do próximo turno de ' + CH[c.k].nome, nm = CH[c.k].nome;
           novoEf(t, { nome: 'Foco Absoluto', autor: nm, faz: '−1 na Defesa contra ' + nm + (ex.aprim ? ' · sofre +2 de dano de ' + nm : ''), acaba, exp, contra: cr, cmods: { df: -1 }, mods: {} });
