@@ -6244,6 +6244,27 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       h += btn('data-pasv="mover"', '👣', 'MOVER GRÁTIS', 'passiva · sem ação · ' + pm[2], usou(pm[0]) ? 'já usado neste turno' : c.imo ? 'Imóvel' : c.carona ? 'no veículo' : semDC ? 'nenhum inimigo com Dano Contínuo' : ''); }
     return h;
   }
+  // para onde o personagem vai antes do teste (lido da nota ↪ da ficha)
+  function destinoPre(c, h, m, r, mTxt, alvos){
+    const aj = S.ativo[0], hh = r.aprim ? alcAprim(h) : h, ta = tipoAlc(hh);
+    if (ta === 'LINHA' && m.dir !== undefined) {
+      const cs = alvosDe(h, r.aprim).casas.filter(([, di]) => di === m.dir).map(([id]) => id), ate1 = /até o primeiro inimigo/i.test(mTxt);
+      let last = null;
+      for (const id of cs) { if (obstaculo(id)) break; if (ocupante(id)) { if (ate1) break; continue; } last = id; }
+      return last;
+    }
+    const t = alvos.length ? S.times[alvos[0][0]][alvos[0][1]] : null;
+    if (ta === 'ALCANCE' && m.cel && /para a casa/i.test(mTxt)) return livre(m.cel) ? m.cel : null;
+    if (t && t.pos && t !== c) {
+      if (/Atravessa o alvo/i.test(mTxt)) {
+        const alem = viz(t.pos, dirPara(c.pos, t.pos)); if (alem && livre(alem)) return alem;
+        const op = vizinhas(t.pos).filter(livre).sort((a, b) => (alem ? dist(a, alem) - dist(b, alem) : 0) || dist(b, c.pos) - dist(a, c.pos)); return op[0] || null;
+      }
+      if (dist(c.pos, t.pos) <= 1) return null;
+      const op = vizinhas(t.pos).filter(livre).sort((a, b) => dist(a, c.pos) - dist(b, c.pos)); return op[0] || null;
+    }
+    return null;
+  }
   function aprimAtivo(h){ const c = ativoC(); return !!(c && aprimorarMarcado && h.p && !c.med && S.med[S.ativo[0]] >= 1); }
   function alvosDe(h0, ap){
     if (ap === undefined) ap = aprimAtivo(h0);
@@ -6795,6 +6816,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     });
     const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
+    { const mTxt = limpo(h.m || '');
+      if (/acontece mesmo se errar|avança sempre/i.test(mTxt) && c.pos && !pre.some(p => p.k === 'aprox')) { const dest = destinoPre(c, h, m, r, mTxt, alvos); if (dest && dest !== c.pos) pre.push({ k: 'irPara', v: dest, on: true, txt: ch.nome + ' vai para ' + dest + ' antes do teste (mesmo se errar)' }); } }
     if (ef.ocupar && alvo1 && linhasR[0] && linhasR[0].ok) extras.push({ k: 'ocupar', v: alvos[0], on: true, txt: ch.nome + ' termina na casa onde o alvo estava' });
     if (c.k === 'drive' && h.n === 'Rasante' && m.cel) {
       const linha = alvosDe(h, r.aprim).casas.filter(([, di]) => di === m.dir).map(([id]) => id);
@@ -6890,7 +6913,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (r.basico && c.k === 'reator' && r.linhas[0].ok && rec(c, 'Cargas')) { setRec(c, 'Cargas', 0); c.basicoFeito = true; msg.push('Cargas consumidas'); }
       if (r.basico && c.k === 'reator') c.basicoFeito = true;
       if (r.cupCura) c.cupCura = true;
-      (r.pre || []).forEach(p => { if (p.on && p.k === 'aprox') { const t = S.times[p.v[0]][p.v[1]]; const cc = aproximar(c, t.pos); if (cc) msg.push(CH[c.k].nome + ' avançou para ' + cc); } });
+      (r.pre || []).forEach(p => { if (p.on && p.k === 'irPara' && !ocupante(p.v)) { moverPeca(c, p.v); msg.push(CH[c.k].nome + ' foi para ' + p.v); } if (p.on && p.k === 'aprox') { const t = S.times[p.v[0]][p.v[1]]; const cc = aproximar(c, t.pos); if (cc) msg.push(CH[c.k].nome + ' avançou para ' + cc); } });
       const antes = {};
       r.linhas.forEach(l => { antes[l.alvo.join(',')] = S.times[l.alvo[0]][l.alvo[1]].pos; });
       const posEf = [];
