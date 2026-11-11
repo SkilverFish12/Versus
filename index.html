@@ -6314,6 +6314,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (nm === 'Execução Final' && L[0] && T(L[0].alvo).elim) mv(3, nm);
     if (r.aprim && nm === 'Formas' && r.ops && r.ops[r.opSel[0]].nome === 'Ágil') mv(3, 'Formas (Ágil)');
     if (r.aprim && nm === 'Formas' && r.ops && r.ops[r.opSel[0]].nome === 'Colosso') Q.push({ t: 'auto', fn: m => S.times[1 - aj].forEach(x => { if (!x.elim && x.pos && c.pos && dP(c.pos, x) === 1) m.push(...empurrar(x, c.pos, 1, {})); }), log: 'Colosso empurrou os inimigos no Raio 1' });
+    if (nm === 'Armadilha de Caça' && r.ops && r.opSel.some(i => r.ops[i].nome === 'Laço')) ok.forEach(a => Q.push({ t: 'teleporte', alvo: a, de: T(a).pos, alc: 2, tit: '➰ Laço: puxe ' + nmC(a) + ' até 2 casas para onde quiser (ou cancele)' }));
     if (nm === 'Sumir no Mato') mv(r.aprim ? 5 : 3, 'Sumir no Mato');
     if (nm === 'Revoada' && c.k === 'duque') { const adj = r.aprim ? S.times[aj].map((x, i) => [x, i]).filter(([x]) => x !== c && !x.elim && x.pos && c.pos && dP(c.pos, x) === 1) : []; mv(4, 'Revoada'); adj.forEach(([x, i]) => Q.push({ t: 'teleporte', alvo: [aj, i], centro: refDe(c), alc: 1, tit: '🦇 Levar ' + CH[x.k].nome + ' para o lado do Duque (ou cancele)' })); }
     if (nm === 'Troca de Lugar') { Q.push({ t: 'troca', tit: '👥 Troca de Lugar: toque na Cópia' }); if (r.aprim) mv(2, 'Troca de Lugar'); }
