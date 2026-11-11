@@ -6369,7 +6369,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       return last;
     }
     const t = alvos.length ? S.times[alvos[0][0]][alvos[0][1]] : null;
-    if (ta === 'ALCANCE' && m.cel && /para a casa/i.test(mTxt)) return livre(m.cel) ? m.cel : null;
+    if (ta === 'ALCANCE' && m.cel && /para a casa|teleporta/i.test(mTxt)) return livre(m.cel) ? m.cel : null;
     if (t && t.pos && t !== c) {
       if (/Atravessa o alvo/i.test(mTxt)) {
         const alem = viz(t.pos, dirPara(c.pos, t.pos)); if (alem && livre(alem)) return alem;
@@ -7449,7 +7449,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
     { const mTxt = limpo(h.m || '');
-      if (/acontece mesmo se errar|avança sempre/i.test(mTxt) && c.pos && !pre.some(p => p.k === 'aprox')) { const dest = destinoPre(c, h, m, r, mTxt, alvos); if (dest && dest !== c.pos) pre.push({ k: 'irPara', v: dest, on: true, txt: ch.nome + ' vai para ' + dest + ' antes do teste (mesmo se errar)' }); } }
+      if (/acontece mesmo se errar|avança sempre|antes do teste, sempre/i.test(mTxt) && c.pos && !pre.some(p => p.k === 'aprox')) { const dest = destinoPre(c, h, m, r, mTxt, alvos); if (dest && dest !== c.pos) pre.push({ k: 'irPara', v: dest, on: true, txt: ch.nome + ' vai para ' + dest + ' antes do teste (mesmo se errar)' }); } }
       if (h.n === 'Cavalgar Destrutivo' && r.aprim && alvos.length === 2 && c.pos) { const p1 = (pre.find(p => p.k === 'irPara') || {}).v || c.pos, t2 = S.times[alvos[1][0]][alvos[1][1]];
         const d2 = t2.pos ? vizinhas(t2.pos).filter(id => livre(id) || id === c.pos).filter(id => id !== p1).sort((a, b) => dist(a, p1) - dist(b, p1))[0] : null;
         if (d2) pre.push({ k: 'irPara', v: d2, on: true, txt: 'Segundo salto: ' + ch.nome + ' vai para ' + d2 + ', ao lado de ' + CH[t2.k].nome }); }
