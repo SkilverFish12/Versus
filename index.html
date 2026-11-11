@@ -5237,7 +5237,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   const pega = s => { const [j, i] = s.split(',').map(Number); return [j, i, S.times[j][i]]; };
   const NOMES_ST = { ab: 'ações do próximo turno', dn: 'bônus de dano', dd: 'bônus de dados', df: 'Defesa', ds: 'deslocamento', dcv: 'Dano Contínuo', dcn: 'turnos de Dano Contínuo', red: 'redução de dano', esc: 'escudo' };
-  const LIM = { ab: [-4, 2], dn: [-9, 9], dd: [-4, 4], df: [-6, 6], ds: [-2, 4], dcv: [0, 9], dcn: [0, 9], red: [0, 9], esc: [0, 9] };
+  const LIM = { ab: [-4, 2], dn: [-9, 9], dd: [-4, 4], df: [-6, 6], ds: [-2, 4], dcv: [0, 9], dcn: [0, 9], red: [0, 9], esc: [0, 9], dr: [0, 9], cr: [0, 9] };
   const cobradorDe = j => S.times[1 - j] && S.times[1 - j].some(x => x.k === 'cobrador' && !x.elim);
   const divDe = c => c.div || 0;
   const TATS = ['Presas', 'Escamas', 'Asas', 'Olho Aberto', 'Raiz', 'Presas Avessas', 'Escamas Avessas', 'Asas Avessas', 'Olho Roxo', 'Raiz Avessa'];
@@ -5292,6 +5292,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (m.dd) x.dd = clamp(x.dd - m.dd, -4, 4);
     if (m.ds) x.ds = clamp(x.ds - m.ds, -2, 4);
     if (m.red) x.red = clamp((x.red || 0) - m.red, 0, 9);
+    if (m.dr) x.dr = clamp((x.dr || 0) - m.dr, 0, 9);
+    if (m.cr) x.cr = clamp((x.cr || 0) - m.cr, 0, 9);
     if (m.imo && !(x.efs || []).some(o => o !== e && o.mods && o.mods.imo)) x.imo = false;
     if (m.est && x.estado && x.estado.nome === e.nome) x.estado = null;
     if (m.monstro) {
@@ -5408,9 +5410,9 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     sc.closest('label').classList.toggle('pede', x.contra === 'escolher');
     if (x.contra === 'escolher') toast('Escolha em SÓ VALE CONTRA quem é o personagem do efeito', 2200);
   }
-  const EF_CAMPOS = [['df', 'DEFESA'], ['dd', 'DADOS'], ['dn', 'DANO'], ['ds', 'DESLOC.'], ['red', 'REDUÇÃO']];
-  const EF_LIM = { df: [-6, 6], dd: [-4, 4], dn: [-9, 9], ds: [-2, 4], red: [0, 9] };
-  const EF_PRE = [['+1 Defesa', { df: 1 }], ['+2 Defesa', { df: 2 }], ['−1 Defesa', { df: -1 }], ['+1 dado', { dd: 1 }], ['−1 dado', { dd: -1 }], ['+2 dano', { dn: 2 }], ['−2 dano', { dn: -2 }], ['+1 desloc.', { ds: 1 }], ['−1 desloc.', { ds: -1 }], ['Redução 1', { red: 1 }], ['Imóvel', { imo: true }]];
+  const EF_CAMPOS = [['df', 'DEFESA'], ['dd', 'DADOS'], ['dn', 'DANO'], ['ds', 'DESLOC.'], ['red', 'REDUÇÃO'], ['dr', 'DANO SOFRIDO'], ['cr', 'CURA A MENOS']];
+  const EF_LIM = { df: [-6, 6], dd: [-4, 4], dn: [-9, 9], ds: [-2, 4], red: [0, 9], dr: [0, 9], cr: [0, 9] };
+  const EF_PRE = [['+1 Defesa', { df: 1 }], ['+2 Defesa', { df: 2 }], ['−1 Defesa', { df: -1 }], ['+1 dado', { dd: 1 }], ['−1 dado', { dd: -1 }], ['+2 dano', { dn: 2 }], ['−2 dano', { dn: -2 }], ['+1 desloc.', { ds: 1 }], ['−1 desloc.', { ds: -1 }], ['Redução 1', { red: 1 }], ['Sofre +1 dano', { dr: 1 }], ['Sofre +2 dano', { dr: 2 }], ['Curas −2', { cr: 2 }], ['Imóvel', { imo: true }]];
   let efM = { df: 0, dd: 0, dn: 0, ds: 0, red: 0 };
   const efSalvos = () => { const L = store.get('versus-efeitos'); return Array.isArray(L) ? L : []; };
   const efMTxt = () => modsTxt({ df: efM.df, dd: efM.dd, dn: efM.dn, ds: efM.ds }) + (efM.red ? (modsTxt({ df: efM.df, dd: efM.dd, dn: efM.dn, ds: efM.ds }) ? ', ' : '') + 'Redução ' + efM.red : '');
@@ -5455,7 +5457,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   // ── auras das estruturas (Galho, Campo, Aparatos) ──
   const AURAS = {
     'Brotamento': r => ({ raio: 1, ali: { df: 1 }, txt: 'Aliados de Vale no Raio 1 do Galho recebem +1 na Defesa.' + (r.aprim ? ' Aprimorado: +2 na Defesa contra o primeiro ataque que cada um sofrer (o +1 extra é ajustado à mão).' : '') }),
-    'Contendo o Mal': () => ({ raio: 2, ini: { ds: -1 }, txt: 'Inimigos dentro do campo (Raio 2) sofrem −1 casa de deslocamento. Nenhum deslocamento atravessa a borda do campo.' }),
+    'Contendo o Mal': r => ({ raio: 2, ini: r && r.aprim ? { ds: -1, dr: 2 } : { ds: -1 }, txt: 'Inimigos dentro do campo (Raio 2) sofrem −1 casa de deslocamento' + (r && r.aprim ? ' e +2 de dano de qualquer ataque' : '') + '. Nenhum deslocamento atravessa a borda do campo.' }),
     'Campo Magnético': (r, ops) => { const med = ops.includes('Medicinal'), pot = ops.includes('Potencial'), den = ops.includes('Denso'), dis = ops.includes('Dispersivo'), rr = r.aprim ? 2 : 1;
       return { raio: rr, ali: pot ? { dn: 2 } : {}, ini: den ? { ds: -2 } : dis ? { dd: -1 } : {}, cura: med ? 4 : 0, txt: [med ? 'Medicinal: aliados no Raio ' + rr + ' do Aparato recuperam 4 PV no início de cada turno deles.' : '', pot ? 'Potencial: aliados no Raio ' + rr + ' do Aparato causam +2 de dano em ataques.' : '', den ? 'Denso: inimigos no Raio ' + rr + ' do Aparato sofrem −2 casas de deslocamento.' : '', dis ? 'Dispersivo: inimigos no Raio ' + rr + ' do Aparato sofrem −1 dado nos testes.' : ''].filter(Boolean).join(' ') }; },
     'Miasma': r => ({ raio: r.aprim ? 3 : 2, txt: 'Inimigos que terminarem o turno dentro da nuvem ficam Contagiados (−1 na Defesa e curas recebidas −2) por 2 rodadas. Quem já estava Contagiado também fica Imóvel.' }),
@@ -5511,7 +5513,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const antes = c.pv; let txt = '';
     mudar(() => {
       if (tipo === 'd') { const q = sofrerDano(c, v, { psi }); txt = CH[c.k].nome + ' sofreu ' + v + (psi ? ' de Dano Psíquico' : ' de dano') + ': ' + antes + ' → ' + c.pv + ' PV' + (q.nota.length ? ' (' + q.nota.join(', ') + ')' : '') + '.'; }
-      else { const cv = contagiado(c) ? Math.max(0, v - 2) : v; c.pv = Math.min(c.max, c.pv + cv); txt = CH[c.k].nome + ' recebeu cura de ' + v + ': ' + antes + ' → ' + c.pv + ' PV' + (cv < v ? ' (Contagiado: −2)' : '') + '.'; }
+      else { const cv = Math.max(0, (contagiado(c) ? v - 2 : v) - (c.cr || 0)); c.pv = Math.min(c.max, c.pv + cv); txt = CH[c.k].nome + ' recebeu cura de ' + v + ': ' + antes + ' → ' + c.pv + ' PV' + (cv < v ? ' (' + [contagiado(c) ? 'Contagiado −2' : '', c.cr ? 'curas −' + c.cr : ''].filter(Boolean).join(', ') + ')' : '') + '.'; }
     }, () => txt);
   }
   const contagiado = t => (t.efs || []).some(e => /^(Toque Pestilente|Miasma|Os Olhos da Morte)$/.test(e.nome) && e.mods && e.mods.df);
@@ -6696,7 +6698,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     while ((x = ra.exec(txt))) { m.apt = m.apt || [0, 0, 0, 0]; m.apt[AN[x[3]]] += sg(x[1]) * x[2]; }
     return m;
   }
-  const NM = { df: 'Defesa', dn: 'dano', dd: 'dado', ds: 'desloc.', adef: 'Def. dos alvos' };
+  const NM = { df: 'Defesa', dn: 'dano', dd: 'dado', ds: 'desloc.', adef: 'Def. dos alvos', red: 'redução', dr: 'dano sofrido', cr: 'cura recebida' };
   const modsTxt = m => Object.entries(m).filter(([k, v]) => v && k !== 'apt').map(([k, v]) => (v > 0 ? '+' : '−') + Math.abs(v) + ' ' + NM[k]).concat((m.apt || []).map((v, a) => v ? (v > 0 ? '+' : '−') + Math.abs(v) + ' ' + APT[a] : '').filter(Boolean)).join(', ');
   const limpo = s => (s || '').replace(/<[^>]+>/g, '');
   function opcoes(h){
@@ -6727,6 +6729,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (apr) { const m = /cura (\d+)|(\d+) PV/.exec(apr); if (m && e.cura) e.cura = +(m[1] || m[2]); }
     const sai = /causa(?:m)? [−-](\d+) de dano em seus ataques/.exec(txt); if (sai) e.dnAlvo = -(+sai[1]);
     const red = /contra (?:ele|ela) causam [−-](\d+) de dano/.exec(txt); if (red) e.red = +red[1];
+    const dr = /sofrem? \+(\d+) de dano (?:de|em) (?:todo|cada|qualquer)/.exec(txt); if (dr) e.dr = +dr[1];
+    const cr = /curas?[^.]{0,20}?valem (\d+) a menos/.exec(txt); if (cr) e.cr = +cr[1];
     const esc = /(\d+) de dano a menos|sofre (\d+) a menos/.exec(txt); if (esc) e.esc = +(esc[1] || esc[2]);
     const t2 = txt.replace(/causa(?:m)? [−-]\d+ de dano[^.]*/g, '');
     const df = /([−-]|\+)(\d+) na Defesa/.exec(t2); if (df) e.def = (df[1] === '+' ? 1 : -1) * +df[2];
@@ -6755,6 +6759,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (t.monstro) return { real: 0, nota: ['o Monstro não sofre dano'] };
     if (t.k === 'axioma' && o.psi) return { real: 0, nota: ['Axioma é imune a Dano Psíquico'] };
     let real = v, nota = [];
+    if (o.ataque) { const xa = (t.dr || 0) + auraMod(t, 'dr'); if (xa > 0) { real += xa; nota.push('+' + xa + ' dano sofrido'); } }
     if (!o.psi) {
       if (t.red) { real = Math.max(0, real - t.red); nota.push('−' + t.red + ' redução'); }
       if (t.esc && real > 0) { const a = Math.min(t.esc, real); real -= a; nota.push('escudo −' + a); t.esc = 0; }
@@ -6907,6 +6912,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (ef.dc) lista.push({ k: 'dc', v: ef.dc, on: true, txt: 'Dano Contínuo ' + ef.dc[0] + ' por ' + ef.dc[1] });
           if (ef.def && ef.def < 0) lista.push({ k: 'def', v: ef.def, on: true, txt: '−' + (-ef.def) + ' na Defesa' });
           if (ef.dnAlvo) lista.push({ k: 'dnAlvo', v: ef.dnAlvo, on: true, txt: 'causa −' + (-ef.dnAlvo) + ' de dano nos ataques' });
+          if (ef.dr) lista.push({ k: 'dr', v: ef.dr, on: true, txt: 'sofre +' + ef.dr + ' de dano de todo ataque' });
+          if (ef.cr) lista.push({ k: 'cr', v: ef.cr, on: true, txt: 'curas nele valem ' + ef.cr + ' a menos' });
           if (ef.acao && ef.acao < 0) lista.push({ k: 'acao', v: ef.acao, on: true, txt: '−' + (-ef.acao) + ' ação no próximo turno' });
           if (ef.imo) lista.push({ k: 'imo', v: true, on: true, txt: 'fica Imóvel' });
           if (ef.dados && ef.dados < 0) lista.push({ k: 'dados', v: ef.dados, on: true, txt: '−' + (-ef.dados) + ' dado' });
@@ -7050,10 +7057,10 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           }
         }
         const reg = { mods: {}, faz: [], dc: false };
-        const ant = { df: t.df, dn: t.dn, dd: t.dd, ds: t.ds, red: t.red || 0, imo: t.imo };
+        const ant = { df: t.df, dn: t.dn, dd: t.dd, ds: t.ds, red: t.red || 0, imo: t.imo, dr: t.dr || 0, cr: t.cr || 0 };
         l.ef.forEach(ef => {
           if (!ef.on || t.elim) return;
-          if (['def', 'dnAlvo', 'red', 'acao', 'imo', 'dados', 'desl', 'dc'].includes(ef.k)) { reg.faz.push(limpo(ef.txt || '')); if (ef.k === 'dc') reg.dc = true; }
+          if (['def', 'dnAlvo', 'red', 'acao', 'imo', 'dados', 'desl', 'dc', 'dr', 'cr'].includes(ef.k)) { reg.faz.push(limpo(ef.txt || '')); if (ef.k === 'dc') reg.dc = true; }
           if (ef.k === 'empurra' || ef.k === 'puxa') { posEf.push([t, ef]); return; }
           if (ef.k === 'dano' && t.k === 'axioma' && r.ataque && refDe(t)[0] !== refDe(c)[0]) {
             const g = S.rodada + ':' + refDe(c);
@@ -7069,11 +7076,13 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (ef.k === 'divset') t.div = ef.v;
           if (ef.k === 'penhora') { ['df', 'dd', 'dn'].forEach(k => { if (t[k] > 0) t[k] = 0; }); t.red = 0; t.esc = 0; msg.push(CH[t.k].nome + ' perdeu os bônus (Penhora)'); }
           if (ef.k === 'dano') { const q = sofrerDano(t, ef.v, { psi: ef.psi, ataque: r.ataque, basico: r.basico }); msg.push(CH[t.k].nome + ' −' + q.real + ' PV' + (q.nota.length ? ' (' + q.nota.join(', ') + ')' : '')); }
-          if (ef.k === 'cura') { const cv = contagiado(t) ? Math.max(0, ef.v - 2) : ef.v; t.pv = Math.min(t.max, t.pv + cv); msg.push(CH[t.k].nome + ' +' + cv + ' PV' + (cv < ef.v ? ' (Contagiado: −2)' : '')); }
+          if (ef.k === 'cura') { const cv = Math.max(0, (contagiado(t) ? ef.v - 2 : ef.v) - (t.cr || 0)); t.pv = Math.min(t.max, t.pv + cv); msg.push(CH[t.k].nome + ' +' + cv + ' PV' + (cv < ef.v ? ' (cura reduzida)' : '')); }
           if (ef.k === 'dc') { t.dcv = Math.max(t.dcv, ef.v[0]); t.dcn = Math.max(t.dcn, ef.v[1]); }
           if (ef.k === 'def') t.df = clamp(t.df + ef.v, -6, 6);
           if (ef.k === 'dnAlvo') t.dn = clamp(t.dn + ef.v, -9, 9);
           if (ef.k === 'red') t.red = clamp((t.red || 0) + ef.v, 0, 9);
+          if (ef.k === 'dr') t.dr = clamp((t.dr || 0) + ef.v, 0, 9);
+          if (ef.k === 'cr') t.cr = clamp((t.cr || 0) + ef.v, 0, 9);
           if (ef.k === 'esc') t.esc = Math.max(t.esc || 0, ef.v);
           if (ef.k === 'acao') t.ab = clamp(t.ab + ef.v, -4, 2);
           if (ef.k === 'imo') t.imo = true;
@@ -7087,7 +7096,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (ef.k === 'desl') t.ds = clamp(t.ds + ef.v, -2, 4);
         });
         if (reg.faz.length && r.nome && !t.elim) {
-          const m = { df: t.df - ant.df, dn: t.dn - ant.dn, dd: t.dd - ant.dd, ds: t.ds - ant.ds, red: (t.red || 0) - ant.red, imo: t.imo && !ant.imo };
+          const m = { df: t.df - ant.df, dn: t.dn - ant.dn, dd: t.dd - ant.dd, ds: t.ds - ant.ds, red: (t.red || 0) - ant.red, imo: t.imo && !ant.imo, dr: (t.dr || 0) - ant.dr, cr: (t.cr || 0) - ant.cr };
           Object.keys(m).forEach(k => { if (!m[k]) delete m[k]; });
           let du = duracaoEf(descTxt, c, t);
           if (reg.dc && !Object.keys(m).length && reg.faz.length === 1) du = { txt: 'quando o Dano Contínuo acabar', exp: { t: 'dc' } };
