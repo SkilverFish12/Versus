@@ -5652,7 +5652,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (temTat(c, 'Raiz') && c.pv < c.max) { c.pv = Math.min(c.max, c.pv + 2); msg += ' Raiz: +2 PV.'; aviso = (aviso ? aviso + ' · ' : '') + '🌱 Raiz: +2 PV'; }
         if (temTat(c, 'Raiz Avessa')) { sofrerDano(c, 2, {}); msg += ' Raiz Avessa: −2 PV.'; aviso = (aviso ? aviso + ' · ' : '') + '🥀 Raiz Avessa: −2 PV'; }
         c.olhoRoxo = false;
-        c.acts = clamp(3 + c.ab + desv, 1, 5); c.ab = 0; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0; c.rErros = 0; c.rDano = 0; c.cupCura = false; c.escP = null; c.leitura = false; c.copAtk = [];
+        c.acts = clamp(3 + c.ab + desv, 1, 5); c.ab = 0; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0; c.rErros = 0; c.rDano = 0; c.cupCura = false; c.escP = null; c.leitura = false; c.copAtk = []; c.sableMov = false;
         if (c.aspecto && c.aspecto.ate === 'turno') c.aspecto = null;
         expiraIni(j + ',' + i); expiraDC();
         if (c.k === 'superior') { const L = (S.est || []).filter(z => z.tipo === 'Domínio' && z.dono === j); if (L.length) { S.est = S.est.filter(z => z !== L[0]); msg += ' Domínio mais antigo desfeito (' + L[0].cell + ').'; } }
@@ -6113,7 +6113,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   const ativoC = () => S.ativo ? S.times[S.ativo[0]][S.ativo[1]] : null;
   const restam = c => c.acts - c.gastas;
-  const lado = h => (h.t.includes('ATAQUE') || h.t.includes('PENALIDADE')) ? ((h.t.includes('RESTAURAÇÃO') || h.t.includes('REFORÇO')) ? 'qualquer' : 'inimigo') : 'aliado';
+  const LADO_QQ = ['Velejando em Alto-Mar', 'Colapso Espacial', 'Desviando Rota'];
+  const lado = h => LADO_QQ.includes(h.n) ? 'qualquer' : (h.t.includes('ATAQUE') || h.t.includes('PENALIDADE')) ? ((h.t.includes('RESTAURAÇÃO') || h.t.includes('REFORÇO')) ? 'qualquer' : 'inimigo') : 'aliado';
   const alcN = h => { const m = /(\d+)/.exec(h.a); return m ? +m[1] : 0; };
   const tipoAlc = h => h.a === 'ADJACENTE' ? 'alvo' : h.a.split(' ')[0];
   function pecas(filtro){
@@ -6265,6 +6266,39 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     }
     return null;
   }
+  // ── passos com escolha depois de uma habilidade (fila) ──
+  let filaPos = [];
+  const temPen = t => !!(t.imo || t.dcn > 0 || t.df < 0 || t.dd < 0 || t.ds < 0 || t.dn < 0 || (t.efs || []).some(e => e.mods && Object.entries(e.mods).some(([k, v]) => typeof v === 'number' && v < 0)));
+  function proximoPos(){
+    while (filaPos.length) {
+      const st = filaPos.shift(), x = st.alvo ? S.times[st.alvo[0]][st.alvo[1]] : ativoC();
+      if (!x || x.elim || !x.pos) continue;
+      iniciarModo(st); if (st.tit) toast(st.tit, 2600); return;
+    }
+  }
+  function montarPos(r, c, aj){
+    const Q = [], nm = r.nome, L = r.linhas || [], T = a => S.times[a[0]][a[1]], nmC = a => CH[T(a).k].nome;
+    const ok = L.filter(l => l.ok && l.alvo[0] !== aj).map(l => l.alvo);
+    if (nm === 'Partindo o Mar') ok.forEach(a => Q.push({ t: 'empDir', alvo: a, n: 2, tit: '🌊 Empurre ' + nmC(a) + ' 2 casas para um dos lados da linha' }));
+    if (nm === 'Rasante') ok.forEach(a => Q.push({ t: 'empDir', alvo: a, n: 1, tit: '🚗 Empurre ' + nmC(a) + ' 1 casa para o lado' }));
+    if (nm === 'Desviando Rota') L.filter(l => l.ok || l.alvo[0] === aj).forEach(l => Q.push({ t: 'empDir', alvo: l.alvo, n: r.aprim ? 4 : 2, mover: true, tit: '🛸 ' + nmC(l.alvo) + ' se move até ' + (r.aprim ? 4 : 2) + ' casas: escolha a direção' }));
+    if (nm === 'Xeque-Mate') ok.forEach(a => Q.push({ t: 'arremesso', alvo: a, alc: 8, colDano: 4, colAcao: true, tit: '♟️ Arremesse ' + nmC(a) + ' até 8 casas em linha reta' }));
+    if (nm === 'Pega pra Cá!') ok.forEach(a => Q.push({ t: 'arremesso', alvo: a, alc: r.aprim ? 99 : 6, colDano: 2, tit: '🤸 Arremesse ' + nmC(a) + (r.aprim ? ' para qualquer casa em linha reta' : ' até 6 casas em linha reta') }));
+    if (nm === 'Velejando em Alto-Mar') L.filter(l => l.ok || l.alvo[0] === aj).forEach(l => Q.push({ t: 'teleporte', alvo: l.alvo, centro: refDe(c), alc: r.aprim ? 4 : 2, acao: r.aprim && l.alvo[0] !== aj, tit: '🛢️ Arremesse ' + nmC(l.alvo) + ' para uma casa a até ' + (r.aprim ? 4 : 2) + ' casas de Azeitona' }));
+    if (nm === 'Colapso Espacial') {
+      S.times[aj].forEach((x, i) => { if (x !== c && !x.elim && x.pos) Q.push({ t: 'teleporte', alvo: [aj, i], tit: '🌀 Teleporte ' + CH[x.k].nome + ' (aliado) para qualquer casa vazia' }); });
+      S.times[1 - aj].forEach((x, i) => { if (x.elim || !x.pos) return; const hit = L.some(l => l.ok && l.alvo[0] === 1 - aj && l.alvo[1] === i);
+        Q.push(hit ? { t: 'teleporte', alvo: [1 - aj, i], naoAdj: true, tit: '🌀 Teleporte ' + CH[x.k].nome + ' para qualquer casa vazia (longe de outro inimigo)' } : { t: 'teleporte', alvo: [1 - aj, i], de: x.pos, alc: 2, naoAdj: true, tit: '🌀 ' + CH[x.k].nome + ' escapou: teleporte a até 2 casas' }); });
+    }
+    if (c.k === 'sable' && !c.sableMov) { const pen = ok.filter(a => !T(a).elim && T(a).pos && temPen(T(a))); if (pen.length) Q.push({ t: 'empDir', alvo: pen[0], n: 1, mover: true, sable: true, tit: '🦂 Alvo Comprometido: mova ' + nmC(pen[0]) + ' 1 casa (ou cancele)' }); }
+    const mv = (n, g) => Q.push({ t: 'mover', gratis: g, desl: n, tit: '👣 ' + g + ': ' + CH[c.k].nome + ' pode andar ' + n + (n > 1 ? ' casas' : ' casa') + ' (ou cancele)' });
+    if (r.aprim && ['Giro Serrilhado', 'Investida Alada', 'Mão Leve', 'Amor Cego'].includes(nm)) mv(2, nm);
+    if (r.aprim && nm === 'Execução Silenciosa' && ok.length) mv(2, nm);
+    if (nm === 'Execução Final' && L[0] && T(L[0].alvo).elim) mv(3, nm);
+    if (r.aprim && nm === 'Formas' && r.ops && r.ops[r.opSel[0]].nome === 'Ágil') mv(3, 'Formas (Ágil)');
+    if (nm === 'Garras' && c.estado && /Ágil/.test(c.estado.nome) && ok.length) mv(1, 'Garras (Ágil)');
+    return Q;
+  }
   function aprimAtivo(h){ const c = ativoC(); return !!(c && aprimorarMarcado && h.p && !c.med && S.med[S.ativo[0]] >= 1); }
   function alvosDe(h0, ap){
     if (ap === undefined) ap = aprimAtivo(h0);
@@ -6295,7 +6329,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     return '';
   }
   function iniciarModo(m){ modo = m; if (!mostrarTab) { mostrarTab = true; } rBoard(); rPainel(); const b = $('#ptBoard'); if (b && window.innerWidth < 1100) b.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  function cancelarModo(){ modo = null; rBoard(); rPainel(); }
+  function cancelarModo(){ modo = null; rBoard(); rPainel(); if (filaPos.length) setTimeout(proximoPos, 50); }
 
   function rPainel(){
     const box = $('#ptAcao');
@@ -6373,7 +6407,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function bannerModo(){
     const c = ativoC(), desl = (modo && modo.desl) || (c ? Math.max(1, 2 + mod(c, 'ds')) : 2);
     const nomeM = modo.t === 'mover' ? '👣 ' + (modo.gratis ? 'MOVER GRÁTIS (' + modo.gratis + ')' : 'MOVER') + ': toque numa casa amarela (até ' + desl + ' casas)' : modo.t === 'basico' ? '👊 ATAQUE BÁSICO: toque num inimigo adjacente' :
-      modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo + (modo.resta ? ' (faltam até ' + modo.resta + (modo.alc ? ', a até ' + modo.alc + ' casas' + (modo.tipo === 'Domínio' ? ' do Superior' : '') : '') + ')' : '') : modo.t === 'ceus' ? '☁️ CÉUS: toque na casa ao lado do alvo na direção do empurrão (3 casas)' : modo.t === 'copiaAtk' ? '👥 CÓPIAS ATACAM: toque num inimigo adjacente a uma Cópia livre' : modo.t === 'atkEst' ? '🎯 ATACAR ESTRUTURA: toque na casa da estrutura' : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
+      modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo + (modo.resta ? ' (faltam até ' + modo.resta + (modo.alc ? ', a até ' + modo.alc + ' casas' + (modo.tipo === 'Domínio' ? ' do Superior' : '') : '') + ')' : '') : (modo.t === 'empDir' || modo.t === 'arremesso' || modo.t === 'teleporte' || (modo.t === 'mover' && modo.tit)) ? modo.tit : modo.t === 'ceus' ? '☁️ CÉUS: toque na casa ao lado do alvo na direção do empurrão (3 casas)' : modo.t === 'copiaAtk' ? '👥 CÓPIAS ATACAM: toque num inimigo adjacente a uma Cópia livre' : modo.t === 'atkEst' ? '🎯 ATACAR ESTRUTURA: toque na casa da estrutura' : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
     const conf = modo.t === 'hab' && (modo.alvosInfo.tipo === 'todos' || modo.alvosInfo.tipo === 'linha') && (modo.dir !== undefined || modo.alvosInfo.tipo === 'todos');
     return '<div class="ac-modo"><span>' + nomeM + '</span>' + (modo.t === 'estrutura' && modo.resta ? '<button class="btn-amarelo sm" data-cancelar>✓ PRONTO</button>' : '') + (conf ? '<button class="btn-amarelo sm" data-confirmar>USAR ▶</button>' : '') + '<button class="btn-ghost sm" data-cancelar>✕ CANCELAR</button></div>';
   }
@@ -6442,6 +6476,10 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'estrutura') CELLS.forEach(x => { if (!bloqueada(x.id)) out.casas.add(x.id); });
     if (modo.t === 'atkEst') modo.alvos.forEach(id => out.casas.add(id));
     if (modo.t === 'ceus') { const t = S.times[modo.alvo[0]][modo.alvo[1]]; if (t.pos) vizinhas(t.pos).forEach(id => out.casas.add(id)); }
+    if (modo.t === 'empDir') { const t = S.times[modo.alvo[0]][modo.alvo[1]]; if (t.pos) vizinhas(t.pos).forEach(id => out.casas.add(id)); }
+    if (modo.t === 'arremesso') { const t = S.times[modo.alvo[0]][modo.alvo[1]]; if (t.pos) DIR6.forEach((_, di) => { let p = t.pos; for (let k = 0; k < modo.alc; k++) { const nx = viz(p, di); if (!nx) break; out.casas.add(nx); p = nx; } }); }
+    if (modo.t === 'teleporte') { const t = S.times[modo.alvo[0]][modo.alvo[1]], cen = modo.centro ? S.times[+modo.centro[0]][+modo.centro[2]].pos : modo.de, tj = modo.alvo[0];
+      CELLS.forEach(x => { if (!livre(x.id) || (cen && dist(cen, x.id) > modo.alc)) return; if (modo.naoAdj && vizinhas(x.id).some(v => { const o = ocupante(v); return o && o[0] === tj && S.times[o[0]][o[1]] !== t; })) return; out.casas.add(x.id); }); }
     if (modo.t === 'copiaAtk') { copiaAlvos(c).forEach(p => out.toks.add(p.join(','))); copiasLivres(c).forEach(z => out.casas.add(z.cell)); }
     if (modo.t === 'carona') pecas((pj, pi, x) => pj === S.ativo[0] && x !== c && !x.carona && x.pos && c.pos && dist(x.pos, c.pos) === 1).forEach(p => out.toks.add(p.join(',')));
     if (modo.t === 'descer') { const [qj, qi] = modo.quem.split(',').map(Number), q = S.times[qj][qi]; if (q.pos) vizinhas(q.pos).filter(livre).forEach(id => out.casas.add(id)); }
@@ -6469,6 +6507,33 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     }
     if (!c) { modo = null; return false; }
     const d0 = destaquesModo();
+    if (modo.t === 'empDir' || modo.t === 'arremesso' || modo.t === 'teleporte') {
+      const st = modo, t = S.times[st.alvo[0]][st.alvo[1]], id = cellId || (tok && S.times[+tok[0]][+tok[2]].pos);
+      if (!t.pos || !id || !d0.casas.has(id)) return true;
+      modo = null; const msg = [];
+      mudar(() => {
+        if (st.t === 'teleporte') { moverPeca(t, id); msg.push(CH[t.k].nome + ' foi para ' + id); if (st.acao) { t.ab = clamp(t.ab - 1, -4, 2); msg.push(CH[t.k].nome + ' perde 1 ação no próximo turno'); } return; }
+        const di = st.t === 'empDir' ? DIR6.findIndex((_, k) => viz(t.pos, k) === id) : (() => { for (let k = 0; k < 6; k++) { let p = t.pos; for (let n = 0; n < st.alc; n++) { p = viz(p, k); if (!p) break; if (p === id) return k; } } return -1; })();
+        if (di < 0) return;
+        if (st.t === 'empDir' && !st.mover) { msg.push(...empurrar(t, null, st.n, { di })); return; }
+        const lim = st.t === 'empDir' ? st.n : st.alc;
+        for (let n = 0; n < lim; n++) {
+          const nx = viz(t.pos, di); if (!nx) break;
+          if (st.t === 'empDir') { if (!livre(nx)) break; moverPeca(t, nx); continue; }
+          const o = ocupante(nx);
+          if (o || obstaculo(nx)) {
+            msg.push(CH[t.k].nome + ' colidiu' + (o ? ' com ' + CH[S.times[o[0]][o[1]].k].nome : ' num obstáculo'));
+            [t].concat(o ? [S.times[o[0]][o[1]]] : []).forEach(x => { dano(x, st.colDano, msg); if (st.colAcao && !x.elim) { x.ab = clamp(x.ab - 1, -4, 2); msg.push(CH[x.k].nome + ' perde 1 ação no próximo turno'); } });
+            break;
+          }
+          moverPeca(t, nx); if (nx === id) break;
+        }
+        msg.unshift(CH[t.k].nome + ' foi para ' + t.pos);
+        if (st.sable) ativoC().sableMov = true;
+      }, () => (st.tit ? st.tit.split(':')[0].replace(/^\S+ /, '') + ': ' : '') + msg.join(', ') + '.');
+      if (filaPos.length) setTimeout(proximoPos, 50);
+      return true;
+    }
     if (modo.t === 'ceus') {
       const t = S.times[modo.alvo[0]][modo.alvo[1]], id = cellId || (tok && S.times[+tok[0]][+tok[2]].pos);
       if (!t.pos || !id) return true;
@@ -6510,6 +6575,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (!cellId || !d0.casas.has(cellId)) return true;
       const de = c.pos, gr = modo.gratis; modo = null;
       mudar(() => { moverPeca(c, cellId); if (gr) c.usadas = (c.usadas || []).concat(gr); else c.gastas++; }, '👣 ' + CH[c.k].nome + (de ? ' moveu de ' + de + ' para ' + cellId : ' entrou em ' + cellId) + '.');
+      if (filaPos.length) setTimeout(proximoPos, 50);
       return true;
     }
     if (modo.t === 'basico') {
@@ -6843,7 +6909,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (livre) extras.push({ k: 'est', v: ['Cópia', livre], on: true, txt: 'Criar 👥 Cópia em ' + livre + ' (toque nela no tabuleiro para mudar de casa)' });
     }
     if (m.cel && h.t.includes('ESTRUTURA')) { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, m.cel], on: true, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + m.cel }); }
-    if (m.cel && !ef.ocupar && h.t.includes('MOBILIDADE') && /aparece|desloca|despenca|avança|desliza|dispara/i.test(h.d) && !ocupante(m.cel)) extras.push({ k: 'mover', v: m.cel, on: true, txt: 'Mover ' + ch.nome + ' para ' + m.cel });
+    if (m.cel && !ef.ocupar && h.t.includes('MOBILIDADE') && /aparece|desloca\b|despenca|avança|desliza|dispara/i.test(h.d) && !ocupante(m.cel)) extras.push({ k: 'mover', v: m.cel, on: true, txt: 'Mover ' + ch.nome + ' para ' + m.cel });
     if (!m.cel && h.t.includes('ESTRUTURA') && c.pos && h.a === 'PESSOAL') { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, c.pos], on: false, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + c.pos }); }
     if (AURA_APAR.includes(h.n)) {
       const aps = (S.est || []).filter(z => z.tipo === 'Aparato' && z.dono === aj);
@@ -7047,6 +7113,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     }, () => (r.nome ? (r.sup ? '★ ' : '✨ ') + CH[c.k].nome + ' usou ' + r.nome : '👊 ' + CH[c.k].nome + ' fez um Ataque Básico') + (msg.length ? ': ' + msg.join(', ') : '') + '.');
     if (r.sup) toast('★ ' + r.nome.toUpperCase() + ' ★', 2200);
     if (r.nome === 'Marca Titânica' && r.ops && r.opSel.some(i => r.ops[i].nome === 'Céus') && r.linhas[0] && r.linhas[0].ok) { const al = r.linhas[0].alvo, t = S.times[al[0]][al[1]]; if (!t.elim && t.pos) setTimeout(() => { iniciarModo({ t: 'ceus', alvo: al }); toast('☁️ Céus: toque na casa ao lado de ' + CH[t.k].nome + ' para a direção do empurrão', 3000); }, 60); }
+    { const Q = montarPos(r, c, aj); if (Q.length) { filaPos = Q; setTimeout(proximoPos, 80); } }
     if (r.nome === 'Pouso Tático' && r.aprim) setTimeout(() => { iniciarModo({ t: 'estrutura', tipo: 'Pássaro', dono: aj, resta: 1, alc: 5, de: c.pos || null }); toast('⚡ Aprimorado: posicione ou reposicione o segundo Pássaro (até 5 casas)', 3000); }, 60);
     if (r.nome === 'Domínio Gravitacional' && c.pos) setTimeout(() => { iniciarModo({ t: 'estrutura', tipo: 'Domínio', dono: aj, resta: 5, alc: 4, de: c.pos }); toast('Marque as outras casas de Domínio: até 2 no total por 1 ação, até 6 por 2 ações', 3200); }, 60);
   });
