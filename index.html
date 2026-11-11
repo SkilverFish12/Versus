@@ -6531,9 +6531,18 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     return '<div class="ac-modo"><span>' + nomeM + '</span>' + (modo.t === 'estrutura' && modo.resta ? '<button class="btn-amarelo sm" data-cancelar>✓ PRONTO</button>' : '') + (conf ? '<button class="btn-amarelo sm" data-confirmar>USAR ▶</button>' : '') + '<button class="btn-ghost sm" data-cancelar>✕ CANCELAR</button></div>';
   }
   const tipoIcone = h => h.t.includes('ATAQUE') ? '💥' : h.t.includes('PENALIDADE') ? '🌀' : h.t.includes('RESTAURAÇÃO') ? '💚' : h.t.includes('ESTRUTURA') ? '🏗️' : h.t.includes('MOBILIDADE') ? '💨' : h.t.includes('REFORÇO') ? '🛡️' : '✨';
+  // Aprimorar que dá um segundo alvo
+  const DOIS_ALVOS = { 'Escopeta de Pulso': 'alc', 'Interceptor Tático': 'alc', 'Pensamento Intrusivo': 'alc', 'Cavalgar Destrutivo': 'perto2' };
+  function segAlvos(m){
+    if (!m || !m.aprim || !m.h || !DOIS_ALVOS[m.h.n] || !m.sel || m.sel.length !== 1) return [];
+    const f = m.sel[0], ft = S.times[f[0]][f[1]], aj = S.ativo[0];
+    if (DOIS_ALVOS[m.h.n] === 'perto2') return pecas((j, i, x) => j !== aj && !(j === f[0] && i === f[1]) && !temEf(x, 'intocavel') && ft.pos && x.pos && dP(ft.pos, x) <= 2);
+    return m.alvosInfo.alvos.filter(p => !(p[0] === f[0] && p[1] === f[1]));
+  }
   function textoModo(m){
     const a = m.alvosInfo;
-    if (a.tipo === 'peca') return 'toque no alvo';
+    if (a.tipo === 'peca' && m.seg) return '⚡ toque no 2º alvo' + (DOIS_ALVOS[m.h.n] === 'perto2' ? ' (a até 2 casas do primeiro)' : '') + ', ou de novo no 1º para ficar só com ele';
+    if (a.tipo === 'peca') return 'toque no alvo' + (m.aprim && DOIS_ALVOS[m.h.n] ? ' (o Aprimorar deixa escolher um 2º)' : '');
     if (a.tipo === 'bico') return m.bico && m.bico.ops ? '🐦 Pássaro em ' + m.bico.fila[m.bico.i] + ' (' + (m.bico.i + 1) + '/' + m.bico.fila.length + '): ' + (m.aprim ? 'escolha o alvo dele' : 'empate, escolha qual inimigo mais próximo ele ataca') : 'Pássaros escolhendo alvos';
     if (a.tipo === 'casa') return 'toque numa casa a até ' + alcN(m.aprim ? alcAprim(m.h) : m.h) + ' casas';
     if (a.tipo === 'linha') return m.dir === undefined ? 'toque numa casa amarela para escolher a direção' : (m.sel || []).length + ' alvo(s) na linha · toque em outra direção ou use';
@@ -6607,7 +6616,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'descer') { const [qj, qi] = modo.quem.split(',').map(Number), q = S.times[qj][qi]; if (q.pos) vizinhas(q.pos).filter(livre).forEach(id => out.casas.add(id)); }
     if (modo.t === 'hab') {
       const a = modo.alvosInfo;
-      if (a.tipo === 'peca' || a.tipo === 'todos') (a.tipo === 'todos' ? modo.sel : a.alvos).forEach(p => out.toks.add(p.join(',')));
+      if (a.tipo === 'peca' && modo.seg) { out.toks.add(modo.sel[0].join(',')); segAlvos(modo).forEach(p => out.toks.add(p.join(','))); }
+      else if (a.tipo === 'peca' || a.tipo === 'todos') (a.tipo === 'todos' ? modo.sel : a.alvos).forEach(p => out.toks.add(p.join(',')));
       if (a.tipo === 'casa' && a.meia && modo.mnA) { a.casas.forEach(id => out.casas.add(id)); out.linha = new Set([modo.mnA]); }
       else if (a.tipo === 'casa' && a.faixa && modo.faixaA) { out.casas.add(modo.faixaA); vizinhas(modo.faixaA).forEach(id => out.casas.add(id)); if (modo.faixa) out.linha = new Set(modo.faixa); }
       else if (a.tipo === 'casa') a.casas.forEach(id => out.casas.add(id));
@@ -6728,7 +6738,15 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'hab') {
       const a = modo.alvosInfo;
       if (a.tipo === 'bico') { const b = modo.bico; if (!tok || !b.ops || !b.ops.includes(tok)) return true; b.cont[tok] = (b.cont[tok] || 0) + 1; b.atr.push([b.fila[b.i], tok]); b.i++; b.ops = null; bicoAvanca(); return true; }
-      if (a.tipo === 'peca') { if (!tok || !d0.toks.has(tok)) return true; modo.sel = [tok.split(',').map(Number)]; return resolverHab(), true; }
+      if (a.tipo === 'peca' && modo.seg) {
+        if (!tok) return true;
+        if (tok === modo.sel[0].join(',')) { modo.seg = false; return resolverHab(), true; }
+        if (!segAlvos(modo).some(p => p.join(',') === tok)) return true;
+        modo.sel.push(tok.split(',').map(Number)); modo.seg = false; return resolverHab(), true;
+      }
+      if (a.tipo === 'peca') { if (!tok || !d0.toks.has(tok)) return true; modo.sel = [tok.split(',').map(Number)];
+        if (segAlvos(modo).length) { modo.seg = true; rBoard(); rPainel(); toast('⚡ Agora toque no 2º alvo (ou de novo no 1º para ficar só com ele)', 2400); return true; }
+        return resolverHab(), true; }
       if (a.tipo === 'casa' && a.meia) {
         const id = cellId || (tok && S.times[+tok[0]][+tok[2]].pos);
         if (!id || !d0.casas.has(id)) return true;
@@ -7176,6 +7194,18 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (c.k === 'andarilho') { extras.push(supFx('Andarilho entra no Embalo máximo (9 casas)', () => setRec(c, 'Embalo', 9)));
           extras.push(supFx('Aliados recebem Embalo 9 até o fim do próximo turno do Andarilho: +2 de dano nos Ataques Básicos, +1 na Defesa, −1 de dano de cada ataque', () => S.times[aj].forEach(x => { if (!x.elim && x !== c) aplicarEf(x, { nome: 'Embalo (Caravana)', autor: nm, faz: '+2 de dano nos Ataques Básicos · +1 na Defesa · −1 de dano de cada ataque', acaba: txtFim(c), exp: fimP(c), mods: { df: 1, red: 1 }, basDn: 2 }); }))); }
         break;
+      case 'Ignição':
+        if (!r.aprim) break;
+        linhasR.forEach(l => { if (!ini(l) || !l.ok) return; l.ef.forEach(e => { if (e.k === 'dc') { e.v = [e.v[0], 3]; e.txt = 'Dano Contínuo ' + e.v[0] + ' por 3'; } });
+          fx(l, 'cada inimigo adjacente ao alvo sofre 2 de dano', (t, msg) => { if (!t.pos) return; S.times[timeDe(t)].forEach(x => { if (x === t || x.elim || !x.pos || dist(x.pos, t.pos) !== 1) return; const q = sofrerDano(x, 2, { ataque: true }); msg.push(CH[x.k].nome + ' −' + q.real + ' PV'); }); }); });
+        break;
+      case 'Pó de Escamas': {
+        const marcar = t => { if (!(t.efs || []).some(e => e.nome === 'Pó de Escamas')) aplicarEf(t, { nome: 'Pó de Escamas', autor: nm, faz: 'Marcado: −1 dado em todos os testes', acaba: txtFim(c), exp: fimP(c), mods: { dd: -1 } });
+          novoEf(c, { nome: 'Marcado: ' + CH[t.k].nome, autor: nm, faz: '+1 dado contra ' + CH[t.k].nome, acaba: txtFim(c), exp: fimP(c), mods: {}, contra: refDe(t), cmods: { dd: 1 } }); };
+        linhasR.forEach(l => { if (!ini(l) || !l.ok) return; l.ef = l.ef.filter(e => e.k !== 'dados');
+          fx(l, 'fica Marcado (−1 dado; Betterfly +1 dado contra ele)', t => marcar(t));
+          if (r.aprim) fx(l, 'os inimigos adjacentes ao alvo também ficam Marcados', (t, msg) => { if (!t.pos) return; S.times[timeDe(t)].forEach(x => { if (x !== t && !x.elim && x.pos && dist(x.pos, t.pos) === 1) { marcar(x); msg.push(CH[x.k].nome + ' Marcado'); } }); }); });
+        break; }
       case 'Borrão':
         linhasR.forEach(l => { if (!ini(l) || !l.ok) return; l.ef = l.ef.filter(e => e.k === 'dano');
           fx(l, '+2 Manchas (cada uma tira 1 dado do próximo teste, máx. 3); se já estava Manchado, alcance máximo 2 e −1 casa até o fim do próximo turno dele', t => { const ja = (t.manchas || 0) > 0; manchar(t, 2); if (ja) aplicarEf(t, { nome: 'Borrão nos olhos', autor: nm, faz: 'alcance máximo 2 · −1 casa de deslocamento', acaba: txtFim(t), exp: fimP(t), mods: { ds: -1 }, alcMax: true }); }); });
@@ -7302,11 +7332,14 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (/não acertar sofrem metade do dano/.test(dT) && ef.dano) { const v = Math.floor((ef.dano + bonusDn) / 2); lista.push({ k: 'dano', v, psi: ef.psi, on: true, txt: v + ' de dano (metade)' }); } }
       linhasR.push({ alvo: al, ok, txt, ef: lista });
     });
-    if (m.sup || h.n === 'Borrão') ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
+    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
     const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
     { const mTxt = limpo(h.m || '');
       if (/acontece mesmo se errar|avança sempre/i.test(mTxt) && c.pos && !pre.some(p => p.k === 'aprox')) { const dest = destinoPre(c, h, m, r, mTxt, alvos); if (dest && dest !== c.pos) pre.push({ k: 'irPara', v: dest, on: true, txt: ch.nome + ' vai para ' + dest + ' antes do teste (mesmo se errar)' }); } }
+      if (h.n === 'Cavalgar Destrutivo' && r.aprim && alvos.length === 2 && c.pos) { const p1 = (pre.find(p => p.k === 'irPara') || {}).v || c.pos, t2 = S.times[alvos[1][0]][alvos[1][1]];
+        const d2 = t2.pos ? vizinhas(t2.pos).filter(id => livre(id) || id === c.pos).filter(id => id !== p1).sort((a, b) => dist(a, p1) - dist(b, p1))[0] : null;
+        if (d2) pre.push({ k: 'irPara', v: d2, on: true, txt: 'Segundo salto: ' + ch.nome + ' vai para ' + d2 + ', ao lado de ' + CH[t2.k].nome }); }
     if (ef.ocupar && alvo1 && linhasR[0] && linhasR[0].ok) extras.push({ k: 'ocupar', v: alvos[0], on: true, txt: ch.nome + ' termina na casa onde o alvo estava' });
     if (c.k === 'drive' && h.n === 'Rasante' && m.cel) {
       const linha = alvosDe(h, r.aprim).casas.filter(([, di]) => di === m.dir).map(([id]) => id);
