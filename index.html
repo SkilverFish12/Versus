@@ -6136,7 +6136,18 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     return !c.pos || (x.pos && dP(c.pos, x) >= 1 && dP(c.pos, x) <= alc);
   }
   // alvos possíveis de uma habilidade para o personagem ativo
-  function alvosDe(h){
+  // alcance com Aprimorar: lê "o alcance passa a ser X" do texto do Medidor
+  function alcAprim(h){
+    const m = /alcance(?: passa a ser)? (Todo Tabuleiro|(?:Alvo|Linha|Raio) \d+|\d+)/i.exec(limpo(h.p || ''));
+    if (!m) return h;
+    const tp = h.a === 'ADJACENTE' ? 'ALVO' : h.a.split(' ')[0], v = m[1].toUpperCase();
+    const a = v === 'TODO TABULEIRO' ? (tp === 'ALCANCE' || tp === 'LINHA' ? tp : tp) + ' 99' : /^\d+$/.test(v) ? tp + ' ' + v : v;
+    return Object.assign({}, h, { a, aOrig: h.a });
+  }
+  function aprimAtivo(h){ const c = ativoC(); return !!(c && aprimorarMarcado && h.p && !c.med && S.med[S.ativo[0]] >= 1); }
+  function alvosDe(h0, ap){
+    if (ap === undefined) ap = aprimAtivo(h0);
+    const h = ap ? alcAprim(h0) : h0;
     const [aj] = S.ativo, c = ativoC(), n = h.a === 'ADJACENTE' ? 1 : alcN(h), ta = tipoAlc(h), ld = lado(h);
     const ok = (j) => ld === 'qualquer' || (ld === 'inimigo' ? j !== aj : j === aj);
     const temPos = !!c.pos;
@@ -6185,7 +6196,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     ch.habs.forEach((hb, k) => {
       if (!hb.c) return;
       const mot = motivo(hb, false);
-      h += btn('data-hab="' + k + '"', tipoIcone(hb), hb.n.toUpperCase(), hb.c + (hb.c > 1 ? ' ações' : ' ação') + ' · ' + hb.a.toLowerCase() + ' · ' + (hb.x >= 0 ? 'teste ' + APT[hb.x] : 'sem teste') + (hb.k ? ' · ' + hb.k : ''), mot);
+      h += btn('data-hab="' + k + '"', tipoIcone(hb), hb.n.toUpperCase(), hb.c + (hb.c > 1 ? ' ações' : ' ação') + ' · ' + (aprimAtivo(hb) && alcAprim(hb).aOrig ? '⚡ ' + alcAprim(hb).a.replace(/ 99$/, ' todo tabuleiro') : hb.a).toLowerCase() + ' · ' + (hb.x >= 0 ? 'teste ' + APT[hb.x] : 'sem teste') + (hb.k ? ' · ' + hb.k : ''), mot);
     });
     // Sobe Aí (veículo)
     if (temSobeAi(c)) {
@@ -6244,12 +6255,12 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function textoModo(m){
     const a = m.alvosInfo;
     if (a.tipo === 'peca') return 'toque no alvo';
-    if (a.tipo === 'casa') return 'toque numa casa a até ' + alcN(m.h) + ' casas';
+    if (a.tipo === 'casa') return 'toque numa casa a até ' + alcN(m.aprim ? alcAprim(m.h) : m.h) + ' casas';
     if (a.tipo === 'linha') return m.dir === undefined ? 'toque numa casa amarela para escolher a direção' : (m.sel || []).length + ' alvo(s) na linha · toque em outra direção ou use';
     if (a.tipo === 'todos') return (m.sel || []).length + ' alvo(s) na área';
     return 'confirme para usar';
   }
-  $('#ptAcao').addEventListener('change', e => { if (e.target.id === 'acApr') aprimorarMarcado = e.target.checked; });
+  $('#ptAcao').addEventListener('change', e => { if (e.target.id === 'acApr') { aprimorarMarcado = e.target.checked; rPainel(); } });
   $('#ptAcao').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b || b.disabled) return;
     if (b.dataset.cancelar !== undefined) return cancelarModo();
@@ -6275,7 +6286,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b.dataset.hab !== undefined) {
       const sup = b.dataset.hab === 'sup', h = sup ? CH[c.k].supH : CH[c.k].habs[+b.dataset.hab];
       const aprim = !sup && aprimorarMarcado && !!h.p && !c.med && S.med[S.ativo[0]] >= 1;
-      const ai = alvosDe(h);
+      const ai = alvosDe(h, aprim);
       const m = { t: 'hab', h, sup, aprim, alvosInfo: ai, sel: [] };
       if (ai.tipo === 'nenhum') { m.sel = [S.ativo]; modo = m; return resolverHab(); }
       if (ai.tipo === 'todos') { m.sel = ai.alvos; }
@@ -6649,7 +6660,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
     if (ef.ocupar && alvo1 && linhasR[0] && linhasR[0].ok) extras.push({ k: 'ocupar', v: alvos[0], on: true, txt: ch.nome + ' termina na casa onde o alvo estava' });
     if (c.k === 'drive' && h.n === 'Rasante' && m.cel) {
-      const linha = alvosDe(h).casas.filter(([, di]) => di === m.dir).map(([id]) => id);
+      const linha = alvosDe(h, r.aprim).casas.filter(([, di]) => di === m.dir).map(([id]) => id);
       pecas((pj, pi, x) => pj === aj && x !== c && !x.carona && x.pos && linha.some(id => dist(id, x.pos) <= 1)).forEach(p => extras.push({ k: 'carona', v: p, on: false, txt: CH[S.times[p[0]][p[1]].k].nome + ' sobe no veículo (grátis)' }));
     }
     if (c.k === 'semelhante' && h.n === 'Multiplicar' && c.pos) {
