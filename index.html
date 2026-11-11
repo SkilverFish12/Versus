@@ -6144,11 +6144,41 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const a = v === 'TODO TABULEIRO' ? (tp === 'ALCANCE' || tp === 'LINHA' ? tp : tp) + ' 99' : /^\d+$/.test(v) ? tp + ' ' + v : v;
     return Object.assign({}, h, { a, aOrig: h.a });
   }
+  const passarosDe = j => (S.est || []).filter(z => z.tipo === 'Pássaro' && z.dono === j && z.cell);
+  // Pássaros além do máximo (3, ou 5 no Canto Final): o mais antigo sai (é o que foi reposicionado)
+  function limitarPassaros(j){
+    const canto = S.times[j].some(x => !x.elim && x.k === 'assobio' && ((x.estado && x.estado.nome === 'O Canto Final') || (x.efs || []).some(e => e.nome === 'O Canto Final')));
+    const L = passarosDe(j), sai = [];
+    while (L.length > (canto ? 5 : 3)) { const z = L.shift(); S.est = S.est.filter(y => y !== z); sai.push(z.cell); }
+    return sai;
+  }
+  // Bico de Aço: cada Pássaro ataca o inimigo mais próximo dele (máx. 2 Pássaros por alvo); empate ou Aprimorar = jogador escolhe
+  function bicoOps(cell){
+    const aj = S.ativo[0], cont = modo.bico.cont;
+    const L = pecas((j, i, x) => j !== aj && x.pos && (cont[j + ',' + i] || 0) < 2);
+    if (modo.aprim || !L.length) return L.map(p => p.join(','));
+    const ds = L.map(([j, i]) => dP(cell, S.times[j][i])), mn = Math.min(...ds);
+    return L.filter((_, k) => ds[k] === mn).map(p => p.join(','));
+  }
+  function bicoAvanca(){
+    const b = modo.bico;
+    while (b.i < b.fila.length) {
+      const ops = bicoOps(b.fila[b.i]);
+      if (ops.length > 1) { b.ops = ops; rBoard(); rPainel(); return; }
+      if (ops.length === 1) { b.cont[ops[0]] = (b.cont[ops[0]] || 0) + 1; b.atr.push([b.fila[b.i], ops[0]]); }
+      b.i++;
+    }
+    b.ops = null;
+    modo.sel = Object.keys(b.cont).map(r => r.split(',').map(Number));
+    if (!modo.sel.length) { toast('Nenhum inimigo para os Pássaros atacarem', 1800); return cancelarModo(); }
+    resolverHab();
+  }
   function aprimAtivo(h){ const c = ativoC(); return !!(c && aprimorarMarcado && h.p && !c.med && S.med[S.ativo[0]] >= 1); }
   function alvosDe(h0, ap){
     if (ap === undefined) ap = aprimAtivo(h0);
     const h = ap ? alcAprim(h0) : h0;
     const [aj] = S.ativo, c = ativoC(), n = h.a === 'ADJACENTE' ? 1 : alcN(h), ta = tipoAlc(h), ld = lado(h);
+    if (c.k === 'assobio' && h.n === 'Bico de Aço') return { tipo: 'bico' };
     const ok = (j) => ld === 'qualquer' || (ld === 'inimigo' ? j !== aj : j === aj);
     const temPos = !!c.pos;
     if (ta === 'PESSOAL' || AURA_APAR.includes(h.n)) return { tipo: 'nenhum' };
@@ -6166,6 +6196,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if ((c.usadas || []).includes(h.n)) return 'já usada neste turno';
     if (h.n === 'Defletir') return 'reação: use no ataque do inimigo (tire 2 ações do próximo turno)';
     if (sup) { if (c.sup) return 'já usada na partida'; if (c.med) return 'Medidor já gasto nesta rodada'; if (S.med[j] < 3) return 'precisa de 3 de Medidor'; }
+    if (c.k === 'assobio' && h.n === 'Bico de Aço' && !passarosDe(j).length) return 'precisa de um Pássaro no tabuleiro';
     const a = alvosDe(h);
     if (c.pos && a.tipo === 'peca' && !a.alvos.length) return 'nenhum alvo no alcance';
     if (c.pos && a.tipo === 'linha' && lado(h) !== 'aliado' && !h.t.includes('MOBILIDADE') && !a.casas.some(([id]) => { const o = ocupante(id); return o && o[0] !== j; })) return 'nenhum inimigo em linha';
@@ -6255,6 +6286,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function textoModo(m){
     const a = m.alvosInfo;
     if (a.tipo === 'peca') return 'toque no alvo';
+    if (a.tipo === 'bico') return m.bico && m.bico.ops ? '🐦 Pássaro em ' + m.bico.fila[m.bico.i] + ' (' + (m.bico.i + 1) + '/' + m.bico.fila.length + '): ' + (m.aprim ? 'escolha o alvo dele' : 'empate, escolha qual inimigo mais próximo ele ataca') : 'Pássaros escolhendo alvos';
     if (a.tipo === 'casa') return 'toque numa casa a até ' + alcN(m.aprim ? alcAprim(m.h) : m.h) + ' casas';
     if (a.tipo === 'linha') return m.dir === undefined ? 'toque numa casa amarela para escolher a direção' : (m.sel || []).length + ' alvo(s) na linha · toque em outra direção ou use';
     if (a.tipo === 'todos') return (m.sel || []).length + ' alvo(s) na área';
@@ -6290,6 +6322,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       const m = { t: 'hab', h, sup, aprim, alvosInfo: ai, sel: [] };
       if (ai.tipo === 'nenhum') { m.sel = [S.ativo]; modo = m; return resolverHab(); }
       if (ai.tipo === 'todos') { m.sel = ai.alvos; }
+      if (ai.tipo === 'bico') { m.bico = { fila: passarosDe(S.ativo[0]).map(z => z.cell), i: 0, cont: {}, atr: [] }; modo = m; mostrarTab = true; return bicoAvanca(); }
       iniciarModo(m);
     }
   });
@@ -6311,6 +6344,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       const a = modo.alvosInfo;
       if (a.tipo === 'peca' || a.tipo === 'todos') (a.tipo === 'todos' ? modo.sel : a.alvos).forEach(p => out.toks.add(p.join(',')));
       if (a.tipo === 'casa') a.casas.forEach(id => out.casas.add(id));
+      if (a.tipo === 'bico' && modo.bico && modo.bico.ops) { modo.bico.ops.forEach(r => out.toks.add(r)); out.casas.add(modo.bico.fila[modo.bico.i]); }
       if (a.tipo === 'linha') a.casas.forEach(([id, di]) => { out.casas.add(id); if (modo.dir === di) out.linha = (out.linha || new Set()).add(id); });
     }
     return out;
@@ -6325,7 +6359,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (modo.de && dist(modo.de, cellId) > (modo.alc || 99)) { toast('Fora do alcance (até ' + modo.alc + ' casas)', 1400); return true; }
       if (tipo === 'Domínio' && dominioEm(cellId)) return true;
       if (modo.resta > 1) { modo.resta--; } else modo = null;
-      mudar(() => { S.est = S.est || []; const ne = { id: Date.now() + '' + d(999), tipo, cell: cellId, dono, acaba: tipo === 'Domínio' ? 'quando for desfeito' : undefined }; const hp = { Galho: 'Brotamento', Campo: 'Contendo o Mal', Miasma: 'Miasma' }[tipo]; if (hp) { const a = AURAS[hp]({}, []); a.nome = hp; ne.auras = [a]; ne.hab = hp; } S.est.push(ne); if (tipo === 'Domínio') limitarDominio(dono); }, ESTI[tipo][1] + ' ' + tipo + ' colocado em ' + cellId + '.');
+      mudar(() => { S.est = S.est || []; const ne = { id: Date.now() + '' + d(999), tipo, cell: cellId, dono, acaba: tipo === 'Domínio' ? 'quando for desfeito' : undefined }; const hp = { Galho: 'Brotamento', Campo: 'Contendo o Mal', Miasma: 'Miasma' }[tipo]; if (hp) { const a = AURAS[hp]({}, []); a.nome = hp; ne.auras = [a]; ne.hab = hp; } S.est.push(ne); if (tipo === 'Domínio') limitarDominio(dono); if (tipo === 'Pássaro') limitarPassaros(dono); }, ESTI[tipo][1] + ' ' + tipo + ' colocado em ' + cellId + '.');
       rPainel(); return true;
     }
     if (!c) { modo = null; return false; }
@@ -6354,6 +6388,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     }
     if (modo.t === 'hab') {
       const a = modo.alvosInfo;
+      if (a.tipo === 'bico') { const b = modo.bico; if (!tok || !b.ops || !b.ops.includes(tok)) return true; b.cont[tok] = (b.cont[tok] || 0) + 1; b.atr.push([b.fila[b.i], tok]); b.i++; b.ops = null; bicoAvanca(); return true; }
       if (a.tipo === 'peca') { if (!tok || !d0.toks.has(tok)) return true; modo.sel = [tok.split(',').map(Number)]; return resolverHab(), true; }
       if (a.tipo === 'casa') {
         const id = cellId || (tok && S.times[+tok[0]][+tok[2]].pos);
@@ -6624,6 +6659,12 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         else { const nd = Math.min(6, dv + 2); ok = true; txt = nd + ' Dívidas cobradas'; lista.push({ k: 'dano', v: 2 * nd, on: true, txt: (2 * nd) + ' de dano' }); lista.push({ k: 'divset', v: 0, on: true, txt: 'zera as Dívidas' }); }
         linhasR.push({ alvo: al, ok, txt, ef: lista }); return;
       }
+      if (c.k === 'assobio' && h.n === 'Bico de Aço' && inimigo && m.bico) {
+        const np = m.bico.cont[al.join(',')] || 0, por = r.aprim ? 3 : 2;
+        txt += ' · ' + np + (np > 1 ? ' Pássaros' : ' Pássaro');
+        if (ok) { const dv = Math.max(1, np * (por + bonusDn)); lista.push({ k: 'dano', v: dv, on: true, txt: dv + ' de dano (' + np + ' × ' + (por + bonusDn) + ')' }); }
+        linhasR.push({ alvo: al, ok, txt, ef: lista }); return;
+      }
       if (h.n === 'Quebra de Guarda' && inimigo && def !== null) {
         const hq = r.dados.filter(x => x >= def).length; ok = hq > 0;
         txt = ok ? hq + (hq > 1 ? ' acertos' : ' acerto') + ' (Defesa ' + def + ')' : 'escapou (Defesa ' + def + ')';
@@ -6840,6 +6881,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (ne.tipo === 'Muralha') S.est = S.est.filter(z => !(z.tipo === 'Muralha' && z.autor === ne.autor));
           S.est.push(ne);
           if (ne.tipo === 'Domínio') { const sai = limitarDominio(ne.dono); if (sai.length) msg.push('Domínio desfeito em ' + sai.join(', ')); }
+          if (ne.tipo === 'Pássaro') { const sai = limitarPassaros(ne.dono); if (sai.length) msg.push('o Pássaro de ' + sai.join(', ') + ' foi reposicionado'); }
           if (ne.tipo === 'Cópia') { const mi = S.est.filter(z => z.tipo === 'Cópia' && z.dono === ne.dono); if (mi.length > 3) { S.est = S.est.filter(z => z !== mi[0]); msg.push('a Cópia mais antiga (' + mi[0].cell + ') se desfez'); } }
           if (ne.tipo === 'Armadilha') { const mi = S.est.filter(z => z.tipo === 'Armadilha' && z.autor === ne.autor); if (mi.length > 3) { S.est = S.est.filter(z => z !== mi[0]); msg.push('a armadilha mais antiga (' + mi[0].cell + ') se desfez'); } }
         }
@@ -6871,6 +6913,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (r.nome && c.pos) pecas((pj, pi, x) => x.k === 'forasteiro' && x.pos && dist(x.pos, c.pos) <= 3).forEach(([pj, pi]) => { const f = S.times[pj][pi]; if (rec(f, 'Amostras') < 3) { setRec(f, 'Amostras', rec(f, 'Amostras') + 1); msg.push('🛸 +1 Amostra'); } });
     }, () => (r.nome ? (r.sup ? '★ ' : '✨ ') + CH[c.k].nome + ' usou ' + r.nome : '👊 ' + CH[c.k].nome + ' fez um Ataque Básico') + (msg.length ? ': ' + msg.join(', ') : '') + '.');
     if (r.sup) toast('★ ' + r.nome.toUpperCase() + ' ★', 2200);
+    if (r.nome === 'Pouso Tático' && r.aprim) setTimeout(() => { iniciarModo({ t: 'estrutura', tipo: 'Pássaro', dono: aj, resta: 1, alc: 5, de: c.pos || null }); toast('⚡ Aprimorado: posicione ou reposicione o segundo Pássaro (até 5 casas)', 3000); }, 60);
     if (r.nome === 'Domínio Gravitacional' && c.pos) setTimeout(() => { iniciarModo({ t: 'estrutura', tipo: 'Domínio', dono: aj, resta: 5, alc: 4, de: c.pos }); toast('Marque as outras casas de Domínio: até 2 no total por 1 ação, até 6 por 2 ações', 3200); }, 60);
   });
 
