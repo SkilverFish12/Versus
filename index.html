@@ -6056,10 +6056,10 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   // empurrão em linha reta; quem estiver no caminho vai junto (fila)
   function empurrar(t, origem, n, opt){
     const out = [];
-    if (!t.pos || !origem || t.pos === origem) return out;
+    if (!t.pos || ((!origem || t.pos === origem) && !(opt && opt.di !== undefined))) return out;
     if (t.carona) t.carona = null;
     if (t.k === 'agentecaos') n = Math.min(n, 1);
-    const di = dirPara(origem, t.pos);
+    const di = opt && opt.di !== undefined ? opt.di : dirPara(origem, t.pos);
     const fila = [t];
     for (let k = 0; k < n; k++) {
       const frente = fila[fila.length - 1];
@@ -6373,7 +6373,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function bannerModo(){
     const c = ativoC(), desl = (modo && modo.desl) || (c ? Math.max(1, 2 + mod(c, 'ds')) : 2);
     const nomeM = modo.t === 'mover' ? '👣 ' + (modo.gratis ? 'MOVER GRÁTIS (' + modo.gratis + ')' : 'MOVER') + ': toque numa casa amarela (até ' + desl + ' casas)' : modo.t === 'basico' ? '👊 ATAQUE BÁSICO: toque num inimigo adjacente' :
-      modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo + (modo.resta ? ' (faltam até ' + modo.resta + (modo.alc ? ', a até ' + modo.alc + ' casas' + (modo.tipo === 'Domínio' ? ' do Superior' : '') : '') + ')' : '') : modo.t === 'copiaAtk' ? '👥 CÓPIAS ATACAM: toque num inimigo adjacente a uma Cópia livre' : modo.t === 'atkEst' ? '🎯 ATACAR ESTRUTURA: toque na casa da estrutura' : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
+      modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo + (modo.resta ? ' (faltam até ' + modo.resta + (modo.alc ? ', a até ' + modo.alc + ' casas' + (modo.tipo === 'Domínio' ? ' do Superior' : '') : '') + ')' : '') : modo.t === 'ceus' ? '☁️ CÉUS: toque na casa ao lado do alvo na direção do empurrão (3 casas)' : modo.t === 'copiaAtk' ? '👥 CÓPIAS ATACAM: toque num inimigo adjacente a uma Cópia livre' : modo.t === 'atkEst' ? '🎯 ATACAR ESTRUTURA: toque na casa da estrutura' : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
     const conf = modo.t === 'hab' && (modo.alvosInfo.tipo === 'todos' || modo.alvosInfo.tipo === 'linha') && (modo.dir !== undefined || modo.alvosInfo.tipo === 'todos');
     return '<div class="ac-modo"><span>' + nomeM + '</span>' + (modo.t === 'estrutura' && modo.resta ? '<button class="btn-amarelo sm" data-cancelar>✓ PRONTO</button>' : '') + (conf ? '<button class="btn-amarelo sm" data-confirmar>USAR ▶</button>' : '') + '<button class="btn-ghost sm" data-cancelar>✕ CANCELAR</button></div>';
   }
@@ -6441,6 +6441,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'basico') pecas((j, i, x) => alvoBasico(c, j, x)).forEach(p => out.toks.add(p.join(',')));
     if (modo.t === 'estrutura') CELLS.forEach(x => { if (!bloqueada(x.id)) out.casas.add(x.id); });
     if (modo.t === 'atkEst') modo.alvos.forEach(id => out.casas.add(id));
+    if (modo.t === 'ceus') { const t = S.times[modo.alvo[0]][modo.alvo[1]]; if (t.pos) vizinhas(t.pos).forEach(id => out.casas.add(id)); }
     if (modo.t === 'copiaAtk') { copiaAlvos(c).forEach(p => out.toks.add(p.join(','))); copiasLivres(c).forEach(z => out.casas.add(z.cell)); }
     if (modo.t === 'carona') pecas((pj, pi, x) => pj === S.ativo[0] && x !== c && !x.carona && x.pos && c.pos && dist(x.pos, c.pos) === 1).forEach(p => out.toks.add(p.join(',')));
     if (modo.t === 'descer') { const [qj, qi] = modo.quem.split(',').map(Number), q = S.times[qj][qi]; if (q.pos) vizinhas(q.pos).filter(livre).forEach(id => out.casas.add(id)); }
@@ -6468,6 +6469,18 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     }
     if (!c) { modo = null; return false; }
     const d0 = destaquesModo();
+    if (modo.t === 'ceus') {
+      const t = S.times[modo.alvo[0]][modo.alvo[1]], id = cellId || (tok && S.times[+tok[0]][+tok[2]].pos);
+      if (!t.pos || !id) return true;
+      const di = DIR6.findIndex((_, k) => viz(t.pos, k) === id); if (di < 0) return true;
+      modo = null; const msg = [];
+      mudar(() => {
+        const o = empurrar(t, null, 3, { di, bloqueio: 3 }); msg.push(...o);
+        if (!t.elim && o.some(x => /colidiu|obstáculo|queda/.test(x))) { t.ds = clamp(t.ds - 1, -2, 4); novoEf(t, { nome: 'Marca Titânica (Céus)', autor: CH[c.k].nome, faz: '−1 casa de deslocamento', acaba: 'no fim do próximo turno de ' + CH[t.k].nome, exp: { t: 'fim', ref: refDe(t), pula: 0 }, mods: { ds: -1 } }); msg.push(CH[t.k].nome + ' anda 1 casa a menos no próximo turno'); }
+      }, () => '☁️ Céus: ' + msg.join(', ') + '.');
+      setTimeout(() => { iniciarModo({ t: 'mover', gratis: 'Céus', desl: 1 }); toast('O Guardião pode andar 1 casa (ou cancele)', 2400); }, 60);
+      return true;
+    }
     if (modo.t === 'copiaAtk') {
       if (!tok || !d0.toks.has(tok)) return true;
       const al = tok.split(',').map(Number), t = S.times[al[0]][al[1]], z = copiasLivres(c).find(y => dP(y.cell, t) === 1); modo = null;
@@ -6745,7 +6758,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const self = alvos.length === 1 && alvos[0][0] === aj && alvos[0][1] === S.ativo[1];
     const linhasR = [], extras = [], pre = [];
     let hitsBrasa = 0;
-    if (c.k === 'kael' && h.n === 'Marca Titânica') { delete ef.dano; delete ef.cura; const nt = 'O dano e a cura dos selos só acontecem na condição descrita: aplique à mão.'; if (!r.notas.includes(nt)) r.notas = r.notas.concat(nt); }
+    if (c.k === 'kael' && h.n === 'Marca Titânica') { delete ef.dano; delete ef.cura; delete ef.empurra; delete ef.desl; if (r.ops && r.opSel.some(i => r.ops[i].nome === 'Céus')) { const nc = 'Céus: depois de aplicar, toque na casa ao lado do alvo para onde ele vai ser empurrado (3 casas).'; if (!r.notas.includes(nc)) r.notas = r.notas.concat(nc); } const nt = 'O dano e a cura dos selos só acontecem na condição descrita: aplique à mão.'; if (!r.notas.includes(nt)) r.notas = r.notas.concat(nt); }
     if (c.k === 'magnus' && h.n === 'Eu Escolho o Monstro') extras.push({ k: 'estado', v: { nome: 'Monstro de Sangue', mods: { apt: [Math.max(0, 4 - ch.apt[0]), 0, 0, 0], dn: 2 }, hab: h.n, dtx: 'até o fim do seu próximo turno' }, on: true, txt: 'Virar o Monstro de Sangue até o fim do próximo turno (Físico 4, +2 de dano nos Ataques Básicos, sem habilidades)' });
     if (c.k === 'assobio' && h.n === 'O Canto Final') extras.push({ k: 'estado', v: { nome: 'O Canto Final', mods: { apt: [0, 0, Math.max(0, 4 - ch.apt[2]), 0] }, hab: h.n, dtx: 'durante 2 rodadas' }, on: true, txt: 'Assobio fica com Visão 4 durante 2 rodadas' });
     if (c.k === 'arquiteto' && h.n === 'Assalto de Identidade') S.times.flat().filter(x => !x.elim && x !== c).forEach(x => extras.push({ k: 'estado', v: { nome: 'Assalto de Identidade: ' + CH[x.k].nome, mods: { apt: CH[x.k].apt.map((v, a) => v - ch.apt[a]) }, hab: h.n, dtx: 'durante 2 rodadas' }, on: false, txt: 'Copiar as aptidões de ' + CH[x.k].nome + ' (' + CH[x.k].apt.join('/') + ') durante 2 rodadas' }));
@@ -7033,6 +7046,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (r.nome && c.pos) pecas((pj, pi, x) => x.k === 'forasteiro' && x.pos && dist(x.pos, c.pos) <= 3).forEach(([pj, pi]) => { const f = S.times[pj][pi]; if (rec(f, 'Amostras') < 3) { setRec(f, 'Amostras', rec(f, 'Amostras') + 1); msg.push('🛸 +1 Amostra'); } });
     }, () => (r.nome ? (r.sup ? '★ ' : '✨ ') + CH[c.k].nome + ' usou ' + r.nome : '👊 ' + CH[c.k].nome + ' fez um Ataque Básico') + (msg.length ? ': ' + msg.join(', ') : '') + '.');
     if (r.sup) toast('★ ' + r.nome.toUpperCase() + ' ★', 2200);
+    if (r.nome === 'Marca Titânica' && r.ops && r.opSel.some(i => r.ops[i].nome === 'Céus') && r.linhas[0] && r.linhas[0].ok) { const al = r.linhas[0].alvo, t = S.times[al[0]][al[1]]; if (!t.elim && t.pos) setTimeout(() => { iniciarModo({ t: 'ceus', alvo: al }); toast('☁️ Céus: toque na casa ao lado de ' + CH[t.k].nome + ' para a direção do empurrão', 3000); }, 60); }
     if (r.nome === 'Pouso Tático' && r.aprim) setTimeout(() => { iniciarModo({ t: 'estrutura', tipo: 'Pássaro', dono: aj, resta: 1, alc: 5, de: c.pos || null }); toast('⚡ Aprimorado: posicione ou reposicione o segundo Pássaro (até 5 casas)', 3000); }, 60);
     if (r.nome === 'Domínio Gravitacional' && c.pos) setTimeout(() => { iniciarModo({ t: 'estrutura', tipo: 'Domínio', dono: aj, resta: 5, alc: 4, de: c.pos }); toast('Marque as outras casas de Domínio: até 2 no total por 1 ação, até 6 por 2 ações', 3200); }, 60);
   });
