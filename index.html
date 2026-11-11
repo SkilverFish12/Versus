@@ -6732,6 +6732,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (apr) { const m = /cura (\d+)|(\d+) PV/.exec(apr); if (m && e.cura) e.cura = +(m[1] || m[2]); }
     const sai = /causa(?:m)? [−-](\d+) de dano em seus ataques/.exec(txt); if (sai) e.dnAlvo = -(+sai[1]);
     const red = /contra (?:ele|ela) causam [−-](\d+) de dano/.exec(txt); if (red) e.red = +red[1];
+    const rd2 = /dano que sofrer é reduzido em (\d+)|(\d+) de redução de dano/.exec(base); if (rd2) e.red = +(rd2[1] || rd2[2]);
+    const rd3 = /redução passa a ser (\d+)/.exec(apr); if (rd3 && e.red) e.red = +rd3[1];
     const dr = /sofrem? \+(\d+) de dano (?:de|em) (?:todo|cada|qualquer)/.exec(txt); if (dr) e.dr = +dr[1];
     const cr = /curas?[^.]{0,20}?valem (\d+) a menos/.exec(txt); if (cr) e.cr = +cr[1];
     const esc = /(\d+) de dano a menos|sofre (\d+) a menos/.exec(txt); if (esc) e.esc = +(esc[1] || esc[2]);
@@ -6770,6 +6772,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (!o.psi && o.basico && temTat(t, 'Escamas') && real > 0) { real -= 1; nota.push('Escamas −1'); }
     if (!o.psi && o.basico && temTat(t, 'Escamas Avessas') && real > 0) { real += 1; nota.push('Escamas Avessas +1'); }
     if (!o.psi && o.ataque && t.k === 'andarilho' && rec(t, 'Embalo') >= 9 && real > 0) { real -= 1; nota.push('Embalo −1'); }
+    if (!o.psi && o.golpe && t.k === 'cambiante' && t.estado && /Colosso|Quimera/.test(t.estado.nome) && real > 0) { real -= 1; nota.push('Colosso −1 (Golpe)'); }
     if (t.k === 'agentecaos' && real > 10) { real = 10; nota.push('Pele de Rocha: máx. 10'); }
     t.pv = Math.max(0, t.pv - real);
     if (t.k === 'dinamo') setRec(t, 'Dano sofrido', rec(t, 'Dano sofrido') + real);
@@ -6867,6 +6870,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const self = alvos.length === 1 && alvos[0][0] === aj && alvos[0][1] === S.ativo[1];
     const linhasR = [], extras = [], pre = [];
     let hitsBrasa = 0;
+    if (h.n === 'Petrificação') { delete ef.def; if (r.aprim) extras.push({ k: 'petrAli', on: true, txt: 'Aliados adjacentes ao Guardião recebem +1 na Defesa até o início do próximo turno dele' }); }
     if (h.n === 'Foco Absoluto' && alvos.length && alvos[0][0] !== aj) { delete ef.def; delete ef.dados; delete ef.dano; const tf = S.times[alvos[0][0]][alvos[0][1]];
       extras.push({ k: 'foco', v: alvos[0], aprim: r.aprim, on: true, txt: 'Foco em ' + CH[tf.k].nome + ': −1 na Defesa contra ' + ch.nome + (r.aprim ? ', +2 de dano de ' + ch.nome + ' contra ele' : '') + '; ' + ch.nome + ' tem −1 dado contra outros inimigos' }); }
     if (c.k === 'kael' && h.n === 'Marca Titânica') { delete ef.dano; delete ef.cura; delete ef.empurra; delete ef.desl; if (r.ops && r.opSel.some(i => r.ops[i].nome === 'Céus')) { const nc = 'Céus: depois de aplicar, toque na casa ao lado do alvo para onde ele vai ser empurrado (3 casas).'; if (!r.notas.includes(nc)) r.notas = r.notas.concat(nc); } const nt = 'O dano e a cura dos selos só acontecem na condição descrita: aplique à mão.'; if (!r.notas.includes(nt)) r.notas = r.notas.concat(nt); }
@@ -6930,6 +6934,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (ef.cura) lista.push({ k: 'cura', v: ef.cura, on: true, txt: '+' + ef.cura + ' PV' });
           if (ef.def && ef.def > 0) lista.push({ k: 'def', v: ef.def, on: true, txt: '+' + ef.def + ' na Defesa' });
           if (ef.red) lista.push({ k: 'red', v: ef.red, on: true, txt: 'reduz ' + ef.red + ' de dano recebido' });
+          if (ef.imo && self) lista.push({ k: 'imo', v: true, on: true, txt: 'fica Imóvel' });
           if (ef.esc) lista.push({ k: 'esc', v: ef.esc, on: true, txt: 'escudo: o próximo dano vem com ' + ef.esc + ' a menos' });
           if (ef.acao && ef.acao > 0) lista.push({ k: 'acao', v: ef.acao, on: true, txt: '+' + ef.acao + ' ação' });
           if (ef.dados && ef.dados > 0) lista.push({ k: 'dados', v: ef.dados, on: true, txt: '+' + ef.dados + ' dado' });
@@ -7081,7 +7086,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (ef.k === 'div') { t.div = Math.min(6, divDe(t) + ef.v); msg.push(CH[t.k].nome + ': ' + t.div + ' Dívida(s)'); }
           if (ef.k === 'divset') t.div = ef.v;
           if (ef.k === 'penhora') { ['df', 'dd', 'dn'].forEach(k => { if (t[k] > 0) t[k] = 0; }); t.red = 0; t.esc = 0; msg.push(CH[t.k].nome + ' perdeu os bônus (Penhora)'); }
-          if (ef.k === 'dano') { const q = sofrerDano(t, ef.v, { psi: ef.psi, ataque: r.ataque, basico: r.basico }); msg.push(CH[t.k].nome + ' −' + q.real + ' PV' + (q.nota.length ? ' (' + q.nota.join(', ') + ')' : '')); }
+          if (ef.k === 'dano') { const hk = r.basico ? null : CH[c.k].habs.concat(CH[c.k].supH ? [CH[c.k].supH] : []).find(x => x.n === r.nome), golpe = r.ataque && (r.basico ? !!(c.pos && t.pos && dP(c.pos, t) === 1) : !!(hk && /Golpe/.test(hk.k || ''))); const q = sofrerDano(t, ef.v, { psi: ef.psi, ataque: r.ataque, basico: r.basico, golpe }); msg.push(CH[t.k].nome + ' −' + q.real + ' PV' + (q.nota.length ? ' (' + q.nota.join(', ') + ')' : '')); }
           if (ef.k === 'cura') { const cv = Math.max(0, (contagiado(t) ? ef.v - 2 : ef.v) - (t.cr || 0)); t.pv = Math.min(t.max, t.pv + cv); msg.push(CH[t.k].nome + ' +' + cv + ' PV' + (cv < ef.v ? ' (cura reduzida)' : '')); }
           if (ef.k === 'dc') { t.dcv = Math.max(t.dcv, ef.v[0]); t.dcn = Math.max(t.dcn, ef.v[1]); }
           if (ef.k === 'def') t.df = clamp(t.df + ef.v, -6, 6);
@@ -7118,6 +7123,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       });
       (r.extras || []).slice().sort((a, b) => (a.k === 'carona') - (b.k === 'carona')).forEach(ex => {
         if (!ex.on) return;
+        if (ex.k === 'petrAli') S.times[aj].forEach(x => { if (x !== c && !x.elim && x.pos && c.pos && dP(c.pos, x) === 1) { x.df = clamp(x.df + 1, -6, 6); novoEf(x, { nome: 'Petrificação', autor: CH[c.k].nome, faz: '+1 na Defesa', acaba: 'no início do próximo turno de ' + CH[c.k].nome, exp: { t: 'ini', ref: refDe(c) }, mods: { df: 1 } }); msg.push(CH[x.k].nome + ' +1 na Defesa'); } });
         if (ex.k === 'foco') { const t = S.times[ex.v[0]][ex.v[1]], tr = refDe(t), cr = refDe(c), exp = { t: 'ini', ref: cr }, acaba = 'no início do próximo turno de ' + CH[c.k].nome, nm = CH[c.k].nome;
           novoEf(t, { nome: 'Foco Absoluto', autor: nm, faz: '−1 na Defesa contra ' + nm + (ex.aprim ? ' · sofre +2 de dano de ' + nm : ''), acaba, exp, contra: cr, cmods: { df: -1 }, mods: {} });
           c.dd = clamp(c.dd - 1, -4, 4);
