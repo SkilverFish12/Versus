@@ -2042,7 +2042,7 @@
 .roster-card:hover .ri.emb{transform:scale(1.06)}
 i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; background-size:cover; background-position:center; vertical-align:middle; margin:-3px 4px -2px -2px; border:1.5px solid #000}
 </style>
-</head>
+<style>.apt .dia b.apt-up{color:#52ff86!important}.apt .def b.apt-up{color:#0b7a2e!important}.apt .dia b.apt-dn{color:#ff6b6b!important}.apt .def b.apt-dn{color:#8a2be2!important}.apt .dia b.apt-up::after,.apt .def b.apt-up::after{content:"▲";font-size:.45em;vertical-align:super}.apt .dia b.apt-dn::after,.apt .def b.apt-dn::after{content:"▼";font-size:.45em;vertical-align:super}</style></head>
 <body class="em-capa">
 <div class="topbar app-top"><a class="brand" href="#" data-ir="capa">VERSUS<span style="color:var(--red)">.</span></a><div class="chap-now" id="chapNow"></div><button class="top-home" data-ir="capa" aria-label="Voltar à capa">🏠</button></div>
 
@@ -5029,10 +5029,12 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (S.fase === 'partida' && S.times) {
       const c = S.times.flat().find(x => x.k === k && !x.elim);
       let forma = null;
-      if (c && k === 'magnus') forma = (c.efs || []).some(e => e.nome === 'Monstro de Sangue') ? '1' : '0';
+      if (c && k === 'magnus') forma = ((c.efs || []).some(e => e.nome === 'Monstro de Sangue') || (c.estado && c.estado.nome === 'Monstro de Sangue')) ? '1' : '0';
+      else if (c && k === 'cambiante') { const en = (c.estado && c.estado.nome) || ''; forma = /Colosso/.test(en) ? '1' : /Ágil/.test(en) ? '2' : /Rapina/.test(en) ? '3' : '0'; }
       else if (c) { try { forma = localStorage.getItem('versus-forma-' + k); } catch (_) {} }
       const bt = forma && $('#mFichaCorpo').querySelector('[data-forma="' + forma + '"]');
       if (bt) bt.click();
+      if (c) { const fi2 = $('#mFichaCorpo .ficha'); if (fi2 && window.versusAptFicha) versusAptFicha(fi2, [0, 1, 2, 3].map(a => aptE(c, a)), [0, 1, 2, 3].map(a => clamp(5 + aptE(c, a) + mod(c, 'df'), 2, 10))); const pv = fi2 && fi2.querySelector('.ficha-pv i'); if (pv) pv.textContent = 'atual: ' + c.pv; }
     }
     abrir('mFicha');
     $('#mFicha').scrollTop = 0;
@@ -5555,7 +5557,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (c.k === 'magnus' && !c.monstroUsado) {
       c.monstroUsado = true; c.monstro = true; c.pv = 0;
       novoEf(c, { nome: 'Monstro de Sangue', autor: CH[c.k].nome, faz: 'Sem PV e não sofre dano. Só Ataques Básicos com Físico 4, nos alvos que quiser. Precisa causar 10 de dano para Magnus voltar com 15 PV.',
-        acaba: 'no fim do próximo turno de ' + CH[c.k].nome, exp: { t: 'fim', ref: j + ',' + i, pula: ehAtivo(c) ? 1 : 0 }, mods: { monstro: true } });
+        acaba: 'no fim do próximo turno de ' + CH[c.k].nome, exp: { t: 'fim', ref: j + ',' + i, pula: ehAtivo(c) ? 1 : 0 }, mods: { monstro: true, est: true } });
+      c.estado = { nome: 'Monstro de Sangue', mods: { apt: [Math.max(0, 4 - CH[c.k].apt[0]), 0, 0, 0] } };
       log('🩸 ' + CH[c.k].nome + ' chegou a 0 PV e virou o Monstro de Sangue.');
       setTimeout(() => toast('🩸 MAGNUS VIROU O MONSTRO DE SANGUE!<br><small style="font-family:Comic Neue;font-weight:700;font-size:13px">Precisa causar 10 de dano até o fim do próximo turno dele</small>', 3600), 30);
       return;
@@ -6581,6 +6584,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     let hitsBrasa = 0;
     if (c.k === 'kael' && h.n === 'Marca Titânica') { delete ef.dano; delete ef.cura; const nt = 'O dano e a cura dos selos só acontecem na condição descrita: aplique à mão.'; if (!r.notas.includes(nt)) r.notas = r.notas.concat(nt); }
     if (c.k === 'magnus' && h.n === 'Eu Escolho o Monstro') extras.push({ k: 'estado', v: { nome: 'Monstro de Sangue', mods: { apt: [Math.max(0, 4 - ch.apt[0]), 0, 0, 0], dn: 2 }, hab: h.n, dtx: 'até o fim do seu próximo turno' }, on: true, txt: 'Virar o Monstro de Sangue até o fim do próximo turno (Físico 4, +2 de dano nos Ataques Básicos, sem habilidades)' });
+    if (c.k === 'assobio' && h.n === 'O Canto Final') extras.push({ k: 'estado', v: { nome: 'O Canto Final', mods: { apt: [0, 0, Math.max(0, 4 - ch.apt[2]), 0] }, hab: h.n, dtx: 'durante 2 rodadas' }, on: true, txt: 'Assobio fica com Visão 4 durante 2 rodadas' });
+    if (c.k === 'arquiteto' && h.n === 'Assalto de Identidade') S.times.flat().filter(x => !x.elim && x !== c).forEach(x => extras.push({ k: 'estado', v: { nome: 'Assalto de Identidade: ' + CH[x.k].nome, mods: { apt: CH[x.k].apt.map((v, a) => v - ch.apt[a]) }, hab: h.n, dtx: 'durante 2 rodadas' }, on: false, txt: 'Copiar as aptidões de ' + CH[x.k].nome + ' (' + CH[x.k].apt.join('/') + ') durante 2 rodadas' }));
     if (c.k === 'cambiante' && h.n === 'Quimera Primordial') extras.push({ k: 'estado', v: { nome: 'Quimera Primordial', mods: { apt: [1, 1, 1, 0], dn: 4, ds: 2 }, hab: h.n }, on: true, txt: 'Entrar na Quimera: as três formas sem perder Astúcia (+1 FÍS, +1 DES, +1 VIS, +4 de dano, +2 desloc.)' });
     if (ehEstado(h)) {
       const nome = r.ops ? r.ops[r.opSel[0]].nome : h.n;
@@ -6981,5 +6986,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   if (S.fase === 'partida' && S.fim && tela === 'combate') setTimeout(mostrarFim, 300);
 })();
 </script>
-<script>document.addEventListener("click",function(e){var b=e.target.closest("[data-forma]");if(!b)return;e.preventDefault();e.stopPropagation();var f=b.closest("figure");f.querySelectorAll("img.fm").forEach(function(i){i.classList.toggle("on",i.dataset.f===b.dataset.forma)});f.querySelectorAll("[data-forma]").forEach(function(x){x.classList.toggle("on",x===b)});if(e.isTrusted&&b.closest("#mFichaCorpo")){var fi=b.closest(".ficha"),m=fi&&fi.className.match(/\bt-([a-z]+)/);if(m)try{localStorage.setItem("versus-forma-"+m[1],b.dataset.forma)}catch(_){}}},true);</script></body>
+<script>document.addEventListener("click",function(e){var b=e.target.closest("[data-forma]");if(!b)return;e.preventDefault();e.stopPropagation();var f=b.closest("figure");f.querySelectorAll("img.fm").forEach(function(i){i.classList.toggle("on",i.dataset.f===b.dataset.forma)});f.querySelectorAll("[data-forma]").forEach(function(x){x.classList.toggle("on",x===b)});if(e.isTrusted&&b.closest("#mFichaCorpo")){var fi=b.closest(".ficha"),m=fi&&fi.className.match(/\bt-([a-z]+)/);if(m)try{localStorage.setItem("versus-forma-"+m[1],b.dataset.forma)}catch(_){}}},true);</script><script>(function(){var A={"cambiante": [[2, 2, 2, 2], [3, 2, 2, 1], [2, 3, 2, 1], [2, 2, 3, 1]], "magnus": [[2, 1, 2, 3], [4, 1, 2, 3]]};
+function marca(b,v,base){if(!b)return;b.textContent=v;b.classList.toggle("apt-up",v>base);b.classList.toggle("apt-dn",v<base);}
+window.versusAptFicha=function(fi,vals,defs){var ap=fi.querySelectorAll(".apt-demo .apt");ap.forEach(function(el,a){var bd=el.querySelector(".dia b"),dd=el.querySelector(".def b");if(!bd.dataset.base)bd.dataset.base=bd.textContent;if(dd&&!dd.dataset.base)dd.dataset.base=dd.textContent;marca(bd,vals[a],+bd.dataset.base);if(dd)marca(dd,defs?defs[a]:Math.max(2,Math.min(10,5+vals[a])),+dd.dataset.base);});};
+document.addEventListener("click",function(e){var b=e.target.closest("[data-forma]");if(!b)return;var fi=b.closest(".ficha"),m=fi&&fi.className.match(/\bt-([a-z]+)/);if(!m||!A[m[1]])return;var v=A[m[1]][+b.dataset.forma];if(v)versusAptFicha(fi,v);},true);})();</script></body>
 </html>
