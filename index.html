@@ -6223,6 +6223,19 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (c.k === 'arquiteto') novoEf(c, { nome, autor, faz: '+1 dado em todos os testes contra ' + CH[t.k].nome, acaba, exp: ate, contra: ref, cmods: { dd: 1 }, mods: {} });
     if (c.k === 'ninguem') novoEf(c, { nome, autor, faz: '+1 na Defesa contra ' + CH[t.k].nome, acaba, exp: ate, contra: ref, cmods: { df: 1 }, mods: {} });
   }
+  // ── passivas com efeito que se ativa ──
+  const H_TOCAIA = { n: 'Tiro de Tocaia', t: ['ATAQUE'], a: 'TODO TABULEIRO', c: 0, x: 2, d: 'No início do turno, sem gastar ação: teste de Visão contra todos os inimigos a 4 casas ou mais. Quem for atingido sofre 4 de dano (2 do tiro e +2 da Caça Covarde).', p: null, k: '🎯 Projétil', m: '' };
+  const tocaiaAlvos = c => pecas((j, i, x) => j !== S.ativo[0] && x.pos && c.pos && dP(c.pos, x) >= 4);
+  const PASM = { gatoxadrez: ['Movimentação Aguçada', 2, 'até 2 casas no começo do turno'], andarilho: ['Recompensando a Caminhada', 0, 'um Mover por turno'], johnny: ['Instinto Predatório', 2, 'até 2 casas em direção a um inimigo com Dano Contínuo'], promessa: ['Voto de Proteção', 3, 'até 3 casas em direção a um aliado que foi atacado'] };
+  function botoesPassivas(c, btn){
+    let h = '';
+    const usou = n => (c.usadas || []).includes(n);
+    if (c.k === 'espreitador') { const L = tocaiaAlvos(c); h += btn('data-pasv="tocaia"', '🎯', 'TIRO DE TOCAIA', 'passiva · sem ação · VIS contra todos a 4+ casas · 4 de dano', usou('Tiro de Tocaia') ? 'já usado neste turno' : c.pos && !L.length ? 'nenhum inimigo a 4 casas ou mais' : ''); }
+    const pm = PASM[c.k];
+    if (pm) { const semDC = c.k === 'johnny' && !S.times[1 - S.ativo[0]].some(x => !x.elim && x.dcn > 0);
+      h += btn('data-pasv="mover"', '👣', 'MOVER GRÁTIS', 'passiva · sem ação · ' + pm[2], usou(pm[0]) ? 'já usado neste turno' : c.imo ? 'Imóvel' : c.carona ? 'no veículo' : semDC ? 'nenhum inimigo com Dano Contínuo' : ''); }
+    return h;
+  }
   function aprimAtivo(h){ const c = ativoC(); return !!(c && aprimorarMarcado && h.p && !c.med && S.med[S.ativo[0]] >= 1); }
   function alvosDe(h0, ap){
     if (ap === undefined) ap = aprimAtivo(h0);
@@ -6274,6 +6287,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     h += '<div class="ac-grade">' +
       btn('data-ac="mover"', '👣', 'MOVER', '1 ação · até ' + desl + ' casas', c.carona ? 'no veículo: use DESCER' : c.imo ? 'Imóvel' : r < 1 ? 'sem ações' : '') +
       btn('data-ac="basico"', '👊', 'ATAQUE BÁSICO', '1 ação · ' + (c.k === 'espreitador' ? 'adjacente DES ' + aptE(c, 1) + ' · de longe 🎯 VIS ' + aptE(c, 2) + ' dados' : (c.k === 'cupido' ? 'alcance 3 · 🎯 Projétil' : 'adjacente · 🥊 Golpe') + ' · ' + (['FÍS', 'DES', 'VIS', 'AST'][atkIdx(ch)]) + ' ' + aptE(c, atkIdx(ch)) + ' dados'), r < 1 ? 'sem ações' : (c.pos && !enem.length) ? 'nenhum alvo ao alcance' : '');
+    h += botoesPassivas(c, btn);
     if (estAtacaveis(c, true).length) h += btn('data-ac="atkest"', '🎯', 'ATACAR ESTRUTURA', '1 ação · Ataque Básico num Galho, Pássaro, Ilusão, Retrato ou Cópia', r < 1 ? 'sem ações' : !estAtacaveis(c).length ? 'nenhuma estrutura ao alcance' : '');
     ch.habs.forEach((hb, k) => {
       if (!hb.c) return;
@@ -6328,8 +6342,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   let aprimorarMarcado = false;
   function bannerModo(){
-    const c = ativoC(), desl = c ? Math.max(1, 2 + mod(c, 'ds')) : 2;
-    const nomeM = modo.t === 'mover' ? '👣 MOVER: toque numa casa amarela (até ' + desl + ' casas)' : modo.t === 'basico' ? '👊 ATAQUE BÁSICO: toque num inimigo adjacente' :
+    const c = ativoC(), desl = (modo && modo.desl) || (c ? Math.max(1, 2 + mod(c, 'ds')) : 2);
+    const nomeM = modo.t === 'mover' ? '👣 ' + (modo.gratis ? 'MOVER GRÁTIS (' + modo.gratis + ')' : 'MOVER') + ': toque numa casa amarela (até ' + desl + ' casas)' : modo.t === 'basico' ? '👊 ATAQUE BÁSICO: toque num inimigo adjacente' :
       modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo + (modo.resta ? ' (faltam até ' + modo.resta + (modo.alc ? ', a até ' + modo.alc + ' casas' + (modo.tipo === 'Domínio' ? ' do Superior' : '') : '') + ')' : '') : modo.t === 'atkEst' ? '🎯 ATACAR ESTRUTURA: toque na casa da estrutura' : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
     const conf = modo.t === 'hab' && (modo.alvosInfo.tipo === 'todos' || modo.alvosInfo.tipo === 'linha') && (modo.dir !== undefined || modo.alvosInfo.tipo === 'todos');
     return '<div class="ac-modo"><span>' + nomeM + '</span>' + (modo.t === 'estrutura' && modo.resta ? '<button class="btn-amarelo sm" data-cancelar>✓ PRONTO</button>' : '') + (conf ? '<button class="btn-amarelo sm" data-confirmar>USAR ▶</button>' : '') + '<button class="btn-ghost sm" data-cancelar>✕ CANCELAR</button></div>';
@@ -6358,6 +6372,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b.dataset.descer) return iniciarModo({ t: 'descer', quem: b.dataset.descer });
     if (b.dataset.ac === 'pagar') return mudar(() => { c.div = divDe(c) - 1; c.gastas += 1; }, '💰 ' + CH[c.k].nome + ' pagou 1 Dívida (' + (divDe(c) - 1) + ' restante(s)).');
     if (b.dataset.ac === 'carga') return mudar(() => { setRec(c, 'Cargas', rec(c, 'Cargas') + 1); c.gastas += 2; }, '⚛️ ' + CH[c.k].nome + ' carregou: ' + (rec(c, 'Cargas') + 1) + ' Carga(s).');
+    if (b.dataset.pasv === 'tocaia') { const L = c.pos ? tocaiaAlvos(c) : pecas((j, i, x) => j !== S.ativo[0]); modo = { t: 'hab', h: H_TOCAIA, sup: false, aprim: false, alvosInfo: { tipo: 'todos', alvos: L }, sel: L }; return resolverHab(); }
+    if (b.dataset.pasv === 'mover') { const pm = PASM[c.k]; return iniciarModo({ t: 'mover', gratis: pm[0], desl: pm[1] || undefined }); }
     if (b.dataset.ac === 'atkest') return iniciarModo({ t: 'atkEst', alvos: estAtacaveis(c).map(z => z.cell) });
     if (b.dataset.escp) { const [tj, ti] = b.dataset.escp.split(',').map(Number), t = S.times[tj][ti]; return mudar(() => aplicarEscolha(c, t), ESCP[c.k][1] + ' ' + CH[c.k].nome + ' (' + ESCP[c.k][0] + ') escolheu ' + CH[t.k].nome + '.'); }
     if (b.dataset.leitura !== undefined) { const [tj, ti] = c.escP.split(',').map(Number), t = S.times[tj][ti]; return mudar(() => { c.gastas++; c.leitura = true; S.times[S.ativo[0]].forEach(x => { if (x !== c && !x.elim) novoEf(x, { nome: 'Lendo Intenções', autor: CH[c.k].nome, faz: '+1 na Defesa contra o próximo ataque de ' + CH[t.k].nome + ' (remova depois do primeiro ataque)', acaba: 'no início do próximo turno de ' + CH[c.k].nome, exp: { t: 'ini', ref: refDe(c) }, contra: c.escP, cmods: { df: 1 }, mods: {} }); }); }, '📡 ' + CH[c.k].nome + ' compartilhou a leitura de ' + CH[t.k].nome + ' com os aliados.'); }
@@ -6388,7 +6404,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'estrutura') { CELLS.forEach(x => { if (!bloqueada(x.id)) out.casas.add(x.id); }); return out; }
     if (!c) return out;
     if (modo.t === 'mover' && c.pos) {
-      const desl = Math.max(1, 2 + mod(c, 'ds'));
+      const desl = modo.desl || Math.max(1, 2 + mod(c, 'ds'));
       CELLS.forEach(x => { if (dist(c.pos, x.id) <= desl && x.id !== c.pos && !obstaculo(x.id) && !ocupante(x.id)) out.casas.add(x.id); });
     } else if (modo.t === 'mover') CELLS.forEach(x => { if (!obstaculo(x.id) && !ocupante(x.id)) out.casas.add(x.id); });
     if (modo.t === 'basico') pecas((j, i, x) => alvoBasico(c, j, x)).forEach(p => out.toks.add(p.join(',')));
@@ -6440,8 +6456,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     }
     if (modo.t === 'mover') {
       if (!cellId || !d0.casas.has(cellId)) return true;
-      const de = c.pos; modo = null;
-      mudar(() => { moverPeca(c, cellId); c.gastas++; }, '👣 ' + CH[c.k].nome + (de ? ' moveu de ' + de + ' para ' + cellId : ' entrou em ' + cellId) + '.');
+      const de = c.pos, gr = modo.gratis; modo = null;
+      mudar(() => { moverPeca(c, cellId); if (gr) c.usadas = (c.usadas || []).concat(gr); else c.gastas++; }, '👣 ' + CH[c.k].nome + (de ? ' moveu de ' + de + ' para ' + cellId : ' entrou em ' + cellId) + '.');
       return true;
     }
     if (modo.t === 'basico') {
