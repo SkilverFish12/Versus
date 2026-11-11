@@ -6290,6 +6290,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     while (filaPos.length) {
       const st = filaPos.shift(), x = st.alvo ? S.times[st.alvo[0]][st.alvo[1]] : ativoC();
       if (!x || x.elim || !x.pos) continue;
+      if (x.imo && (st.t === 'mover' || st.caminha)) { toast('⛓ ' + CH[x.k].nome + ' está Imóvel e não anda', 1600); continue; }
       if (st.t === 'auto') { const m = []; mudar(() => st.fn(m), () => st.log + (m.length ? ': ' + m.join(', ') : '') + '.'); continue; }
       iniciarModo(st); if (st.tit) toast(st.tit, 2600); return;
     }
@@ -6321,7 +6322,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (nm === 'Revoada' && c.k === 'duque') { const adj = r.aprim ? S.times[aj].map((x, i) => [x, i]).filter(([x]) => x !== c && !x.elim && x.pos && c.pos && dP(c.pos, x) === 1) : []; mv(4, 'Revoada'); adj.forEach(([x, i]) => Q.push({ t: 'teleporte', alvo: [aj, i], centro: refDe(c), alc: 1, tit: '🦇 Levar ' + CH[x.k].nome + ' para o lado do Duque (ou cancele)' })); }
     if (nm === 'Troca de Lugar') { Q.push({ t: 'troca', tit: '👥 Troca de Lugar: toque na Cópia' }); if (r.aprim) mv(2, 'Troca de Lugar'); }
     if (nm === 'Vem Cirandar') S.times[aj].forEach((x, i) => { if (x !== c && !x.elim && x.pos) Q.push({ t: 'teleporte', alvo: [aj, i], centro: refDe(c), alc: 1, tit: '🎭 ' + CH[x.k].nome + ' vai para uma casa ao lado da Parlenda' }); });
-    if (nm === 'Caravana') S.times[aj].forEach((x, i) => { if (x !== c && !x.elim && x.pos) Q.push({ t: 'teleporte', alvo: [aj, i], de: x.pos, alc: 2, tit: '🧳 ' + CH[x.k].nome + ' pode andar 2 casas (ou cancele)' }); });
+    if (nm === 'Caravana') S.times[aj].forEach((x, i) => { if (x !== c && !x.elim && x.pos) Q.push({ t: 'teleporte', alvo: [aj, i], de: x.pos, alc: 2, caminha: true, tit: '🧳 ' + CH[x.k].nome + ' pode andar 2 casas (ou cancele)' }); });
     if (nm === 'Passo de Combate' && ok.length) { mv(3, 'Passo de Combate'); Q.push({ t: 'teleporte', alvo: ok[0], centro: refDe(c), alc: 1, tit: '💃 ' + nmC(ok[0]) + ' termina ao lado do Ritmista' }); }
     if (nm === 'Garras' && fm(/Rapina/) && ok.length) { mv(3, 'Garras (Rapina)'); Q.push({ t: 'teleporte', alvo: ok[0], centro: refDe(c), alc: 1, tit: '🦅 Solte ' + nmC(ok[0]) + ' numa casa ao lado do Cambiante' }); }
     if (nm === 'Garras' && fm(/Ágil/) && ok.length) mv(1, 'Garras (Ágil)');
@@ -6343,9 +6344,11 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (ta === 'LINHA') return { tipo: 'linha', casas: temPos ? linhas(c.pos, n) : [] };
     return { tipo: 'nenhum' };
   }
+  const MOVE_SI = ['Avanço Imparável', 'Bote', 'Cavalgar Destrutivo', 'Marca da Brasa', 'Xeque-Mate', 'Choque Térmico', 'Rasante', 'Velejando em Alto-Mar', 'Torpedo Profundo', 'Descarregando a Bagagem', 'Revoada', 'Avanço Temerário', 'Golpe Flutuante', 'Passo de Combate', 'Passo do Trovão', 'Sumir no Mato', 'Polo Magnético', 'Reverter o Tempo', 'Mão Leve', 'Sessão Rápida', 'Meia-Noite'];
   function motivo(h, sup){
     const c = ativoC(), j = S.ativo[0];
     if (!sup && (c.efs || []).some(e => e.nome === 'Monstro de Sangue')) return 'Monstro de Sangue: só Ataque Básico';
+    if (c.imo && MOVE_SI.includes(h.n)) return 'Imóvel: não pode usar habilidade que move o personagem';
     if (h.c > restam(c)) return 'ações insuficientes';
     if ((c.usadas || []).includes(h.n)) return 'já usada neste turno';
     if (h.n === 'Defletir') return 'reação: use no ataque do inimigo (tire 2 ações do próximo turno)';
