@@ -6532,7 +6532,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   const tipoIcone = h => h.t.includes('ATAQUE') ? '💥' : h.t.includes('PENALIDADE') ? '🌀' : h.t.includes('RESTAURAÇÃO') ? '💚' : h.t.includes('ESTRUTURA') ? '🏗️' : h.t.includes('MOBILIDADE') ? '💨' : h.t.includes('REFORÇO') ? '🛡️' : '✨';
   // Aprimorar que dá um segundo alvo
-  const DOIS_ALVOS = { 'Escopeta de Pulso': 'alc', 'Interceptor Tático': 'alc', 'Pensamento Intrusivo': 'alc', 'Cavalgar Destrutivo': 'perto2' };
+  const DOIS_ALVOS = { 'Escopeta de Pulso': 'alc', 'Interceptor Tático': 'alc', 'Pensamento Intrusivo': 'alc', 'Cavalgar Destrutivo': 'perto2', 'Transferência de Seiva': 'alc' };
   function segAlvos(m){
     if (!m || !m.aprim || !m.h || !DOIS_ALVOS[m.h.n] || !m.sel || m.sel.length !== 1) return [];
     const f = m.sel[0], ft = S.times[f[0]][f[1]], aj = S.ativo[0];
@@ -7194,6 +7194,16 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (c.k === 'andarilho') { extras.push(supFx('Andarilho entra no Embalo máximo (9 casas)', () => setRec(c, 'Embalo', 9)));
           extras.push(supFx('Aliados recebem Embalo 9 até o fim do próximo turno do Andarilho: +2 de dano nos Ataques Básicos, +1 na Defesa, −1 de dano de cada ataque', () => S.times[aj].forEach(x => { if (!x.elim && x !== c) aplicarEf(x, { nome: 'Embalo (Caravana)', autor: nm, faz: '+2 de dano nos Ataques Básicos · +1 na Defesa · −1 de dano de cada ataque', acaba: txtFim(c), exp: fimP(c), mods: { df: 1, red: 1 }, basDn: 2 }); }))); }
         break;
+      case 'Enraizamento':
+        linhasR.forEach(l => { if (!ini(l) || !l.ok) return;
+          fx(l, 'aliados de ' + nm + ' têm +1 dado em ataques contra ele enquanto durar', t => { const e = (t.efs || []).filter(x => x.nome === 'Enraizamento').pop();
+            S.times[aj].forEach(x => { if (!x.elim && x !== c) novoEf(x, { nome: 'Enraizamento: ' + CH[t.k].nome, autor: nm, faz: '+1 dado contra ' + CH[t.k].nome, acaba: e ? e.acaba : txtIni, exp: e ? e.exp : iniT, mods: {}, contra: refDe(t), cmods: { dd: 1 } }); }); }); });
+        break;
+      case 'Transferência de Seiva':
+        { const usados = new Set(); linhasR.forEach(l => { if (ini(l)) return; const t = T(l.alvo); if (!t.pos) return;
+          const gs = (S.est || []).filter(z => z.tipo === 'Galho' && z.dono === aj && z.cell && dist(z.cell, t.pos) === 1), g = gs.find(z => !usados.has(z)) || gs[0], on = !!g && !usados.has(g); if (g) usados.add(g);
+          if (g) l.ef.push(supFx('consumir o Galho em ' + g.cell + ' (adjacente a ' + CH[t.k].nome + ') para curar 10 em vez de 8', (x, msg) => { const g2 = (S.est || []).find(z => z.tipo === 'Galho' && z.dono === aj && z.cell && x.pos && dist(z.cell, x.pos) === 1); if (!g2) return; S.est = S.est.filter(z => z !== g2); x.pv = Math.min(x.max, x.pv + 2); msg.push('Galho em ' + g2.cell + ' consumido: +2 PV a mais para ' + CH[x.k].nome); }, on)); }); }
+        break;
       case 'Ignição':
         if (!r.aprim) break;
         linhasR.forEach(l => { if (!ini(l) || !l.ok) return; l.ef.forEach(e => { if (e.k === 'dc') { e.v = [e.v[0], 3]; e.txt = 'Dano Contínuo ' + e.v[0] + ' por 3'; } });
@@ -7332,7 +7342,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (/não acertar sofrem metade do dano/.test(dT) && ef.dano) { const v = Math.floor((ef.dano + bonusDn) / 2); lista.push({ k: 'dano', v, psi: ef.psi, on: true, txt: v + ' de dano (metade)' }); } }
       linhasR.push({ alvo: al, ok, txt, ef: lista });
     });
-    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
+    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
     const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
     { const mTxt = limpo(h.m || '');
