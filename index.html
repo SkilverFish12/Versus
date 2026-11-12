@@ -5353,7 +5353,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     add(/(?<!Contínuo \d+ )(?:durante|por|dura) (\d+) rodadas?/i, m => { const ate = S.rodada + (+m[1]) - 1; return { txt: 'no fim da rodada ' + ate, exp: { t: 'rod', ate } }; });
     add(/no (?:fim|final) do (?:seu )?próximo turno/i, m => { const x = quemNoTexto(txt.slice(m.index + m[0].length, m.index + m[0].length + 30), autor, alvo); return { txt: 'no fim do próximo turno de ' + nomeC(x), exp: { t: 'fim', ref: refDe(x), pula: ehAtivo(x) ? 1 : 0 } }; });
     add(/(?<!fim do |final do )no próximo turno/i, () => ({ txt: 'no fim do próximo turno de ' + nomeC(alvo), exp: { t: 'fim', ref: refDe(alvo), pula: ehAtivo(alvo) ? 1 : 0 } }));
-    add(/no próximo teste/i, () => ({ txt: 'depois do próximo teste de ' + nomeC(alvo) + ' (remova à mão)', exp: { t: 'man' } }));
+    add(/no próximo teste/i, () => ({ txt: 'depois do próximo teste de ' + nomeC(alvo), exp: { t: 'man' } }));
     add(/usar outra forma/i, () => ({ txt: 'quando ' + nomeC(autor) + ' usar outra forma', exp: { t: 'man' } }));
     if (!cands.length) return { txt: 'quando for removido', exp: { t: 'man' } };
     cands.sort((a, b) => a[0] - b[0]);
@@ -6475,7 +6475,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (z.tipo === 'Retrato') { const aq = porRef(z.autor); evento('🖼️ O Retrato sumiu e espirrou tinta: inimigos adjacentes recebem 1 Mancha' + (z.cor ? '; a casa ficou pintada de ' + z.cor : ''));
         if (z.cor && aq) S.est.push({ id: Date.now() + '' + d(999) + z.cell, tipo: 'Tinta', cell: z.cell, dono: z.dono, cor: z.cor, hab: 'Pincelada', autor: z.autor, autorNome: CH[aq.k].nome, exp: { t: 'fim', ref: z.autor, pula: ehAtivo(aq) ? 1 : 0 }, acaba: 'no fim do próximo turno de ' + CH[aq.k].nome, info: 'Tinta ' + z.cor + ': ' + CORTXT[z.cor] }); }
       if (z.tipo === 'Retrato') S.times[1 - z.dono].forEach(x => { if (!x.elim && x.pos && dist(x.pos, z.cell) <= 1) manchar(x, 1); });
-      if (z.tipo === 'Galho') { c.dd = clamp(c.dd - 1, -4, 4); novoEf(c, { nome: 'Galho destruído', autor: 'Vale', faz: '−1 dado no próximo teste', acaba: 'depois do próximo teste (remova à mão)', exp: { t: 'man' }, mods: { dd: -1 } }); }
+      if (z.tipo === 'Galho') { c.fioDd = (c.fioDd || 0) + 1; novoEf(c, { nome: 'Galho destruído', autor: 'Vale', faz: '−1 dado no próximo teste', acaba: 'depois do próximo teste', exp: { t: 'man' }, mods: {}, fioEf: true }); }
     }, txt + (ok && z.tipo === 'Galho' ? ' (−1 dado no próximo teste)' : '') + (ok && !rach && z.tipo === 'Retrato' ? ' (inimigos adjacentes ao Retrato recebem 1 Mancha)' : '') + '.');
     toast(txt, 2600);
   }
@@ -6813,7 +6813,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b.dataset.pasv === 'mover') { const pm = PASM[c.k]; return iniciarModo({ t: 'mover', gratis: pm[0], desl: pm[1] || undefined }); }
     if (b.dataset.ac === 'atkest') return iniciarModo({ t: 'atkEst', alvos: estAtacaveis(c).map(z => z.cell) });
     if (b.dataset.escp) { const [tj, ti] = b.dataset.escp.split(',').map(Number), t = S.times[tj][ti]; return mudar(() => aplicarEscolha(c, t), ESCP[c.k][1] + ' ' + CH[c.k].nome + ' (' + ESCP[c.k][0] + ') escolheu ' + CH[t.k].nome + '.'); }
-    if (b.dataset.leitura !== undefined) { const [tj, ti] = c.escP.split(',').map(Number), t = S.times[tj][ti]; return mudar(() => { c.gastas++; c.leitura = true; S.times[S.ativo[0]].forEach(x => { if (x !== c && !x.elim) novoEf(x, { nome: 'Lendo Intenções', autor: CH[c.k].nome, faz: '+1 na Defesa contra o próximo ataque de ' + CH[t.k].nome + ' (remova depois do primeiro ataque)', acaba: 'no início do próximo turno de ' + CH[c.k].nome, exp: { t: 'ini', ref: refDe(c) }, contra: c.escP, cmods: { df: 1 }, mods: {} }); }); }, '📡 ' + CH[c.k].nome + ' compartilhou a leitura de ' + CH[t.k].nome + ' com os aliados.'); }
+    if (b.dataset.leitura !== undefined) { const [tj, ti] = c.escP.split(',').map(Number), t = S.times[tj][ti]; return mudar(() => { c.gastas++; c.leitura = true; S.times[S.ativo[0]].forEach(x => { if (x !== c && !x.elim) novoEf(x, { nome: 'Lendo Intenções', autor: CH[c.k].nome, faz: '+1 na Defesa contra o próximo ataque de ' + CH[t.k].nome + ' (some depois do primeiro ataque)', acaba: 'no início do próximo turno de ' + CH[c.k].nome, exp: { t: 'ini', ref: refDe(c) }, contra: c.escP, cmods: { df: 1 }, mods: {} }); }); }, '📡 ' + CH[c.k].nome + ' compartilhou a leitura de ' + CH[t.k].nome + ' com os aliados.'); }
     if (b.dataset.kz !== undefined) { c.kz = +b.dataset.kz; salvar(); rPainel(); return; }
     if (b.dataset.forma2) { const f = b.dataset.forma2; if (formaDe(c) === f) { c.formaT = true; salvar(); rPainel(); return; }
       const paga = !!c.formaT || c.gastas > 0; if (paga && restam(c) < 1) { toast('Sem ações para trocar de forma', 2000); return; }
@@ -7282,7 +7282,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     (c.efs || []).filter(e => e.parD).forEach(e => { const [pj, pi] = e.parD.split(',').map(Number), o = S.times[pj] && S.times[pj][pi]; if (o && !o.elim && o.pos && c.pos && dP(c.pos, o) <= 1) { n += 1; notas.push('Par de Dança com ' + CH[o.k].nome + ': +1 dado'); } });
     if (c.k === 'kazan' && c.kz) { n += c.kz; notas.push(c.kz + ' Brasa(s): +' + c.kz + ' dado'); }
     if (c.k === 'maligno' && rec(c, 'Peso de Dor') && !pOff(c, 'Peso de Dor')) { n += rec(c, 'Peso de Dor'); notas.push('Peso de Dor: +' + rec(c, 'Peso de Dor') + ' dado'); }
-    if (c.fioDd) { n -= c.fioDd; notas.push('−' + c.fioDd + (c.fioDd > 1 ? ' dados' : ' dado') + ' neste teste (Fio Tenso, Clarão ou Estrondo)'); c.fioDd = 0; }
+    if (c.fioDd) { const fn0 = (c.efs || []).filter(e => e.fioEf).map(e => e.nome); tirarEfs(c, e => e.fioEf); n -= c.fioDd; notas.push('−' + c.fioDd + (c.fioDd > 1 ? ' dados' : ' dado') + ' neste teste (' + (fn0.length ? fn0.join(', ') : 'Fio Tenso, Clarão ou Estrondo') + ')'); c.fioDd = 0; }
     if (c.manchas) { n -= c.manchas; notas.push('🎨 ' + c.manchas + (c.manchas > 1 ? ' Manchas' : ' Mancha') + ': −' + c.manchas + (c.manchas > 1 ? ' dados' : ' dado') + ' (somem depois deste teste)'); c.manchas = 0; }
     return { n, notas };
   }
@@ -7991,6 +7991,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           { const rz = risadaDe(c, t); if (rz) risadaUsa(c, rz); }
           if (t.k === 'genio' && l.ok === false && t.armad) delete t.armad[refDe(c)];
           if (!t.elim && (t.efs || []).some(e => e.naoTol)) tirarEfs(t, e => e.naoTol);
+          if (!t.elim) { const px = (t.efs || []).filter(e => e.proxAtk || (e.nome === 'Lendo Intenções' && e.contra === refDe(c))); if (px.length) { tirarEfs(t, e => px.includes(e)); msg.push(px.map(e => e.nome).join(', ') + ' em ' + CH[t.k].nome + ' acabou (já valeu neste ataque)'); } }
         }
         if (r.ataque && !t.elim && refDe(t)[0] !== aj && l.ok !== undefined) {
           const sr = (t.efs || []).find(e => e.selo === 'raiz' && e.seloT === aj);
@@ -8061,7 +8062,12 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           Object.keys(m).forEach(k => { if (!m[k]) delete m[k]; });
           let du = duracaoEf(descTxt, c, t);
           if (reg.dc && !Object.keys(m).length && reg.faz.length === 1) du = { txt: 'quando o Dano Contínuo acabar', exp: { t: 'dc' } };
-          novoEf(t, { nome: r.nome, autor: CH[c.k].nome, faz: reg.faz.join(' · '), acaba: du.txt, exp: du.exp, mods: m });
+          if (m.dd < 0 && /dados? no (?:próximo|primeiro) teste/i.test(descTxt)) { const n = -m.dd; t.dd = clamp(t.dd + n, -4, 4); delete m.dd; t.fioDd = (t.fioDd || 0) + n;
+            novoEf(t, { nome: r.nome, autor: CH[c.k].nome, faz: '−' + n + (n > 1 ? ' dados' : ' dado') + ' no próximo teste', acaba: 'depois do próximo teste de ' + CH[t.k].nome, exp: { t: 'man' }, mods: {}, fioEf: true });
+            reg.faz = reg.faz.filter(x => !/dado/.test(x)); if (/no próximo teste/i.test(du.txt) || du.exp.t === 'man') du = { txt: 'quando for removido', exp: { t: 'man' } }; }
+          const pxa = !!m.df && /na Defesa contra o (?:próximo|primeiro) (?:ataque|teste)/i.test(descTxt);
+          if (reg.faz.length || Object.keys(m).length)
+            novoEf(t, Object.assign({ nome: r.nome, autor: CH[c.k].nome, faz: reg.faz.join(' · ') + (pxa ? ' (some depois do próximo ataque que sofrer)' : ''), acaba: pxa && du.exp.t === 'man' ? 'depois do próximo ataque que sofrer' : du.txt, exp: du.exp, mods: m }, pxa ? { proxAtk: true } : {}));
         }
       });
       const orig = r.origem || c.pos;
