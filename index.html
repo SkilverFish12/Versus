@@ -5797,7 +5797,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           c.efs = (c.efs || []).filter(e => !(e.regen && e.regen.n <= 0));
           (c.efs || []).filter(e => e.psiIni).forEach(e => { if (c.elim) return; const q = sofrerDano(c, e.psiIni, { psi: true }); const t2 = '🧠 Pensamento Intrusivo: ' + CH[c.k].nome + ' −' + q.real + ' PV (Dano Psíquico)'; msg += ' ' + t2 + '.'; aviso = (aviso ? aviso + ' · ' : '') + t2; });
           c.efs = (c.efs || []).filter(e => !e.psiIni);
-          if (c.k === 'cavalo' && !c.elim && (c.cicloD || (c.pvFim != null && c.pv < c.pvFim)) && c.pv < c.max) { const v = Math.min(c.max - c.pv, Math.max(0, 2 - (c.cr || 0))); c.pv += v; const t2 = '🐴 Ciclo de Sofrimento: +' + v + ' PV'; msg += ' ' + t2 + '.'; aviso = (aviso ? aviso + ' · ' : '') + t2; }
+          if (c.k === 'cavalo' && !c.elim && !pOff(c, 'Ciclo de Sofrimento') && (c.cicloD || (c.pvFim != null && c.pv < c.pvFim)) && c.pv < c.max) { const v = Math.min(c.max - c.pv, Math.max(0, 2 - (c.cr || 0))); c.pv += v; const t2 = '🐴 Ciclo de Sofrimento: +' + v + ' PV'; msg += ' ' + t2 + '.'; aviso = (aviso ? aviso + ' · ' : '') + t2; }
           c.cicloD = false;
           if (temEf(c, 'cura4') && c.pv < c.max && !c.elim) { c.pv = Math.min(c.max, c.pv + Math.max(0, 4 - (c.cr || 0))); msg += ' Obra-Prima verde: +4 PV.'; }
         } c.ab = 0; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0; c.rErros = 0; c.rDano = 0; c.cupCura = false; c.escP = null; c.formaT = false; c.trocaT = false; c.leitura = false; c.copAtk = []; c.sableMov = false; c.mansaoT = false;
@@ -6483,7 +6483,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     return pecas((pj, pi, x) => x !== c && (tp === 'inimigo' ? pj !== aj : pj === aj) && (tp !== 'aliado adjacente' || !c.pos || (x.pos && dP(c.pos, x) === 1)));
   }
   function escolhaPassiva(c){
-    const e = ESCP[c.k]; if (!e) return '';
+    const e = ESCP[c.k]; if (!e || pOff(c, e[0])) return '';
     const L = escElegiveis(c);
     let h = '<div class="ac-linha"><b>' + e[1] + ' ' + e[0].toUpperCase() + ':</b>' + (L.length ? L.map(p => '<button class="tg' + (c.escP === p.join(',') ? ' on' : '') + '" data-escp="' + p.join(',') + '">' + CH[S.times[p[0]][p[1]].k].nome + '</button>').join('') : '<small>nenhum ' + e[2] + '</small>') + '<small>escolha um ' + e[2] + '</small></div>';
     if (c.k === 'ninguem' && c.escP) h += '<div class="ac-linha"><button class="tg' + (c.leitura ? ' on' : '') + '" data-leitura' + (c.leitura || restam(c) < 1 ? ' disabled' : '') + '>📡 COMPARTILHAR A LEITURA (1 ação)</button><small>aliados: +1 na Defesa contra o próximo ataque de ' + CH[S.times[+c.escP[0]][+c.escP[2]].k].nome + '</small></div>';
@@ -6506,7 +6506,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   const copiasLivres = c => (S.est || []).filter(z => z.tipo === 'Cópia' && z.dono === S.ativo[0] && z.cell && !(c.copAtk || []).includes(z.id));
   const copiaAlvos = c => pecas((j, i, x) => j !== S.ativo[0] && x.pos && copiasLivres(c).some(z => dP(z.cell, x) === 1));
   // Sem Aberturas: Invicto inimigo do personagem em turno
-  const invictoContra = () => { const aj = S.ativo[0], i = S.times[1 - aj].findIndex(x => !x.elim && x.k === 'invicto'); return i < 0 ? null : [1 - aj, i]; };
+  const invictoContra = () => { const aj = S.ativo[0], i = S.times[1 - aj].findIndex(x => !x.elim && x.k === 'invicto' && !pOff(x, 'Sem Aberturas')); return i < 0 ? null : [1 - aj, i]; };
   function aplicarGuarda(q, t, tipo, red){
     const nm = tipo === 'fardo' ? 'Fardo Aceito' : 'Interceptação', exp = { t: 'ini', ref: refDe(q) };
     t.efs = (t.efs || []).filter(e => !(e.guarda && e.guarda.tipo === tipo));
@@ -6532,10 +6532,10 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const iv = invictoContra();
     if (iv) { const x = S.times[iv[0]][iv[1]]; h += btn('data-pasv="invicto"', '🥊', 'SEM ABERTURAS', 'Invicto ataca ' + CH[c.k].nome + ' (entrou ou saiu do Raio 1 dele) · gasta 1 ação do próximo turno de Invicto', x.ab <= -2 ? 'Invicto já gastou 2 ações do próximo turno' : ''); }
     const usou = n => (c.usadas || []).includes(n);
-    if (c.k === 'espreitador') { const L = tocaiaAlvos(c); h += btn('data-pasv="tocaia"', '🎯', 'TIRO DE TOCAIA', 'passiva · sem ação · VIS contra todos a 4+ casas · 4 de dano', usou('Tiro de Tocaia') ? 'já usado neste turno' : c.pos && !L.length ? 'nenhum inimigo a 4 casas ou mais' : ''); }
+    if (c.k === 'espreitador') { const L = tocaiaAlvos(c); h += btn('data-pasv="tocaia"', '🎯', 'TIRO DE TOCAIA', 'passiva · sem ação · VIS contra todos a 4+ casas · 4 de dano', pOff(c, 'Tiro de Tocaia') ? 'Bloqueio Mental' : usou('Tiro de Tocaia') ? 'já usado neste turno' : c.pos && !L.length ? 'nenhum inimigo a 4 casas ou mais' : ''); }
     const pm = PASM[c.k];
     if (pm) { const semDC = c.k === 'johnny' && !S.times[1 - S.ativo[0]].some(x => !x.elim && x.dcn > 0);
-      h += btn('data-pasv="mover"', '👣', 'MOVER GRÁTIS', 'passiva · sem ação · ' + pm[2], usou(pm[0]) ? 'já usado neste turno' : c.imo ? 'Imóvel' : c.carona ? 'no veículo' : semDC ? 'nenhum inimigo com Dano Contínuo' : ''); }
+      h += btn('data-pasv="mover"', '👣', 'MOVER GRÁTIS', 'passiva · sem ação · ' + pm[2], pOff(c, pm[0]) ? 'Bloqueio Mental' : usou(pm[0]) ? 'já usado neste turno' : c.imo ? 'Imóvel' : c.carona ? 'no veículo' : semDC ? 'nenhum inimigo com Dano Contínuo' : ''); }
     return h;
   }
   // para onde o personagem vai antes do teste (lido da nota ↪ da ficha)
@@ -6601,7 +6601,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       S.times[1 - aj].forEach((x, i) => { if (x.elim || !x.pos) return; const hit = L.some(l => l.ok && l.alvo[0] === 1 - aj && l.alvo[1] === i);
         Q.push(hit ? { t: 'teleporte', alvo: [1 - aj, i], naoAdj: true, tit: '🌀 Teleporte ' + CH[x.k].nome + ' para qualquer casa vazia (longe de outro inimigo)' } : { t: 'teleporte', alvo: [1 - aj, i], de: x.pos, alc: 2, naoAdj: true, tit: '🌀 ' + CH[x.k].nome + ' escapou: teleporte a até 2 casas' }); });
     }
-    if (c.k === 'sable' && !c.sableMov) { const pen = ok.filter(a => !T(a).elim && T(a).pos && temPen(T(a))); if (pen.length) Q.push({ t: 'empDir', alvo: pen[0], n: 1, mover: true, sable: true, tit: '🦂 Alvo Comprometido: mova ' + nmC(pen[0]) + ' 1 casa (ou cancele)' }); }
+    if (c.k === 'sable' && !c.sableMov && !pOff(c, 'Alvo Comprometido')) { const pen = ok.filter(a => !T(a).elim && T(a).pos && temPen(T(a))); if (pen.length) Q.push({ t: 'empDir', alvo: pen[0], n: 1, mover: true, sable: true, tit: '🦂 Alvo Comprometido: mova ' + nmC(pen[0]) + ' 1 casa (ou cancele)' }); }
     const mv = (n, g) => Q.push({ t: 'mover', gratis: g, desl: n, tit: '👣 ' + g + ': ' + CH[c.k].nome + ' pode andar ' + n + (n > 1 ? ' casas' : ' casa') + ' (ou cancele)' });
     if (r.aprim && ['Giro Serrilhado', 'Investida Alada', 'Mão Leve', 'Amor Cego'].includes(nm)) mv(2, nm);
     if (r.aprim && nm === 'Execução Silenciosa' && ok.length) mv(2, nm);
@@ -6619,6 +6619,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (nm === 'Passo de Combate' && ok.length) { mv(3, 'Passo de Combate'); Q.push({ t: 'teleporte', alvo: ok[0], centro: refDe(c), alc: 1, tit: '💃 ' + nmC(ok[0]) + ' termina ao lado do Ritmista' }); }
     if (nm === 'Garras' && fm(/Rapina/) && ok.length) { mv(3, 'Garras (Rapina)'); Q.push({ t: 'teleporte', alvo: ok[0], centro: refDe(c), alc: 1, tit: '🦅 Solte ' + nmC(ok[0]) + ' numa casa ao lado do Cambiante' }); }
     if (nm === 'Garras' && fm(/Ágil/) && ok.length) mv(1, 'Garras (Ágil)');
+    if (nm && !c.elim && c.pos && aurasEm(c).some(([e, , ali]) => ali && e.tipo === 'Pista')) Q.push({ t: 'mover', gratis: 'Pista', desl: 1, tit: '🪩 Pista de Dança: ' + CH[c.k].nome + ' pode andar 1 casa (ou cancele)' });
     return Q;
   }
   function aprimAtivo(h){ const c = ativoC(); if (c && c.possPor) return !!(aprimorarMarcado && h.p && c.possAprim); return !!(c && aprimorarMarcado && h.p && !c.med && S.med[S.ativo[0]] >= 1); }
@@ -6984,7 +6985,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'mover') {
       if (!cellId || !d0.casas.has(cellId)) return true;
       const de = c.pos, gr = modo.gratis; modo = null;
-      { let extra = ''; mudar(() => { const jj = timeDe(c), dd = de ? dist(de, cellId) : 0; moverPeca(c, cellId); c.moveuT = true; if (gr) c.usadas = (c.usadas || []).concat(gr); else c.gastas++;
+      { let extra = ''; mudar(() => { const jj = timeDe(c), dd = de ? dist(de, cellId) : 0; moverPeca(c, cellId); c.moveuT = true; if (gr) { if (!['Pista', 'Par de Dança'].includes(gr)) c.usadas = (c.usadas || []).concat(gr); } else c.gastas++;
         if (S.bosque && S.bosque.time !== jj && S.rodada <= S.bosque.ate && dd > 1) { const q = sofrerDano(c, 2, {}); extra += ' Bosque Efêmero: −' + q.real + ' PV.'; }
         const cam = de ? caminho(de, cellId) : [];
         if (temEf(c, 'rastro') && de) { S.est = S.est || []; [de].concat(cam.slice(0, -1)).forEach(id => { if (!ocupante(id) && !obstaculo(id) && !S.est.some(z => z.cell === id && z.tipo === 'Casa Infernal')) S.est.push({ id: Date.now() + '' + d(999) + id, tipo: 'Casa Infernal', cell: id, dono: jj, rastro: true, acaba: 'no início do próximo turno de Kazan' }); }); }
@@ -6996,6 +6997,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (out) { const dst = vizinhas(out.cell).filter(id => livre(id) && !bloqueada(id)).sort((a, b) => dist(a, cellId) - dist(b, cellId))[0]; if (dst) { moverPeca(c, dst); extra += ' 🌀 Atravessou a Fenda e apareceu em ' + dst + '.'; } } }
         S.times[1 - jj].forEach(x => { if (!c.elim && !x.elim && x.pos && temEf(x, 'combustao') && dist(x.pos, cellId) <= 1 && !(de && dist(x.pos, de) <= 1)) { const q = sofrerDano(c, 6, {}); extra += ' Combustão: −' + q.real + ' PV.'; } });
       }, () => '👣 ' + CH[c.k].nome + (de ? ' moveu de ' + de + ' para ' + cellId : ' entrou em ' + cellId) + '.' + extra); if (extra) toast(extra.trim(), 2200); }
+      (c.efs || []).filter(e => e.parD).forEach(e => { const [pj, pi] = e.parD.split(',').map(Number), o = S.times[pj] && S.times[pj][pi]; if (o && !o.elim && o.pos && !o.imo && !o.carona) filaPos.unshift({ t: 'teleporte', alvo: [pj, pi], de: o.pos, alc: 1, caminha: true, tit: '💃 Par de Dança: ' + CH[o.k].nome + ' pode acompanhar 1 casa (ou cancele)' }); });
       if (filaPos.length) setTimeout(proximoPos, 50);
       return true;
     }
@@ -7082,7 +7084,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (c.k === 'bigorna' && k === 'df' && adjObst(c)) v += 1;
     if (c.k === 'johnny' && (k === 'df' || k === 'dn') && c.pos && !S.times[timeDe(c)].some(x => x !== c && !x.elim && x.pos && dist(x.pos, c.pos) <= 2)) v += k === 'df' ? 1 : 2;
     if (c.k === 'andarilho') { const e = rec(c, 'Embalo'); if (k === 'ds') v += 1; if (k === 'df' && e >= 6) v += 1; }
-    if (k === 'ds' && c.k === 'fantasma') v += 1;
+    if (k === 'ds' && c.k === 'fantasma' && !pOff(c, 'Movimento Fantasma')) v += 1;
     if (k === 'ds' && temTat(c, 'Asas')) v += 1;
     if (k === 'ds' && temTat(c, 'Asas Avessas')) v -= 1;
     if (k === 'dd' && temTat(c, 'Olho Roxo') && !c.olhoRoxo) v -= 1;
@@ -7203,7 +7205,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       } }
     if (!o.psi) {
       if (t.red) { real = Math.max(0, real - t.red); nota.push('−' + t.red + ' redução'); }
-      if (t.esc && real > 0) { const a = Math.min(t.esc, real); real -= a; nota.push('escudo −' + a); t.esc = 0; }
+      if (t.esc && real > 0 && !(t.k === 'cavalo' && pOff(t, 'Corpo Inquebrável'))) { const a = Math.min(t.esc, real); real -= a; nota.push('escudo −' + a); t.esc = 0; }
     }
     if (!o.psi && o.basico && temTat(t, 'Escamas') && real > 0) { real -= 1; nota.push('Escamas −1'); }
     if (!o.psi && o.basico && temTat(t, 'Escamas Avessas') && real > 0) { real += 1; nota.push('Escamas Avessas +1'); }
@@ -7253,29 +7255,30 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     let dd = 0, df = 0; const notas = [];
     if (!t || !c) return { dd, df, notas };
     const ini = timeDe(c) !== timeDe(t);
-    if (basico && c.k === 'gatoxadrez') { dd++; notas.push('Cauda Obscura: +1 dado'); }
-    if (basico && c.k === 'invicto') { dd++; notas.push('Guarda Alta: +1 dado no Ataque Básico'); }
-    if (ini && c.k === 'ceifadora' && !c.spT) { const vivos = S.times[timeDe(t)].filter(x => !x.elim), mn = Math.min(...vivos.map(x => x.pv)); if (t.pv === mn) { dd++; notas.push('Sem Perdão: +1 dado (inimigo com menos PV)'); if (consumir) c.spT = true; } }
-    if (ini && c.k === 'vespera' && t.parado) { dd++; notas.push('Leitura de Aberturas: +1 dado (o alvo não se moveu no turno dele)'); }
-    if (ini && c.pos && t.k !== 'duque' && S.times[timeDe(t)].some(x => x.k === 'duque' && !x.elim && x.pos && dist(x.pos, c.pos) === 1)) { dd--; notas.push('Etiqueta da Corte: −1 dado (ao lado do Duque)'); }
+    if (!pOff(c, 'Cauda Obscura') && basico && c.k === 'gatoxadrez') { dd++; notas.push('Cauda Obscura: +1 dado'); }
+    if (!pOff(c, 'Guarda Alta') && basico && c.k === 'invicto') { dd++; notas.push('Guarda Alta: +1 dado no Ataque Básico'); }
+    if (!pOff(c, 'Sem Perdão') && ini && c.k === 'ceifadora' && !c.spT) { const vivos = S.times[timeDe(t)].filter(x => !x.elim), mn = Math.min(...vivos.map(x => x.pv)); if (t.pv === mn) { dd++; notas.push('Sem Perdão: +1 dado (inimigo com menos PV)'); if (consumir) c.spT = true; } }
+    if (!pOff(c, 'Leitura de Aberturas') && ini && c.k === 'vespera' && t.parado) { dd++; notas.push('Leitura de Aberturas: +1 dado (o alvo não se moveu no turno dele)'); }
+    if (ini && c.pos && t.k !== 'duque' && S.times[timeDe(t)].some(x => x.k === 'duque' && !pOff(x, 'Etiqueta da Corte') && !x.elim && x.pos && dist(x.pos, c.pos) === 1)) { dd--; notas.push('Etiqueta da Corte: −1 dado (ao lado do Duque)'); }
     { const rz = risadaDe(c, t); if (rz) { df++; notas.push('Risada Agonizante: +1 na Defesa'); if (consumir) risadaUsa(c, rz); } }
-    if (ini && t.k === 'invicto' && c.pos && t.pos && dP(t.pos, c) <= 1) { df++; notas.push('Guarda Alta: Invicto +1 na Defesa (atacante no Raio 1)'); }
-    if (ini && t.k === 'genio' && t.armad && t.armad[refDe(c)]) { df += t.armad[refDe(c)]; notas.push('Armadura Adaptativa: Gênio +' + t.armad[refDe(c)] + ' na Defesa'); }
-    if (ini && t.k === 'forasteiro' && t.tentN) { const b = Math.min(3, t.tentN); df += b; notas.push('Tentacular: Forasteiro +' + b + ' na Defesa (' + (t.tentN + 1) + 'º ataque)'); }
-    if (ini && c.k === 'sable' && temPen(t)) { df--; notas.push('Alvo Comprometido: −1 na Defesa do alvo (tem Penalidade)'); }
+    if (!pOff(t, 'Guarda Alta') && ini && t.k === 'invicto' && c.pos && t.pos && dP(t.pos, c) <= 1) { df++; notas.push('Guarda Alta: Invicto +1 na Defesa (atacante no Raio 1)'); }
+    if (!pOff(t, 'Armadura Adaptativa') && ini && t.k === 'genio' && t.armad && t.armad[refDe(c)]) { df += t.armad[refDe(c)]; notas.push('Armadura Adaptativa: Gênio +' + t.armad[refDe(c)] + ' na Defesa'); }
+    if (!pOff(t, 'Tentacular') && ini && t.k === 'forasteiro' && t.tentN) { const b = Math.min(3, t.tentN); df += b; notas.push('Tentacular: Forasteiro +' + b + ' na Defesa (' + (t.tentN + 1) + 'º ataque)'); }
+    if (!pOff(c, 'Alvo Comprometido') && ini && c.k === 'sable' && temPen(t)) { df--; notas.push('Alvo Comprometido: −1 na Defesa do alvo (tem Penalidade)'); }
     if (ini && c.aspecto && c.aspecto.nome === 'Invisível') notas.push('Invisível: −1 na Defesa do alvo');
     { const pe = ini && (c.efs || []).find(e => e.pen && e.pen.ap); if (pe && refDe(t) !== pe.pen.ref) { dd--; notas.push('Penitência: −1 dado (não está atacando a Relicário)'); } }
-    if (ini && c.k === 'invicto' && basico && (t.efs || []).some(e => e.respeite)) { df -= 2; notas.push('Respeite o Campeão: −2 na Defesa do alvo'); if (consumir) tirarEfs(t, e => e.respeite); }
+    if (!pOff(c, 'Respeite o Campeão') && ini && c.k === 'invicto' && basico && (t.efs || []).some(e => e.respeite)) { df -= 2; notas.push('Respeite o Campeão: −2 na Defesa do alvo'); if (consumir) tirarEfs(t, e => e.respeite); }
     if (ini && (t.efs || []).some(e => e.naoTol)) { df += 2; notas.push('Não Toleramos Perdedores: Invicto +2 na Defesa'); if (consumir) tirarEfs(t, e => e.naoTol); }
-    if (ini && c.k === 'maleavel' && basico && c.pos && t.pos && dP(c.pos, t) > 1) { const k = dP(c.pos, t) - 1; dd -= k; notas.push('De Longe!: −' + k + (k > 1 ? ' dados' : ' dado') + ' pelo alcance extra'); }
+    if (!pOff(c, 'De Longe!') && ini && c.k === 'maleavel' && basico && c.pos && t.pos && dP(c.pos, t) > 1) { const k = dP(c.pos, t) - 1; dd -= k; notas.push('De Longe!: −' + k + (k > 1 ? ' dados' : ' dado') + ' pelo alcance extra'); }
     return { dd, df, notas };
   }
+  const pOff = (x, n) => !!x && (x.efs || []).some(e => e.bloqP === n);
   const sozinho2 = t => !!t.pos && !S.times[timeDe(t)].some(x => x !== t && !x.elim && x.pos && dP(t.pos, x) <= 2);
   function dadosExtra(c){
     let n = 0, notas = [];
     (c.efs || []).filter(e => e.parD).forEach(e => { const [pj, pi] = e.parD.split(',').map(Number), o = S.times[pj] && S.times[pj][pi]; if (o && !o.elim && o.pos && c.pos && dP(c.pos, o) <= 1) { n += 1; notas.push('Par de Dança com ' + CH[o.k].nome + ': +1 dado'); } });
     if (c.k === 'kazan' && c.kz) { n += c.kz; notas.push(c.kz + ' Brasa(s): +' + c.kz + ' dado'); }
-    if (c.k === 'maligno' && rec(c, 'Peso de Dor')) { n += rec(c, 'Peso de Dor'); notas.push('Peso de Dor: +' + rec(c, 'Peso de Dor') + ' dado'); }
+    if (c.k === 'maligno' && rec(c, 'Peso de Dor') && !pOff(c, 'Peso de Dor')) { n += rec(c, 'Peso de Dor'); notas.push('Peso de Dor: +' + rec(c, 'Peso de Dor') + ' dado'); }
     if (c.fioDd) { n -= c.fioDd; notas.push('−' + c.fioDd + (c.fioDd > 1 ? ' dados' : ' dado') + ' neste teste (Fio Tenso, Clarão ou Estrondo)'); c.fioDd = 0; }
     if (c.manchas) { n -= c.manchas; notas.push('🎨 ' + c.manchas + (c.manchas > 1 ? ' Manchas' : ' Mancha') + ': −' + c.manchas + (c.manchas > 1 ? ' dados' : ' dado') + ' (somem depois deste teste)'); c.manchas = 0; }
     return { n, notas };
@@ -7682,7 +7685,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         linhasR.forEach(l => { if (!ini(l)) return; l.ef = []; if (!l.ok) return; const t = T(l.alvo), cht = CH[t.k];
           const hs = (cht.habs || []).concat(cht.supH ? [cht.supH] : []);
           let prim = true; hs.forEach(hb => { const pas = hb.c === 0 && !hb.a && hb !== cht.supH; const on = !pas && prim; if (on) prim = false;
-            l.ef.push(supFx('bloquear ' + hb.n + (pas ? ' (passiva: sem efeito ' + txtIni + ', ajuste à mão)' : ' (não pode ser usada no próximo turno dele)'), t2 => novoEf(t2, { nome: 'Bloqueio Mental: ' + hb.n, autor: nm, faz: pas ? 'passiva ' + hb.n + ' sem efeito' : hb.n + ' não pode ser usada', acaba: pas ? txtIni : txtFim(t2), exp: pas ? iniT : fimP(t2), mods: {}, bloq: pas ? null : hb.n }), on)); }); });
+            l.ef.push(supFx('bloquear ' + hb.n + (pas ? ' (passiva: desligada até o início do próximo turno de ' + nm + ')' : ' (não pode ser usada no próximo turno dele)'), t2 => novoEf(t2, { nome: 'Bloqueio Mental: ' + hb.n, autor: nm, faz: pas ? 'passiva ' + hb.n + ' desligada' : hb.n + ' não pode ser usada', acaba: pas ? txtIni : txtFim(t2), exp: pas ? iniT : fimP(t2), mods: {}, bloq: pas ? null : hb.n, bloqP: pas ? hb.n : null }), on)); }); });
         break;
       case 'Pensamento Intrusivo':
         linhasR.forEach(l => { if (!ini(l)) return; const dn = l.ef.find(e => e.k === 'dano'), v = dn ? dn.v : 4; l.ef = l.ef.filter(e => e.k !== 'dano'); if (!l.ok) return;
@@ -7895,7 +7898,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     // recursos
     if (c.k === 'ritmista') {
       if (m.sup) extras.push({ k: 'apice', on: true, txt: '🎶 Compassos passam a 9: Estágio Apogeu' });
-      else { const novo = rec(c, 'Compassos') + 1, ant = estR(c), dep = Math.min(3, Math.floor(Math.min(9, novo) / 3)); extras.push({ k: 'compasso', v: 1, on: true, txt: '🎶 +1 Compasso (' + Math.min(9, novo) + '/9)' + (dep > ant ? ' → sobe para ' + ESTAGIOS[dep] : '') }); }
+      else if (!pOff(c, 'Mantendo o Ritmo')) { const novo = rec(c, 'Compassos') + 1, ant = estR(c), dep = Math.min(3, Math.floor(Math.min(9, novo) / 3)); extras.push({ k: 'compasso', v: 1, on: true, txt: '🎶 +1 Compasso (' + Math.min(9, novo) + '/9)' + (dep > ant ? ' → sobe para ' + ESTAGIOS[dep] : '') }); }
     }
     if (c.k === 'reator' && (h.n === 'Fissão Descontrolada') && rec(c, 'Cargas')) extras.push({ k: 'gastaCargas', v: rec(c, 'Cargas'), on: true, txt: '⚛️ consumir ' + rec(c, 'Cargas') + ' Carga(s)' });
     if (c.k === 'reator' && h.n === 'Blindagem Nuclear' && r.ops && r.ops[r.opSel[0]].cargas) {
