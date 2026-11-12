@@ -6380,7 +6380,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   const ativoC = () => S.ativo ? S.times[S.ativo[0]][S.ativo[1]] : null;
   const restam = c => c.acts - c.gastas;
   const LADO_QQ = ['Velejando em Alto-Mar', 'Colapso Espacial', 'Desviando Rota', 'Arrasto Telecinético'];
-  const lado = h => h.n === 'Possessão' ? 'inimigo' : LADO_QQ.includes(h.n) ? 'qualquer' : (h.t.includes('ATAQUE') || h.t.includes('PENALIDADE')) ? ((h.t.includes('RESTAURAÇÃO') || h.t.includes('REFORÇO')) ? 'qualquer' : 'inimigo') : 'aliado';
+  const LADO_INI = ['Possessão', 'Extração Vital', 'Mordida Vampírica', 'Instinto', 'Dreno de Energia', 'Supressão Total', 'Cai Dentro', 'Pó de Escamas'];
+  const lado = h => LADO_INI.includes(h.n) ? 'inimigo' : LADO_QQ.includes(h.n) ? 'qualquer' : (h.t.includes('ATAQUE') || h.t.includes('PENALIDADE')) ? ((h.t.includes('RESTAURAÇÃO') || h.t.includes('REFORÇO')) ? 'qualquer' : 'inimigo') : 'aliado';
   const alcN = h => { const m = /(\d+)/.exec(h.a); return m ? +m[1] : 0; };
   const tipoAlc = h => h.a === 'ADJACENTE' ? 'alvo' : h.a.split(' ')[0];
   function pecas(filtro){
