@@ -5367,7 +5367,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     S.times.forEach(t => t.forEach(x => {
       if (!x.efs || !x.efs.length) return;
       x.efs = x.efs.filter(e => {
-        if (!pred(e, x)) return true;
+        if (!e.exp || !pred(e, x)) return true;
         desfazerMods(x, e); fim.push(e.nome + ' em ' + nomeC(x)); fimDeEfeito(x, e); return false;
       });
     }));
