@@ -4732,6 +4732,15 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   const iniciador = r => r === 1 ? S.prim : (r === S.rodada && S.ini != null) ? S.ini : (S.ult != null ? 1 - S.ult : (r % 2 === 1 ? S.prim : 1 - S.prim));
 
   let toastT = null;
+  // fila de eventos automáticos mostrados na hora (junta tudo que aconteceu no mesmo toque)
+  const RX_EV = /Blindagem do|Selo d[ae]|Consagrad|Santuário|Fardo Aceito|Interceptação|Sombra Dividida|queda da arena|saiu pela borda|colidiu|parou num|Sucata|Fio|🍷|teia|Tatuagem|perdeu o Ritmo|Supressão|Respeite o Campeão|Guardar a Dor|Pele de Rocha|Combustão|Casa Infernal|Fenda|Canto Final|Miasma|Mancha/;
+  let EVQ = [], evT = null;
+  function evento(t){ if (!t || EVQ.some(e => e.includes(t))) return; EVQ = EVQ.filter(e => !t.includes(e)); EVQ.push(t); if (!evT) evT = setTimeout(flushEv, 160); }
+  function flushEv(){
+    evT = null; const L = [...new Set(EVQ)]; EVQ = []; if (!L.length) return;
+    const e = $('#toast'), prev = e && !e.hidden ? e.innerHTML + '<br>' : '';
+    toast(prev + L.map(x => '⚡ ' + x).join('<br>'), Math.min(9000, 3200 + 1300 * L.length));
+  }
   function toast(t, ms){
     const e = $('#toast'); e.innerHTML = t; e.hidden = false;
     clearTimeout(toastT); toastT = setTimeout(() => { e.hidden = true; }, ms || 2600);
@@ -6257,13 +6266,13 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           aplicarEf(c, { nome: 'Miasma', autor: 'Peste', faz: 'Contagiado: −1 na Defesa e curas recebidas −2', acaba: 'no fim da rodada ' + (S.rodada + 1), exp: { t: 'rod', ate: S.rodada + 1 }, mods: { df: -1 } });
           if (ja && pe) aplicarEf(c, { nome: 'Miasma (Imóvel)', autor: 'Peste', faz: 'Imóvel', acaba: 'no início do próximo turno de Peste', exp: { t: 'ini', ref: mz.miasma }, mods: { imo: true } });
           c.efs = c.efs.filter(e => !e.miasma);
-          log('🦠 Miasma: ' + CH[c.k].nome + ' terminou o turno na nuvem e ficou Contagiado' + (ja ? ' e Imóvel' : '') + '.'); } }
+          evento('🦠 Miasma: ' + CH[c.k].nome + ' ficou Contagiado' + (ja ? ' e Imóvel' : '')); log('🦠 Miasma: ' + CH[c.k].nome + ' terminou o turno na nuvem e ficou Contagiado' + (ja ? ' e Imóvel' : '') + '.'); } }
       c.parado = !c.moveuT;
       if (!c.elim && c.pos && S.times[1 - timeDe(c)].some(x => x.k === 'vespera' && !x.elim && x.pos && dP(x.pos, c) <= 1)) { c.fioDd = 1; aplicarEf(c, { nome: 'Fio Tenso', autor: 'Véspera', faz: '−1 casa de deslocamento e −1 dado no próximo teste', acaba: 'no fim do próximo turno de ' + CH[c.k].nome, exp: { t: 'fim', ref: refDe(c), pula: 1 }, mods: { ds: -1 } }); log('🧵 Fio Tenso: ' + CH[c.k].nome + ' terminou o turno ao lado da Véspera (−1 casa e −1 dado no próximo turno).'); }
       expiraFim(refDe(c));
       c.agiu = true; S.ativo = null; passarVez();
       if (c.k === 'dinamo') setRec(c, 'Dano sofrido', 0);
-      if (!c.elim && c.pos) { const jj = timeDe(c); if (cantoAtivo(1 - jj) && passarosDe(1 - jj).some(z => dist(z.cell, c.pos) === 1)) { const q = sofrerDano(c, 3, {}); log('🐦 O Canto Final: ' + CH[c.k].nome + ' terminou o turno ao lado de um Pássaro e sofreu ' + q.real + ' de dano.'); if (!c.elim && c.pv <= 0) { const [a, b2] = refDe(c).split(',').map(Number); eliminar(a, b2); } } }
+      if (!c.elim && c.pos) { const jj = timeDe(c); if (cantoAtivo(1 - jj) && passarosDe(1 - jj).some(z => dist(z.cell, c.pos) === 1)) { const q = sofrerDano(c, 3, {}); evento('🐦 Canto Final: ' + CH[c.k].nome + ' −' + q.real + ' PV (terminou o turno ao lado de um Pássaro)'); log('🐦 O Canto Final: ' + CH[c.k].nome + ' terminou o turno ao lado de um Pássaro e sofreu ' + q.real + ' de dano.'); if (!c.elim && c.pv <= 0) { const [a, b2] = refDe(c).split(',').map(Number); eliminar(a, b2); } } }
       if (c.k === 'reator' && rec(c, 'Cargas') >= 5 && !c.basicoFeito) aviso = '☢️ O núcleo do Reator Morto explode: inimigos no Raio 1 sofrem 10 de dano e as Cargas zeram.';
     }, '✓ ' + CH[c.k].nome + ' encerrou o turno.');
     if (aviso) {
@@ -6322,6 +6331,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     }
     if (opt && opt.bloqueio && out.some(x => /colidiu/.test(x))) dano(t, opt.bloqueio, out);
     out.unshift(CH[t.k].nome + ' foi para ' + t.pos);
+    if (out.some(x => RX_EV.test(x))) evento('Empurrão em ' + CH[t.k].nome + ': ' + out.slice(1).join(', '));
     return out;
   }
   // puxar ou arrastar em direção a um ponto, até ficar adjacente
@@ -6910,7 +6920,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       mudar(() => {
         const o = empurrar(t, null, 3, { di, bloqueio: 3 }); msg.push(...o);
         if (!t.elim && o.some(x => /colidiu|obstáculo|queda/.test(x))) { t.ds = clamp(t.ds - 1, -2, 4); novoEf(t, { nome: 'Marca Titânica (Céus)', autor: CH[c.k].nome, faz: '−1 casa de deslocamento', acaba: 'no fim do próximo turno de ' + CH[t.k].nome, exp: { t: 'fim', ref: refDe(t), pula: 0 }, mods: { ds: -1 } }); msg.push(CH[t.k].nome + ' anda 1 casa a menos no próximo turno'); }
-      }, () => '☁️ Céus: ' + msg.join(', ') + '.');
+      }, () => '☁️ Céus: ' + msg.join(', ') + '.'); msg.filter(x => RX_EV.test(x)).forEach(evento);
       setTimeout(() => { iniciarModo({ t: 'mover', gratis: 'Céus', desl: 1 }); toast('O Guardião pode andar 1 casa (ou cancele)', 2400); }, 60);
       return true;
     }
@@ -7139,6 +7149,11 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   // dano recebido: redução, escudo e recursos ligados a dano
   function sofrerDano(t, v, o){
+    const q = sofrerDano0(t, v, o);
+    if (q && q.nota && !(o && o.desvio)) { if (q.nota.some(n => RX_EV.test(n))) evento(CH[t.k].nome + ' −' + q.real + ' PV (' + q.nota.join(', ') + ')'); }
+    return q;
+  }
+  function sofrerDano0(t, v, o){
     o = o || {};
     if (t.elim || v <= 0) return { real: 0, nota: [] };
     if (t.monstro) return { real: 0, nota: ['o Monstro não sofre dano'] };
@@ -7974,6 +7989,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       // Forasteiro coleta Amostras de habilidades ativas usadas por perto
       if (r.nome && c.pos) pecas((pj, pi, x) => x.k === 'forasteiro' && x.pos && dist(x.pos, c.pos) <= 3).forEach(([pj, pi]) => { const f = S.times[pj][pi]; if (rec(f, 'Amostras') < 3) { setRec(f, 'Amostras', rec(f, 'Amostras') + 1); msg.push('🛸 +1 Amostra'); } });
     }, () => (r.nome ? (r.sup ? '★ ' : '✨ ') + CH[c.k].nome + ' usou ' + r.nome : '👊 ' + CH[c.k].nome + ' fez um Ataque Básico') + (msg.length ? ': ' + msg.join(', ') : '') + '.');
+    msg.filter(x => RX_EV.test(x)).forEach(evento);
     if (r.sup) toast('★ ' + r.nome.toUpperCase() + ' ★', 2200);
     if (r.nome === 'Marca Titânica' && r.ops && r.opSel.some(i => r.ops[i].nome === 'Céus') && r.linhas[0] && r.linhas[0].ok) { const al = r.linhas[0].alvo, t = S.times[al[0]][al[1]]; if (!t.elim && t.pos) setTimeout(() => { iniciarModo({ t: 'ceus', alvo: al }); toast('☁️ Céus: toque na casa ao lado de ' + CH[t.k].nome + ' para a direção do empurrão', 3000); }, 60); }
     if (c.possQuer) setTimeout(() => iniciarPossessao(c), 60);
