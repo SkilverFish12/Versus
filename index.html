@@ -5361,6 +5361,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   function novoEf(alvo, e){
     alvo.efs = alvo.efs || [];
+    if (e.nome && !(e.mods && e.mods.est) && !e.possE) { const ig = alvo.efs.filter(x => x.nome === e.nome && (x.autor || '') === (e.autor || '') && (x.faz || '') === (e.faz || '') && !x.possE);
+      if (ig.length) { ig.forEach(x => desfazerMods(alvo, x)); alvo.efs = alvo.efs.filter(x => !ig.includes(x)); if (e.mods && e.mods.imo) alvo.imo = true; } }
     alvo.efs.push(Object.assign({ id: Date.now() + '' + d(9999), r: S.rodada }, e));
   }
   function desfazerMods(x, e){
