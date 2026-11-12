@@ -5256,6 +5256,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function estrondo(c, j, i){
     const ref = j + ',' + i, out = [], longe = x => !!(x.pos && c.pos && dP(c.pos, x) > 3);
     const dn = (x, v, tag) => { const lg = longe(x); if (lg) v = Math.floor(v / 2); const q = sofrerDano(x, v, { ataque: true, atk: c }); out.push(CH[x.k].nome + ' −' + q.real + ' PV' + (tag ? ' (' + tag + ')' : '') + (lg ? ' (longe: metade)' : '')); };
+    (S.est || []).filter(z => z.tipo === 'Tempestade' && z.dono === j && z.estr === false).forEach(z => { z.estr = true; z.exp = { t: 'rod', ate: S.rodada + 1 }; z.acaba = 'no fim da rodada ' + (S.rodada + 1); out.push('a Tempestade em ' + z.cell + ' desaba (2 rodadas)'); });
     (S.est || []).filter(z => z.tipo === 'Nuvem' && z.dono === j && z.hab === 'Nuvem Carregada' && z.cell).forEach(z => {
       const R = z.aprim ? 2 : 1;
       S.times[1 - j].forEach(x => { if (x.elim || !x.pos || temEf(x, 'banido') || dist(z.cell, x.pos) > R) return; if (eletrizado(x)) dn(x, 4, 'Nuvem'); else { const q = sofrerDano(x, 2, { ataque: true, atk: c }); out.push(CH[x.k].nome + ' −' + q.real + ' PV (Nuvem)'); } });
@@ -5741,7 +5742,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           c.combT = false; c.spT = false; c.moveuT = false; if (c.k === 'forasteiro') c.tentN = 0;
           S.times[1 - j].forEach(x => { if (!c.elim && !x.elim && x.k === 'carvao' && x.pos && !temEf(x, 'combustao') && dP(x.pos, c) <= 1) { const q = sofrerDano(c, 2, {}); msg += ' Calor Radiante: −' + q.real + ' PV.'; aviso = (aviso ? aviso + ' · ' : '') + '🔥 Calor Radiante: −' + q.real + ' PV'; } });
           S.times[1 - j].forEach(x => { if (!c.combT && !x.elim && x.pos && temEf(x, 'combustao') && dP(x.pos, c) <= 1) { c.combT = true; const q = sofrerDano(c, 6, {}); msg += ' Combustão: −' + q.real + ' PV.'; aviso = (aviso ? aviso + ' · ' : '') + '🔥 Combustão: −' + q.real + ' PV'; } });
-          (S.est || []).filter(z => z.tipo === 'Tempestade' && z.dono !== j && z.cell && dist(z.cell, c.pos) <= 2).slice(0, 1).forEach(() => { const v2 = temEf(c, 'clarao') ? 5 : 3, q = sofrerDano(c, v2, {}); msg += ' Tempestade: −' + q.real + ' PV.'; aviso = (aviso ? aviso + ' · ' : '') + '⛈️ Tempestade: −' + q.real + ' PV'; });
+          (S.est || []).filter(z => z.tipo === 'Tempestade' && z.dono !== j && z.cell && z.estr !== false && dist(z.cell, c.pos) <= 2).slice(0, 1).forEach(() => { const v2 = temEf(c, 'clarao') ? 5 : 3, q = sofrerDano(c, v2, {}); msg += ' Tempestade: −' + q.real + ' PV.'; aviso = (aviso ? aviso + ' · ' : '') + '⛈️ Tempestade: −' + q.real + ' PV'; });
           S.times[1 - j].forEach(x => { if (c.elim || x.elim || x.k !== 'juiza' || !x.pos || temEf(x, 'banido') || dP(x.pos, c) > 2) return;
             const n = Math.max(1, aptE(x, 3) + mod(x, 'dd') + dadosCen(x, 3)), v = rolarD10(n), def = clamp(defesas(c)[3] + adef(x), 2, 10), ok = Math.max(...v) >= def;
             let t2 = '⚖️ Presença de Tribunal [' + v.join(',') + ' vs ' + def + ']: ';
@@ -6128,7 +6129,10 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (es) { estSel = estSel === es.dataset.est ? null : es.dataset.est; selTok = null; rBoard(); return; }
     if (cl && estSel) {
       const x = (S.est || []).find(z => z.id === estSel); const id = cl.dataset.cell;
-      if (x && !bloqueada(id)) { estSel = null; mudar(() => { x.cell = id; }, x.tipo + ' movido para ' + id + '.'); }
+      const at = S.ativo && ativoC(), th = x && x.tipo === 'Tempestade' && at && at.k === 'tharen' && x.dono === S.ativo[0];
+      if (th && dist(x.cell, id) > 2) { toast('⛈️ A Tempestade anda até 2 casas por vez', 2200); return; }
+      if (th && at.gastas >= at.acts) { toast('Sem ações para mover a Tempestade', 2200); return; }
+      if (x && !bloqueada(id)) { estSel = null; mudar(() => { x.cell = id; if (th) at.gastas++; }, x.tipo + ' movido para ' + id + (th ? ' (1 ação)' : '') + '.'); }
       return;
     }
     if (b && b.dataset.tbrolar) { abrirDado(b.dataset.tbrolar.split(',').map(Number)); return; }
@@ -7385,9 +7389,9 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         linhasR.forEach(l => sem(l, ['empurra', 'puxa']));
         break;
       case 'Tempestade':
-        linhasR.forEach(l => { if (!ini(l) || !l.ok) return; sem(l, ['desl']);
-          fx(l, 'Eletrizado e −1 casa no próximo turno; o Estrondo da Tempestade dá 5 de dano', t => { aplicarEf(t, { nome: 'Clarão', autor: nm, faz: '−1 casa de deslocamento', acaba: txtFim(t), exp: fimP(t), mods: { ds: -1 } }); novoEf(t, { nome: 'Eletrizado (Tempestade)', autor: nm, faz: 'Estrondo da Tempestade: 5 de dano em vez de 3', acaba: txtRod(2), exp: rod(2), mods: {}, clarao: cref }); }); });
-        extras.push(supFx('Quem começar o turno na Tempestade sofre 5 (Eletrizado) ou 3 de dano (automático)', () => {}));
+        linhasR.forEach(l => { if (!ini(l)) return; l.ef = []; if (!l.ok) return;
+          fx(l, 'Eletrizado e −1 casa no próximo turno; depois do Estrondo, sofre 5 (em vez de 3) ao começar o turno na Tempestade', t => { aplicarEf(t, { nome: 'Clarão', autor: nm, faz: '−1 casa de deslocamento', acaba: txtFim(t), exp: fimP(t), mods: { ds: -1 } }); novoEf(t, { nome: 'Eletrizado (Tempestade)', autor: nm, faz: 'Tempestade: 5 de dano em vez de 3 ao começar o turno nela', acaba: txtRod(3), exp: rod(3), mods: {}, clarao: cref }); }); });
+        extras.push(supFx('Estrondo no início do próximo turno de ' + nm + ': a Tempestade passa a durar 2 rodadas e quem começar o turno nela sofre 5 (atingido pelo Clarão) ou 3 de dano (automático). Mover a Tempestade até 2 casas custa 1 ação (toque nela e depois na casa)', () => setTimeout(() => { const z = (S.est || []).filter(y => y.tipo === 'Tempestade' && y.dono === aj).pop(); if (z) { z.estr = false; z.exp = null; z.acaba = 'Estrondo no início do próximo turno de ' + nm + ', depois 2 rodadas'; salvar(); rBoard(); } }, 0)));
         break;
       case 'Ninguém Encosta Neles':
         linhasR.forEach(l => { l.ef = []; });
