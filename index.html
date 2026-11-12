@@ -6621,15 +6621,15 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function alvosDe(h0, ap){
     if (ap === undefined) ap = aprimAtivo(h0);
     const h = ap ? alcAprim(h0) : h0;
-    const [aj] = S.ativo, c = ativoC(), n = temEf(c, 'alcTodo') && h.a !== 'PESSOAL' ? 99 : h.a === 'ADJACENTE' ? 1 : h0.n === 'Bote' && /Ágil|Quimera/.test(formaDe(c)) ? 4 : (h0.n === 'Instinto' && /Rapina|Quimera/.test(formaDe(c)) ? 6 : alcN(h)), ta = tipoAlc(h), ld = lado(h);
+    const [aj] = S.ativo, c = ativoC(), n0 = temEf(c, 'alcTodo') && h.a !== 'PESSOAL' ? 99 : h.a === 'ADJACENTE' ? 1 : h0.n === 'Bote' && /Ágil|Quimera/.test(formaDe(c)) ? 4 : (h0.n === 'Instinto' && /Rapina|Quimera/.test(formaDe(c)) ? 6 : alcN(h)), n = h0._nev ? Math.min(2, n0) : n0, ta = tipoAlc(h), ld = lado(h);
     if (/ENTRE OS DOIS/.test(h0.a)) { const L = entreDois(c); return { tipo: 'todos', alvos: pecas((j, i, x) => j !== aj && x.pos && L.includes(x.pos) && !temEf(x, 'intocavel')) }; }
     if (h0.n === 'Passagem da Morte') return { tipo: 'casa', casas: CELLS.map(x => x.id), faixa: true };
     if (h0.n === 'Meia-Noite') return { tipo: 'casa', casas: CELLS.filter(x => !bloqueada(x.id) && !obstaculo(x.id) && (!ocupante(x.id) || S.times[ocupante(x.id)[0]][ocupante(x.id)[1]] === c)).map(x => x.id), meia: true };
     if (h0.n === 'Fenda Espacial') return { tipo: 'casa', casas: CELLS.filter(x => livre(x.id) && !bloqueada(x.id)).map(x => x.id), fendaS: true };
     if (h0.n === 'Fechar o Braço') return { tipo: 'peca', alvos: pecas(() => true) };
     if (h0.n === 'Misericórdia Divina') return { tipo: 'todos', alvos: pecas((j, i, x) => j !== aj && !temEf(x, 'intocavel') && (!c.pos || (x.pos && dP(c.pos, x) <= 1))) };
-    if (nevoaAtiva() && !/^(PESSOAL|ADJACENTE)$/.test(h.a) && (n > 2 || /TODO/.test(h.a))) return alvosDe(Object.assign({}, h0, { a: /TODO/.test(h.a) ? 'RAIO 2' : h.a.replace(/\d+/, '2') }), false);
-    if (temEf(c, 'alcMax') && n > 2) return alvosDe(Object.assign({}, h0, { a: h0.a.replace(/\d+/, '2') }), false);
+    if (!h0._nev && nevoaAtiva() && !/^PESSOAL$/.test(h.a) && (n > 2 || /TODO/.test(h.a))) return alvosDe(Object.assign({}, h0, { _nev: true, a: /TODO/.test(h.a) ? 'RAIO 2' : h.a.replace(/\d+/, '2') }), false);
+    if (!h0._nev && temEf(c, 'alcMax') && n > 2) return alvosDe(Object.assign({}, h0, { _nev: true, a: h0.a.replace(/\d+/, '2') }), false);
     if (c.k === 'assobio' && h.n === 'Bico de Aço') return { tipo: 'bico' };
     const pz = !!c.possPor, ok0 = (j) => ld === 'qualquer' || (ld === 'inimigo' ? (j !== aj || pz) : j === aj);
     const ok = (j, i) => ok0(j) && !(j !== aj && i !== undefined && temEf(S.times[j][i], 'intocavel')) && !(pz && i !== undefined && S.times[j][i] === c);
