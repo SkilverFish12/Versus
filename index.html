@@ -6435,6 +6435,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     return (S.est || []).filter(z => z.cell && ATK_EST[z.tipo] && (z.dono !== aj || z.tipo === 'Ilusão') && !(z.tipo === 'Pássaro' && cantoAtivo(z.dono)) && (todas || !c.pos || (dist(c.pos, z.cell) >= 1 && dist(c.pos, z.cell) <= alc)));
   }
   function defEst(z, apt){
+    if (z.tipo === 'Retrato') { const al = porRef(z.ref); return al ? clamp(defesas(al)[apt], 2, 10) : null; }
     const [k, a] = ATK_EST[z.tipo], o = S.times[z.dono] && S.times[z.dono].find(x => x.k === k);
     if (!o || a === null) return null;
     return a < 0 ? defesas(o)[apt] : clamp(5 + aptE(o, a), 2, 10);
@@ -6445,14 +6446,18 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     let def = defEst(z, apt), ok;
     if (def === null) ok = typeof confirm === 'function' && confirm('Ataque Básico no ' + z.tipo + ' em ' + z.cell + '\nDados: ' + v.join(', ') + '\n\nO ' + z.tipo + ' tem a Defesa do aliado copiado. Algum dado passou dela?\nOK: atingiu (o ' + z.tipo + ' some). Cancelar: errou.');
     else ok = mx >= def;
-    const txt = '🎯 ' + ch.nome + ' atacou ' + (z.tipo === 'Ilusão' || z.tipo === 'Cópia' ? 'a ' : 'o ') + z.tipo + ' em ' + z.cell + ': ' + v.join(', ') + (def !== null ? ' contra Defesa ' + def : '') + (ok ? ' → desfeito' : ' → errou');
+    const txt = '🎯 ' + ch.nome + ' atacou ' + (z.tipo === 'Ilusão' || z.tipo === 'Cópia' ? 'a ' : 'o ') + z.tipo + ' em ' + z.cell + ': ' + v.join(', ') + (def !== null ? ' contra Defesa ' + def : '') + (ok ? (z.tipo === 'Retrato' && (z.hits || 1) > 1 ? ' → rachou (falta 1 acerto)' : ' → desfeito') : ' → errou');
+    const rach = ok && z.tipo === 'Retrato' && (z.hits || 1) > 1;
     mudar(() => {
       c.gastas++;
       if (!ok) return;
+      if (z.tipo === 'Retrato' && (z.hits || 1) > 1) { z.hits--; evento('🖼️ O Retrato rachou: falta 1 acerto para ele sumir'); return; }
       S.est = S.est.filter(y => y !== z);
+      if (z.tipo === 'Retrato') { const aq = porRef(z.autor); evento('🖼️ O Retrato sumiu e espirrou tinta: inimigos adjacentes recebem 1 Mancha' + (z.cor ? '; a casa ficou pintada de ' + z.cor : ''));
+        if (z.cor && aq) S.est.push({ id: Date.now() + '' + d(999) + z.cell, tipo: 'Tinta', cell: z.cell, dono: z.dono, cor: z.cor, hab: 'Pincelada', autor: z.autor, autorNome: CH[aq.k].nome, exp: { t: 'fim', ref: z.autor, pula: ehAtivo(aq) ? 1 : 0 }, acaba: 'no fim do próximo turno de ' + CH[aq.k].nome, info: 'Tinta ' + z.cor + ': ' + CORTXT[z.cor] }); }
       if (z.tipo === 'Retrato') S.times[1 - z.dono].forEach(x => { if (!x.elim && x.pos && dist(x.pos, z.cell) <= 1) manchar(x, 1); });
       if (z.tipo === 'Galho') { c.dd = clamp(c.dd - 1, -4, 4); novoEf(c, { nome: 'Galho destruído', autor: 'Vale', faz: '−1 dado no próximo teste', acaba: 'depois do próximo teste (remova à mão)', exp: { t: 'man' }, mods: { dd: -1 } }); }
-    }, txt + (ok && z.tipo === 'Galho' ? ' (−1 dado no próximo teste)' : '') + (ok && z.tipo === 'Retrato' ? ' (inimigos adjacentes ao Retrato recebem 1 Mancha)' : '') + '.');
+    }, txt + (ok && z.tipo === 'Galho' ? ' (−1 dado no próximo teste)' : '') + (ok && !rach && z.tipo === 'Retrato' ? ' (inimigos adjacentes ao Retrato recebem 1 Mancha)' : '') + '.');
     toast(txt, 2600);
   }
   // ── passivas de escolha no início do turno ──
@@ -6496,8 +6501,16 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   const GUARDA_FORA = { drive: ['Interceptação', 'inter', 4, '🚗'], maligno: ['Fardo Aceito', 'fardo', 2, '🖤'] };
   const guardasFora = () => { const aj = S.ativo[0], out = []; S.times[1 - aj].forEach((x, i) => { if (!x.elim && GUARDA_FORA[x.k]) out.push([1 - aj, i]); }); return out; };
+  const retratoDe = x => { const r0 = refDe(x); return (S.est || []).find(z => z.tipo === 'Retrato' && z.ref === r0 && z.cell && !z.troca); };
+  function trocarRetrato(x){
+    const z = retratoDe(x); if (!z || !x.pos || x.elim) return;
+    const de = x.pos, para = z.cell;
+    mudar(() => { moverPeca(x, para); z.cell = de; z.troca = true; }, '🖼️ ' + nomeC(x) + ' trocou de lugar com o Retrato (' + de + ' ↔ ' + para + ').');
+    toast('🖼️ ' + nomeC(x) + ' trocou de lugar com o Retrato', 2200);
+  }
   function botoesPassivas(c, btn){
     let h = '';
+    S.times.forEach(tm => tm.forEach(x => { if (!x.elim && x.pos && retratoDe(x)) h += btn('data-retrato="' + refDe(x) + '"', '🖼️', 'TROCAR COM O RETRATO (' + nomeC(x) + ')', 'sem ação · 1 vez · Retrato em ' + retratoDe(x).cell + (x === c ? '' : ' · vale fora do turno, antes de rolarem os dados de um ataque contra ele'), ''); }));
     if (c.k === 'semelhante') { const nl = copiasLivres(c).length; h += btn('data-pasv="copias"', '👥', 'CÓPIAS ATACAM', 'passiva · sem ação · Todos Sou Eu · ' + nl + (nl === 1 ? ' Cópia livre' : ' Cópias livres'), !nl ? 'nenhuma Cópia livre' : !copiaAlvos(c).length ? 'nenhum inimigo adjacente a uma Cópia' : ''); }
     guardasFora().forEach(([j, i]) => { const x = S.times[j][i], g = GUARDA_FORA[x.k]; h += btn('data-guardafora="' + j + ',' + i + '"', g[3], g[0].toUpperCase() + ' (' + CH[x.k].nome + ')', 'fora do turno · antes do ataque rolar · gasta 1 ação do próximo turno de ' + CH[x.k].nome, x.ab <= -2 ? CH[x.k].nome + ' já gastou 2 ações do próximo turno' : x.guardaR === S.rodada ? 'já usada nesta rodada' : ''); });
     const iv = invictoContra();
@@ -6770,6 +6783,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b.dataset.descer) return iniciarModo({ t: 'descer', quem: b.dataset.descer });
     if (b.dataset.ac === 'pagar') return mudar(() => { c.div = divDe(c) - 1; c.gastas += 1; }, '💰 ' + CH[c.k].nome + ' pagou 1 Dívida (' + (divDe(c) - 1) + ' restante(s)).');
     if (b.dataset.ac === 'carga') return mudar(() => { setRec(c, 'Cargas', rec(c, 'Cargas') + 1); c.gastas += 2; }, '⚛️ ' + CH[c.k].nome + ' carregou: ' + (rec(c, 'Cargas') + 1) + ' Carga(s).');
+    if (b.dataset.retrato) return trocarRetrato(porRef(b.dataset.retrato));
     if (b.dataset.pasv === 'copias') return iniciarModo({ t: 'copiaAtk' });
     if (b.dataset.guardafora) { const q = b.dataset.guardafora.split(',').map(Number), x = S.times[q[0]][q[1]], g = GUARDA_FORA[x.k]; return iniciarModo({ t: 'guardaFora', quem: q, alc: g[2], tipo: g[1], tit: g[3] + ' ' + g[0] + ': toque no aliado de ' + CH[x.k].nome + ' (até ' + g[2] + ' casas)' }); }
     if (b.dataset.pasv === 'invicto') { const iv = invictoContra(); return ataqueBasico(S.ativo.slice(), { atk: iv, custo: 0, pagaProx: true, tit: 'SEM ABERTURAS' }); }
@@ -7402,6 +7416,17 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (k < 0 || k === meio) return; const dest = L[k < meio ? k + 1 : k - 1];
           fx(l, 'puxado 1 casa em direção ao meio da linha (' + dest + ')', x => { if (livre(dest)) moverPeca(x, dest); }); });
         break; }
+      case 'Retrato Vivo': {
+        linhasR.splice(0);
+        const cel = r.m && r.m.cel; if (!cel) break;
+        let feito = null;
+        S.times[aj].forEach((x, i) => { if (x.elim || x === c) return;
+          extras.push({ k: 'fn', on: !feito && (feito = 'x', true), txt: '🖼️ Retrato de ' + nomeC(x) + ' em ' + cel + ' (Defesa dele: ' + defesas(x).join(' / ') + ')', fn: () => { if (feito === 'ok') return; feito = 'ok';
+            S.est = (S.est || []).filter(z => !(z.tipo === 'Retrato' && z.dono === aj));
+            S.est.push({ id: Date.now() + '' + d(999) + cel, tipo: 'Retrato', cell: cel, dono: aj, ref: aj + ',' + i, hits: r.aprim ? 2 : 1, troca: false, autor: cref, autorNome: nm, info: 'Retrato de ' + nomeC(x) + ': Obstáculo com a Defesa dele' + (r.aprim ? ', some depois de 2 acertos' : '') + '. ' + nomeC(x) + ' pode trocar de lugar com ele 1 vez.' }); } }); });
+        feito = null;
+        if (r.aprim) CORES.forEach((cor, k) => extras.push({ k: 'fn', on: k === 0, txt: '🎨 Quando o Retrato sumir, a casa fica pintada de ' + cor + ' (' + CORTXT[cor] + ')', fn: () => { const z = (S.est || []).find(y => y.tipo === 'Retrato' && y.dono === aj); if (z && !z.cor) z.cor = cor; } }));
+        break; }
       case 'Pincelada': {
         linhasR.splice(0);
         const nMax = r.aprim ? 5 : 3, cel = r.m && r.m.cel;
@@ -7755,7 +7780,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       linhasR.push({ alvo: al, ok, txt, ef: lista });
     });
     if (c.k === 'oliva' && h.x >= 0) linhasR.forEach(l => { if (l.alvo[0] === aj) return; const dm = /Defesa (\d+)/.exec(l.txt || ''); if (dm && r.dados.filter(x => x >= +dm[1]).length >= 2) l.ef.push(supFx('O X Marca o Lugar: −1 dado contra Azeitona e −1 na Defesa contra ela', t => marcarX(c, t))); });
-    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
+    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto', 'Retrato Vivo'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
     const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
     { const mTxt = limpo(h.m || '');
@@ -7774,7 +7799,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       const livre = ids.find(id => dist(c.pos, id) === 1 && vaga(id)) || ids.find(id => base.some(b => dist(b, id) === 1) && vaga(id));
       if (livre) extras.push({ k: 'est', v: ['Cópia', livre], on: true, txt: 'Criar 👥 Cópia em ' + livre + ' (toque nela no tabuleiro para mudar de casa)' });
     }
-    if (m.cel && h.t.includes('ESTRUTURA') && h.n !== 'Fenda Espacial' && h.n !== 'Pincelada') { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, m.cel], on: true, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + m.cel }); }
+    if (m.cel && h.t.includes('ESTRUTURA') && h.n !== 'Fenda Espacial' && h.n !== 'Pincelada' && h.n !== 'Retrato Vivo') { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, m.cel], on: true, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + m.cel }); }
     if (m.cel && !ef.ocupar && h.t.includes('MOBILIDADE') && h.n !== 'Fenda Espacial' && !(h.n === 'Salto no Espaço' && m.aprim) && /aparece|desloca\b|despenca|avança|desliza|dispara/i.test(h.d) && !ocupante(m.cel)) extras.push({ k: 'mover', v: m.cel, on: true, txt: 'Mover ' + ch.nome + ' para ' + m.cel });
     if (!m.cel && h.t.includes('ESTRUTURA') && c.pos && h.a === 'PESSOAL' && h.n !== 'Rastro Infernal') { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, c.pos], on: false, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + c.pos }); }
     if (AURA_APAR.includes(h.n)) {
