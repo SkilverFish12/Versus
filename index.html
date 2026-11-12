@@ -5246,6 +5246,29 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   const tatuadoraDe = j => S.times[j] && S.times[j].some(x => x.k === 'tatuadora' && !x.elim);
   const temTat = (c, n) => !!c && (c.tat === n || c.tat2 === n || (c.efs || []).some(e => e.tatF && e.tatF.includes(n)));
   const manchar = (t, n) => { t.manchas = Math.min(3, (t.manchas || 0) + n); };
+  // Tharen: Clarão deixa Eletrizado; o Estrondo vem no início do próximo turno dele
+  function eletrizar(t, c, hab, o, faz){
+    const ref = refDe(c);
+    t.efs = (t.efs || []).filter(e => !(e.eletr && e.eletr.ref === ref && e.eletr.hab === hab));
+    novoEf(t, { nome: 'Eletrizado', autor: CH[c.k].nome, faz: 'Estrondo de ' + hab + ': ' + faz, acaba: 'no Estrondo (início do próximo turno de ' + CH[c.k].nome + ')', exp: null, mods: {}, eletr: Object.assign({ ref, hab }, o) });
+  }
+  const eletrizado = x => (x.efs || []).some(e => e.eletr || e.clarao);
+  function estrondo(c, j, i){
+    const ref = j + ',' + i, out = [], longe = x => !!(x.pos && c.pos && dP(c.pos, x) > 3);
+    const dn = (x, v, tag) => { const lg = longe(x); if (lg) v = Math.floor(v / 2); const q = sofrerDano(x, v, { ataque: true, atk: c }); out.push(CH[x.k].nome + ' −' + q.real + ' PV' + (tag ? ' (' + tag + ')' : '') + (lg ? ' (longe: metade)' : '')); };
+    (S.est || []).filter(z => z.tipo === 'Nuvem' && z.dono === j && z.hab === 'Nuvem Carregada' && z.cell).forEach(z => {
+      const R = z.aprim ? 2 : 1;
+      S.times[1 - j].forEach(x => { if (x.elim || !x.pos || temEf(x, 'banido') || dist(z.cell, x.pos) > R) return; if (eletrizado(x)) dn(x, 4, 'Nuvem'); else { const q = sofrerDano(x, 2, { ataque: true, atk: c }); out.push(CH[x.k].nome + ' −' + q.real + ' PV (Nuvem)'); } });
+      S.est = S.est.filter(y => y !== z);
+    });
+    S.times[1 - j].forEach(x => { if (x.elim) return;
+      (x.efs || []).filter(e => e.eletr && e.eletr.ref === ref).forEach(e => {
+        if (e.eletr.dano && !x.elim) dn(x, e.eletr.dano, e.eletr.hab);
+        if (e.eletr.dd) { x.fioDd = (x.fioDd || 0) + e.eletr.dd; out.push(CH[x.k].nome + ' −' + e.eletr.dd + ' dado no próximo teste'); }
+      });
+      x.efs = (x.efs || []).filter(e => !(e.eletr && e.eletr.ref === ref)); });
+    return out;
+  }
   // Cada Um no Seu Quadrado!: inimigo que entra no Raio 1 do Maleável ou começa o turno nele (1x por turno dele)
   function quadradoGat(c, cells, de){
     if (c.elim || !c.pos || c.quadT) return '';
@@ -5706,6 +5729,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
             else if (typeof confirm === 'function' && confirm('⚖️ Presença de Tribunal: a Juíza passou no teste de Astúcia contra ' + CH[c.k].nome + ' (' + v.join(', ') + ' contra Defesa ' + def + ').\n\nOK: Multa (1 de dano).\nCancelar: Restrição (−1 casa de deslocamento neste turno).')) { const q = sofrerDano(c, 1, {}); t2 += 'Multa, −' + q.real + ' PV'; }
             else { aplicarEf(c, { nome: 'Restrição', autor: 'Juíza', faz: '−1 casa de deslocamento', acaba: 'no fim deste turno', exp: { t: 'fim', ref: j + ',' + i, pula: 0 }, mods: { ds: -1 } }); t2 += 'Restrição, −1 casa'; }
             msg += ' ' + t2 + '.'; aviso = (aviso ? aviso + ' · ' : '') + t2; });
+          if (c.k === 'tharen') { const eo = estrondo(c, j, i); if (eo.length) { msg += ' ⚡ Estrondo: ' + eo.join(', ') + '.'; aviso = (aviso ? aviso + ' · ' : '') + '⚡ Estrondo: ' + eo.join(', '); } }
           c.quadT = false; { const qg = quadradoGat(c, [c.pos], null); if (qg) { msg += ' ' + qg + '.'; aviso = (aviso ? aviso + ' · ' : '') + qg; } }
           { const tt = tintaTeste(c, [c.pos]); if (tt.length) { msg += ' ' + tt.join('; ') + '.'; aviso = (aviso ? aviso + ' · ' : '') + tt.join(' · '); } }
           if (S.times[1 - j].some(x => !x.elim && temEf(x, 'obra'))) { manchar(c, 1); msg += ' Obra-Prima: +1 Mancha.'; aviso = (aviso ? aviso + ' · ' : '') + '🎨 +1 Mancha (' + c.manchas + ')'; }
@@ -7037,7 +7061,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     let n = 0, notas = [];
     if (c.k === 'kazan' && c.kz) { n += c.kz; notas.push(c.kz + ' Brasa(s): +' + c.kz + ' dado'); }
     if (c.k === 'maligno' && rec(c, 'Peso de Dor')) { n += rec(c, 'Peso de Dor'); notas.push('Peso de Dor: +' + rec(c, 'Peso de Dor') + ' dado'); }
-    if (c.fioDd) { n -= c.fioDd; notas.push('Fio Tenso: −1 dado neste teste'); c.fioDd = 0; }
+    if (c.fioDd) { n -= c.fioDd; notas.push('−' + c.fioDd + (c.fioDd > 1 ? ' dados' : ' dado') + ' neste teste (Fio Tenso, Clarão ou Estrondo)'); c.fioDd = 0; }
     if (c.manchas) { n -= c.manchas; notas.push('🎨 ' + c.manchas + (c.manchas > 1 ? ' Manchas' : ' Mancha') + ': −' + c.manchas + (c.manchas > 1 ? ' dados' : ' dado') + ' (somem depois deste teste)'); c.manchas = 0; }
     return { n, notas };
   }
@@ -7149,6 +7173,25 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const inimR = n => pecas((j, i, x) => j !== aj && x.pos && c.pos && dP(c.pos, x) <= n);
     const hits = linhasR.filter(l => ini(l) && l.ok).length;
     switch (h.n) {
+      case 'Relâmpago': {
+        const t0 = linhasR[0] && T(linhasR[0].alvo), dEst = 4 + bonusDn;
+        linhasR.forEach(l => { if (!ini(l)) return; l.ef = l.ef.filter(e => e.k === 'dano');
+          if (l.ok) { fx(l, 'Eletrizado: no Estrondo sofre ' + dEst + ' de dano', t => eletrizar(t, c, 'Relâmpago', { dano: dEst }, dEst + ' de dano'));
+            if (r.aprim) fx(l, 'Ofuscado: −1 dado no próximo teste', t => { t.fioDd = (t.fioDd || 0) + 1; }); } });
+        if (t0 && t0.pos) {
+          const adj = S.times[1 - aj].filter(x => x !== t0 && !x.elim && x.pos && !temEf(x, 'banido') && dist(x.pos, t0.pos) <= 1).map(x => { const def = clamp(defesas(x)[h.x] + adef(c), 2, 10); return { x, def, ok: r.max >= def }; });
+          if (adj.length) extras.push(supFx('O raio salta para os adjacentes de ' + CH[t0.k].nome + ': ' + adj.map(a => CH[a.x.k].nome + (a.ok ? ' atingido (Defesa ' + a.def + '): 1 de dano e Eletrizado (Estrondo 2)' + (r.aprim ? ' e −1 dado' : '') : ' escapou (Defesa ' + a.def + ')')).join('; '), msg => adj.forEach(a => { if (!a.ok || a.x.elim) return; const q = sofrerDano(a.x, 1, { ataque: true, atk: c }); eletrizar(a.x, c, 'Relâmpago', { dano: 2 }, '2 de dano'); if (r.aprim) a.x.fioDd = (a.x.fioDd || 0) + 1; if (msg && msg.push) msg.push(CH[a.x.k].nome + ' −' + q.real + ' PV (salto)'); })));
+        }
+        break; }
+      case 'Passo do Trovão':
+        linhasR.forEach(l => { if (!ini(l)) return; l.ef = [];
+          if (l.ok) fx(l, 'Eletrizado: no Estrondo fica com −1 dado no primeiro teste do próximo turno', t => eletrizar(t, c, 'Passo do Trovão', { dd: 1 }, '−1 dado no primeiro teste')); });
+        break;
+      case 'Nuvem Carregada':
+        linhasR.forEach(l => { if (!ini(l)) return; l.ef = [];
+          if (l.ok) fx(l, 'Eletrizado e −1 dado no próximo teste', t => { t.fioDd = (t.fioDd || 0) + 1; eletrizar(t, c, 'Nuvem Carregada', {}, 'na Nuvem sofre 4 em vez de 2'); }); });
+        extras.push(supFx('Estrondo no início do próximo turno de ' + nm + ': a Nuvem descarrega e some; inimigos no Raio ' + (r.aprim ? 2 : 1) + ' dela sofrem 2 de dano, Eletrizados 4 (automático)', () => {}));
+        break;
       case 'Cada Um no Seu Quadrado!':
         linhasR.splice(0);
         extras.push(supFx('Até o início do próximo turno, ' + nm + ' não se move nem usa outras habilidades; inimigo que entrar no Raio 1 dele ou começar o turno nele sofre 3 de dano e −1 casa' + (r.aprim ? ' e é empurrado 2 casas' : '') + ' (1x por turno de cada inimigo)', () => aplicarEf(c, { nome: 'Cada Um no Seu Quadrado!', autor: nm, faz: 'não se move nem usa outras habilidades; quem entra no Raio 1 ou começa o turno nele sofre 3 de dano e −1 casa' + (r.aprim ? ' e é empurrado 2 casas' : ''), acaba: txtIni, exp: iniT, mods: { imo: true }, nohab: true, quadrado: { ap: !!r.aprim } })));
@@ -7464,7 +7507,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       linhasR.push({ alvo: al, ok, txt, ef: lista });
     });
     if (c.k === 'oliva' && h.x >= 0) linhasR.forEach(l => { if (l.alvo[0] === aj) return; const dm = /Defesa (\d+)/.exec(l.txt || ''); if (dm && r.dados.filter(x => x >= +dm[1]).length >= 2) l.ef.push(supFx('O X Marca o Lugar: −1 dado contra Azeitona e −1 na Defesa contra ela', t => marcarX(c, t))); });
-    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
+    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
     const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
     { const mTxt = limpo(h.m || '');
@@ -7675,7 +7718,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (ex.k === 'est') {
           S.est = S.est || [];
           const du = duracaoEf(limpo(r.desc || ''), c, c), opN = r.ops ? r.opSel.map(i => r.ops[i].nome) : [];
-          const ne = { id: Date.now() + '' + d(999), tipo: ex.v[0], cell: ex.v[1], dono: aj, hab: r.nome || '', autor: refDe(c), autorNome: CH[c.k].nome, opc: opN.join(' + '), acaba: SEMFIM.includes(ex.v[0]) ? 'quando for removida' : du.txt, exp: (du.exp.t === 'man' || SEMFIM.includes(ex.v[0])) ? null : du.exp,
+          const ne = { id: Date.now() + '' + d(999), tipo: ex.v[0], cell: ex.v[1], dono: aj, hab: r.nome || '', aprim: !!r.aprim, autor: refDe(c), autorNome: CH[c.k].nome, opc: opN.join(' + '), acaba: SEMFIM.includes(ex.v[0]) ? 'quando for removida' : du.txt, exp: (du.exp.t === 'man' || SEMFIM.includes(ex.v[0])) ? null : du.exp,
             info: limpo(r.desc || '').split(/(?<=\.)\s/).slice(0, 3).join(' ') };
           if (AURAS[r.nome]) { const a = AURAS[r.nome](r, opN); a.nome = r.nome; ne.auras = [a]; }
           if (ne.tipo === 'Muralha') S.est = S.est.filter(z => !(z.tipo === 'Muralha' && z.autor === ne.autor));
