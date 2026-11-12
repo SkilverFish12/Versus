@@ -6609,7 +6609,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function alvosDe(h0, ap){
     if (ap === undefined) ap = aprimAtivo(h0);
     const h = ap ? alcAprim(h0) : h0;
-    const [aj] = S.ativo, c = ativoC(), n = temEf(c, 'alcTodo') && h.a !== 'PESSOAL' ? 99 : h.a === 'ADJACENTE' ? 1 : (h0.n === 'Instinto' && /Rapina|Quimera/.test(formaDe(c)) ? 6 : alcN(h)), ta = tipoAlc(h), ld = lado(h);
+    const [aj] = S.ativo, c = ativoC(), n = temEf(c, 'alcTodo') && h.a !== 'PESSOAL' ? 99 : h.a === 'ADJACENTE' ? 1 : h0.n === 'Bote' && /Ágil|Quimera/.test(formaDe(c)) ? 4 : (h0.n === 'Instinto' && /Rapina|Quimera/.test(formaDe(c)) ? 6 : alcN(h)), ta = tipoAlc(h), ld = lado(h);
     if (/ENTRE OS DOIS/.test(h0.a)) { const L = entreDois(c); return { tipo: 'todos', alvos: pecas((j, i, x) => j !== aj && x.pos && L.includes(x.pos) && !temEf(x, 'intocavel')) }; }
     if (h0.n === 'Passagem da Morte') return { tipo: 'casa', casas: CELLS.map(x => x.id), faixa: true };
     if (h0.n === 'Meia-Noite') return { tipo: 'casa', casas: CELLS.filter(x => !bloqueada(x.id) && !obstaculo(x.id) && (!ocupante(x.id) || S.times[ocupante(x.id)[0]][ocupante(x.id)[1]] === c)).map(x => x.id), meia: true };
@@ -7615,6 +7615,14 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
             fx(l, 'Fúria: −2 na Defesa contra o próximo ataque; se ele acertar, o selo explode (3 de dano em cada inimigo adjacente ao alvo)', t => aplicarEf(t, { nome: 'Selo da Fúria', autor: nm, faz: '−2 na Defesa contra o próximo ataque · explode ao ser acertado', acaba: txtIni, exp: iniT, mods: { df: -2 }, selo: 'furia', seloT: aj })); }
           if (sel.includes('Raiz')) fx(l, 'Raiz: o primeiro aliado que acertar um ataque nele recupera 3 PV', t => novoEf(t, { nome: 'Selo da Raiz', autor: nm, faz: 'o primeiro aliado de ' + nm + ' que acertar um ataque recupera 3 PV', acaba: txtIni, exp: iniT, mods: {}, selo: 'raiz', seloT: aj })); });
         break; }
+      case 'Bote': {
+        const fm = formaDe(c), qui = fm === 'Quimera Primordial', sel = (r.ops && r.opSel ? r.opSel.map(i => r.ops[i] && r.ops[i].nome) : []);
+        const agil = fm === 'Ágil' || (qui && sel.includes('Ágil')), col = fm === 'Colosso' || (qui && sel.includes('Colosso'));
+        linhasR.forEach(l => { if (!ini(l)) return; sem(l, ['empurra', 'dc']);
+          if (!l.ok) return;
+          if (agil) l.ef.push({ k: 'dc', v: [2, 2], on: true, txt: 'Sangrando: Dano Contínuo 2 por 2 rodadas (Ágil)' });
+          if (col) fx(l, 'Colosso: empurrado 2 casas; se bater num obstáculo ou personagem, +3 de dano e −1 ação no próximo turno', (t, msg) => { const o = empurrar(t, c.pos, 2, { bloqueio: 3 }); if (o.some(x => /colidiu|obstáculo/.test(x))) { t.ab = clamp((t.ab || 0) - 1, -4, 2); o.push(CH[t.k].nome + ' −1 ação no próximo turno'); } if (msg && msg.push) msg.push(o.join(', ')); }); });
+        break; }
       case 'Instinto': {
         const fm = formaDe(c), qui = fm === 'Quimera Primordial', sel = (r.ops && r.opSel ? r.opSel.map(i => r.ops[i] && r.ops[i].nome) : []);
         const rap = fm === 'Rapina' || (qui && sel.includes('Rapina')), col = fm === 'Colosso' || (qui && sel.includes('Colosso'));
@@ -7780,7 +7788,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       linhasR.push({ alvo: al, ok, txt, ef: lista });
     });
     if (c.k === 'oliva' && h.x >= 0) linhasR.forEach(l => { if (l.alvo[0] === aj) return; const dm = /Defesa (\d+)/.exec(l.txt || ''); if (dm && r.dados.filter(x => x >= +dm[1]).length >= 2) l.ef.push(supFx('O X Marca o Lugar: −1 dado contra Azeitona e −1 na Defesa contra ela', t => marcarX(c, t))); });
-    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto', 'Retrato Vivo'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
+    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto', 'Retrato Vivo', 'Bote'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
     const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
     { const mTxt = limpo(h.m || '');
