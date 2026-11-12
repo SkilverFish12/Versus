@@ -1811,6 +1811,7 @@
   .hx.dominio.d0 polygon{fill:#f5c9e6} .hx.dominio.d1 polygon{fill:#cdd3ff}
   .hx.cerco polygon{fill:#e3d4ff; stroke:#7a4fd0; stroke-width:2; stroke-dasharray:5 3}
   .hx.cerco.c0 polygon{fill:#f3d2ff} .hx.cerco.c1 polygon{fill:#d8dcff}
+  .hx.sombra polygon{fill:#c9c2e0; stroke:#2b2540; stroke-width:2.5; stroke-dasharray:3 3}
   .hx.aura.a0 polygon{stroke:#e8323c} .hx.aura.a1 polygon{stroke:#1e88e5}
   .hx.aura.asel.a0 polygon{fill:#ffd9dc} .hx.aura.asel.a1 polygon{fill:#d5ebfc}
   .tb-info small.tb-aura{color:inherit; margin-top:2px}
@@ -6043,9 +6044,11 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const W = HS * Math.sqrt(3) * 11 + 40, H = HS * 1.5 * 10 + HS * 2 + 20;
     let g = '';
     const DM = destaquesModo(), CER = cercoCasas(), AREAS = areasTab();
+    const SOMB = {}; S.times.forEach((t, j) => t.forEach(x => { if (x.k === 'eclipse' && !x.elim) entreDois(x).forEach(id => { SOMB[id] = j; }); }));
     for (const c of CELLS) {
       const k = marcas(c);
       if (CER[c.id] !== undefined) k.push('cerco c' + CER[c.id]);
+      if (SOMB[c.id] !== undefined) k.push('sombra s' + SOMB[c.id]);
       { const tz = (S.est || []).find(z => z.tipo === 'Tinta' && z.cor && z.cell === c.id); if (tz) k.push('tinta tn-' + tz.cor); }
       { const dm = dominioEm(c.id); if (dm) k.push('dominio d' + dm.dono); }
       if (DM.casas.has(c.id)) k.push(DM.linha ? (DM.linha.has(c.id) ? 'mv' : 'mv2') : 'mv');
