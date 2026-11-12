@@ -4734,7 +4734,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
 
   let toastT = null;
   // fila de eventos automáticos mostrados na hora (junta tudo que aconteceu no mesmo toque)
-  const RX_EV = /Blindagem do|Selo d[ae]|Consagrad|Santuário|Fardo Aceito|Interceptação|Sombra Dividida|queda da arena|saiu pela borda|colidiu|parou num|Sucata|Fio|🍷|teia|Tatuagem|perdeu o Ritmo|Supressão|Respeite o Campeão|Guardar a Dor|Pele de Rocha|Combustão|Casa Infernal|Fenda|Canto Final|Miasma|Mancha/;
+  const RX_EV = /Blindagem do|Selo d[ae]|Consagrad|Santuário|Fardo Aceito|Interceptação|Sombra Dividida|queda da arena|saiu pela borda|colidiu|parou num|Sucata|Fio|🍷|teia|Tatuagem|perdeu o Ritmo|Supressão|Respeite o Campeão|Guardar a Dor|Penitência|Pele de Rocha|Combustão|Casa Infernal|Fenda|Canto Final|Miasma|Mancha/;
   let EVQ = [], evT = null;
   function evento(t){ if (!t || EVQ.some(e => e.includes(t))) return; EVQ = EVQ.filter(e => !t.includes(e)); EVQ.push(t); if (!evT) evT = setTimeout(flushEv, 160); }
   function flushEv(){
@@ -7257,6 +7257,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (ini && t.k === 'forasteiro' && t.tentN) { const b = Math.min(3, t.tentN); df += b; notas.push('Tentacular: Forasteiro +' + b + ' na Defesa (' + (t.tentN + 1) + 'º ataque)'); }
     if (ini && c.k === 'sable' && temPen(t)) { df--; notas.push('Alvo Comprometido: −1 na Defesa do alvo (tem Penalidade)'); }
     if (ini && c.aspecto && c.aspecto.nome === 'Invisível') notas.push('Invisível: −1 na Defesa do alvo');
+    { const pe = ini && (c.efs || []).find(e => e.pen && e.pen.ap); if (pe && refDe(t) !== pe.pen.ref) { dd--; notas.push('Penitência: −1 dado (não está atacando a Relicário)'); } }
     if (ini && c.k === 'invicto' && basico && (t.efs || []).some(e => e.respeite)) { df -= 2; notas.push('Respeite o Campeão: −2 na Defesa do alvo'); if (consumir) tirarEfs(t, e => e.respeite); }
     if (ini && (t.efs || []).some(e => e.naoTol)) { df += 2; notas.push('Não Toleramos Perdedores: Invicto +2 na Defesa'); if (consumir) tirarEfs(t, e => e.naoTol); }
     if (ini && c.k === 'maleavel' && basico && c.pos && t.pos && dP(c.pos, t) > 1) { const k = dP(c.pos, t) - 1; dd -= k; notas.push('De Longe!: −' + k + (k > 1 ? ' dados' : ' dado') + ' pelo alcance extra'); }
@@ -7640,6 +7641,10 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         linhasR.forEach(l => { if (ini(l)) return; l.ef = [];
           fx(l, 'Nanobots: +' + v + ' PV no início de cada um dos próximos ' + n + ' turnos dele', t => { t.efs = (t.efs || []).filter(e => !e.regen || e.nome !== 'Nanobots'); novoEf(t, { nome: 'Nanobots', autor: nm, faz: '+' + v + ' PV no início do turno (faltam ' + n + ')', acaba: 'depois de ' + n + ' curas', exp: { t: 'man' }, mods: {}, regen: { v, n } }); }); });
         break; }
+      case 'Penitência': {
+        linhasR.forEach(l => { if (!ini(l)) return; l.ef = [];
+          if (l.ok) fx(l, 'Penitência até o fim do próximo turno dele: a cada ataque em alguém que não seja ' + nm + ', sofre 3 de Dano Psíquico' + (r.aprim ? ' e esses ataques têm −1 dado' : ''), t => { tirarEfs(t, e => e.pen); novoEf(t, { nome: 'Penitência', autor: nm, faz: 'atacar quem não for ' + nm + ': 3 de Dano Psíquico' + (r.aprim ? ' e −1 dado' : ''), acaba: txtFim(t), exp: fimP(t), mods: {}, pen: { ref: cref, ap: !!r.aprim } }); }); });
+        break; }
       case 'Instinto': {
         const fm = formaDe(c), qui = fm === 'Quimera Primordial', sel = (r.ops && r.opSel ? r.opSel.map(i => r.ops[i] && r.ops[i].nome) : []);
         const rap = fm === 'Rapina' || (qui && sel.includes('Rapina')), col = fm === 'Colosso' || (qui && sel.includes('Colosso'));
@@ -7805,7 +7810,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       linhasR.push({ alvo: al, ok, txt, ef: lista });
     });
     if (c.k === 'oliva' && h.x >= 0) linhasR.forEach(l => { if (l.alvo[0] === aj) return; const dm = /Defesa (\d+)/.exec(l.txt || ''); if (dm && r.dados.filter(x => x >= +dm[1]).length >= 2) l.ef.push(supFx('O X Marca o Lugar: −1 dado contra Azeitona e −1 na Defesa contra ela', t => marcarX(c, t))); });
-    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto', 'Retrato Vivo', 'Bote', 'Nanobots'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
+    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto', 'Retrato Vivo', 'Bote', 'Nanobots', 'Penitência'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
     const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
     { const mTxt = limpo(h.m || '');
@@ -7906,6 +7911,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         while (c.brAc >= 3) { c.brAc -= 3; if (rec(c, 'Brasas') < 3) { setRec(c, 'Brasas', rec(c, 'Brasas') + 1); msg.push('🔥 +1 Brasa'); } }
       }
       if (r.ataque) c.atacou = true;
+      { const pe = (c.efs || []).find(e => e.pen); if (pe && r.ataque && !c.elim && r.linhas && r.linhas.some(l => { const t = S.times[l.alvo[0]][l.alvo[1]]; return l.alvo[0] !== aj && refDe(t) !== pe.pen.ref; })) { const q = sofrerDano(c, 3, { psi: true }); msg.push('Penitência: ' + CH[c.k].nome + ' −' + q.real + ' PV (Dano Psíquico)'); } }
       if (r.ataque && (c.efs || []).some(e => e.rugido)) { tirarEfs(c, e => e.rugido); msg.push('Rugido do Colosso: −2 de dano usado'); }
       if (r.ataque && r.linhas && (c.efs || []).some(e => e.rapinaI && r.linhas.some(l => l.alvo.join(',') === e.contra))) tirarEfs(c, e => e.rapinaI && r.linhas.some(l => l.alvo.join(',') === e.contra));
       if (r.ataque && c.k === 'dinamo' && !c.condUsado) c.condUsado = true;
