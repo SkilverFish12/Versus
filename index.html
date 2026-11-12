@@ -5792,6 +5792,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (c.k === 'kazan') S.est = (S.est || []).filter(z => !(z.tipo === 'Casa Infernal' && z.dono === j && z.rastro));
           c.infT = false;
           if ((S.est || []).some(z => z.tipo === 'Casa Infernal' && z.dono !== j && z.cell === c.pos)) { aplicarEf(c, { nome: 'Casa Infernal', autor: 'Kazan', faz: '−1 casa de deslocamento', acaba: 'no fim deste turno', exp: { t: 'fim', ref: j + ',' + i, pula: 0 }, mods: { ds: -1 } }); msg += ' Casa Infernal: −1 casa.'; }
+          (c.efs || []).filter(e => e.regen && e.regen.n > 0).forEach(e => { if (c.elim) return; const v = Math.min(c.max - c.pv, Math.max(0, e.regen.v - (c.cr || 0))); c.pv += v; e.regen.n--; e.faz = '+' + e.regen.v + ' PV no início do turno (faltam ' + e.regen.n + ')'; const t2 = '🤖 ' + e.nome + ': +' + v + ' PV (faltam ' + e.regen.n + ')'; msg += ' ' + t2 + '.'; aviso = (aviso ? aviso + ' · ' : '') + t2; });
+          c.efs = (c.efs || []).filter(e => !(e.regen && e.regen.n <= 0));
           if (temEf(c, 'cura4') && c.pv < c.max && !c.elim) { c.pv = Math.min(c.max, c.pv + Math.max(0, 4 - (c.cr || 0))); msg += ' Obra-Prima verde: +4 PV.'; }
         } c.ab = 0; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0; c.rErros = 0; c.rDano = 0; c.cupCura = false; c.escP = null; c.formaT = false; c.trocaT = false; c.leitura = false; c.copAtk = []; c.sableMov = false; c.mansaoT = false;
         if (c.aspecto && c.aspecto.ate === 'turno') c.aspecto = null;
@@ -7624,6 +7626,11 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (agil) l.ef.push({ k: 'dc', v: [2, 2], on: true, txt: 'Sangrando: Dano Contínuo 2 por 2 rodadas (Ágil)' });
           if (col) fx(l, 'Colosso: empurrado 2 casas; se bater num obstáculo ou personagem, +3 de dano e −1 ação no próximo turno', (t, msg) => { const o = empurrar(t, c.pos, 2, { bloqueio: 3 }); if (o.some(x => /colidiu|obstáculo/.test(x))) { t.ab = clamp((t.ab || 0) - 1, -4, 2); o.push(CH[t.k].nome + ' −1 ação no próximo turno'); } if (msg && msg.push) msg.push(o.join(', ')); }); });
         break; }
+      case 'Nanobots': {
+        const v = r.aprim ? 4 : 3, n = r.aprim ? 4 : 3;
+        linhasR.forEach(l => { if (ini(l)) return; l.ef = [];
+          fx(l, 'Nanobots: +' + v + ' PV no início de cada um dos próximos ' + n + ' turnos dele', t => { t.efs = (t.efs || []).filter(e => !e.regen || e.nome !== 'Nanobots'); novoEf(t, { nome: 'Nanobots', autor: nm, faz: '+' + v + ' PV no início do turno (faltam ' + n + ')', acaba: 'depois de ' + n + ' curas', exp: { t: 'man' }, mods: {}, regen: { v, n } }); }); });
+        break; }
       case 'Instinto': {
         const fm = formaDe(c), qui = fm === 'Quimera Primordial', sel = (r.ops && r.opSel ? r.opSel.map(i => r.ops[i] && r.ops[i].nome) : []);
         const rap = fm === 'Rapina' || (qui && sel.includes('Rapina')), col = fm === 'Colosso' || (qui && sel.includes('Colosso'));
@@ -7789,7 +7796,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       linhasR.push({ alvo: al, ok, txt, ef: lista });
     });
     if (c.k === 'oliva' && h.x >= 0) linhasR.forEach(l => { if (l.alvo[0] === aj) return; const dm = /Defesa (\d+)/.exec(l.txt || ''); if (dm && r.dados.filter(x => x >= +dm[1]).length >= 2) l.ef.push(supFx('O X Marca o Lugar: −1 dado contra Azeitona e −1 na Defesa contra ela', t => marcarX(c, t))); });
-    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto', 'Retrato Vivo', 'Bote'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
+    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto', 'Retrato Vivo', 'Bote', 'Nanobots'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
     const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
     { const mTxt = limpo(h.m || '');
