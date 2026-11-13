@@ -1704,6 +1704,11 @@
   .rs-prev li.dep{font-weight:600; color:#555}
   .rs-ops.trav button{opacity:1; cursor:default}
   #rsRolar{font-size:18px; padding:12px 22px}
+  .dh-it{border-bottom:2px dashed #bbb; padding:8px 0}
+  .dh-h{display:flex; align-items:center; gap:8px} .dh-h img{width:28px; height:28px; border-radius:50%} .dh-h b{font-family:'Bangers',cursive; letter-spacing:1px; font-size:17px} .dh-h em{font-style:normal; font-weight:700; color:#555}
+  .dh-r{background:#000; color:var(--yellow); font-family:'Bangers',cursive; padding:1px 6px; font-size:13px}
+  .dh-it .dd-dados{margin:6px 0 2px} .dh-it .dd-dados i{animation:none}
+  .dh-it small{font-weight:700; color:#444}
   .rs-ef.extra{border:3px dashed #000; margin-top:10px; background:#fffbd6}
   .rs-ef label{display:flex; align-items:center; gap:5px; cursor:pointer}
   .rs-ef input{width:18px; height:18px}
@@ -4472,7 +4477,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     <div class="pt-barra" id="ptBarra">
       <div class="pt-rodada"><small>RODADA</small><b id="ptRodada">1</b></div>
       <div class="pt-info"><span id="ptInicia"></span><span id="ptVez"></span></div><button class="pt-timer" id="ptTimer" hidden title="Toque para pausar"></button>
-      <div class="pt-botoes"><button class="btn-ghost sm" id="ptDesfazer" title="Desfazer">↶</button><button class="btn-ghost sm" id="ptResumo" title="Resumo das regras">📋</button><button class="btn-amarelo" id="ptFimRodada">FIM DA RODADA ▶</button><button class="btn-ghost sm" id="ptMenu" title="Opções">⋯</button></div>
+      <div class="pt-botoes"><button class="btn-ghost sm" id="ptDesfazer" title="Desfazer">↶</button><button class="btn-ghost sm" id="ptResumo" title="Resumo das regras">📋</button><button class="btn-ghost sm" id="ptDados" title="Histórico de dados">🧾</button><button class="btn-amarelo" id="ptFimRodada">FIM DA RODADA ▶</button><button class="btn-ghost sm" id="ptMenu" title="Opções">⋯</button></div>
     </div>
     <div class="pt-cen" id="ptCen"></div>
     <div class="pt-tabbar"><button class="btn-ghost sm" id="ptTabBtn">▾ TABULEIRO</button></div>
@@ -4507,6 +4512,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   </div>
   <div class="log" id="mnLogBox" hidden></div>
 </div></div>
+<div class="modal" id="mDados" hidden><div class="modal-caixa larga"><div class="modal-h"><h3>🧾 HISTÓRICO DE DADOS</h3><button class="modal-x" data-fecha>✕</button></div><div id="mDadosCorpo" class="dd-corpo"></div></div></div>
 <div class="modal" id="mResumo" hidden><div class="modal-caixa larga resumo">
   <div class="modal-h"><h3>📋 RESUMO DAS REGRAS</h3><button class="modal-x" data-fecha>✕</button></div>
   <div class="rs-grade">
@@ -5348,6 +5354,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function pasInfo0(c){
     const L = [], tj = timeDe(c), inis = S.times[1 - tj].filter(x => !x.elim), add = (n, t) => { if (!pOff(c, n)) L.push([n, t]); }, nmL = a => a.map(x => CH[x.k].nome).join(', ');
     if (!c.pos || c.elim) return L;
+    if (c.k === 'kazan') add('Fúria Draconiana', (c.brAc || 0) + '/3 dados para a próxima Brasa · ' + rec(c, 'Brasas') + '/3 Brasas');
     if (c.k === 'ritmista') { const e = estR(c); if (e >= 1) add('Mantendo o Ritmo', ['', 'Aquecimento: +1 casa', 'No Ritmo: +1 casa e +1 dado', 'Apogeu: +1 casa, +1 dado e +2 de dano'][e] + (c.apiceAte && S.rodada <= c.apiceAte ? ' · Ápice: +2 casas' : '')); }
     if (c.k === 'bigorna' && adjObst(c)) add('Velho Teimoso', '+1 na Defesa (ao lado de obstáculo)');
     if (c.k === 'johnny' && !S.times[tj].some(x => x !== c && !x.elim && x.pos && dist(x.pos, c.pos) <= 2)) add('Sem Testemunhas', '+1 na Defesa e +2 de dano (nenhum aliado a até 2 casas)');
@@ -5991,6 +5998,11 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   // ── menu e vitória ──
   $('#ptMenu').addEventListener('click', () => { $('#mnLogBox').hidden = true; abrir('mMenu'); });
   $('#ptResumo').addEventListener('click', () => abrir('mResumo'));
+  $('#ptDados').addEventListener('click', () => {
+    const L = (S.dh || []).slice().reverse();
+    $('#mDadosCorpo').innerHTML = L.length ? L.map(x => '<div class="dh-it"><div class="dh-h"><span class="dh-r">R' + x.r + '</span>' + (EMB[x.k] ? '<img src="' + EMB[x.k] + '" alt="">' : '') + '<b>' + esc(x.q) + '</b><em>' + esc(x.t) + '</em></div><div class="dd-dados">' + x.d.map(v => '<i class="' + (x.def != null ? (v >= x.def ? 'hit' : 'miss') : x.dm ? (v >= x.dm ? 'hit' : 'miss') : (v === Math.max(...x.d) ? 'hit' : 'miss')) + '">' + v + '</i>').join('') + '</div><small>' + (x.def != null ? 'contra Defesa ' + x.def : 'maior dado: ' + Math.max(...x.d)) + (x.al ? ' · ' + esc(x.al) : '') + (x.n ? ' · ' + esc(x.n) : '') + '</small></div>').join('') : '<p class="rs-nota">Nenhum teste aplicado ainda nesta partida.</p>';
+    abrir('mDados');
+  });
   $('#mnRegras').addEventListener('click', () => { fechar('mMenu'); ir('manual'); });
   window.addEventListener('error', ev => { window.__ultErro = (ev.message || '') + ' @' + (ev.lineno || '?') + ':' + (ev.colno || '?') + ' ' + ((ev.error && ev.error.stack) || '').split('\n').slice(0, 4).join(' | '); try { toast('⚠️ Erro no app: ' + (ev.message || '') + '<br><small>Abra ⋯ e toque em COPIAR PARTIDA para mandar ao suporte.</small>', 6000); } catch (e) {} });
   $('#mnCopiar').addEventListener('click', () => {
@@ -6614,7 +6626,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       desc: '', linhas: [], extras: [], pre: [], ef: {}, ops, opSel: ops ? [0] : null, multi: false, custo: meu ? 1 : 0, pagaProx: !meu, atkRef: [xj, +xr.split(',')[1]], nome: 'Detonar Bomba', sup: false, aprim: false, ataque: true, usouDados: true, semPrev: false };
     r.pend = rr => {
       let v = rolarD10(n); if (alv.length && (cpDe(x).mal || cpDe(x).bem)) { const nt = []; v = cpAplicar(x, v, Math.min(...alv.map(([a]) => clamp(defesas(S.times[a[0]][a[1]])[2] + adef(x), 2, 10))), nt); rr.notas = rr.notas.concat(nt); } const mx = Math.max(...v), bk = ops ? ops[rr.opSel[0]].br : 0;
-      rr.dados = v; rr.max = mx;
+      rr.dados = v; rr.max = mx; rr.hitsBrasa = alv.length ? Math.max(...alv.map(([a]) => { const def = clamp(defesas(S.times[a[0]][a[1]])[2] + adef(x), 2, 10); return v.filter(q => q >= def).length; })) : 0;
       rr.linhas = alv.map(([a, base]) => { const t = S.times[a[0]][a[1]], def = clamp(defesas(t)[2] + adef(x), 2, 10), ok = mx >= def, dn = base + bk;
         const ef = ok ? [{ k: 'dano', v: dn, on: true, txt: dn + ' de dano' + (bk ? ' (' + bk + ' de Brasa)' : '') }] : [];
         if (z.aprim && dist(z.cell, t.pos) <= 1) ef.push(supFx('−1 casa de deslocamento até o início do próximo turno de Kazan', y => novoEf(t, { nome: 'Bomba de Magma', autor: 'Kazan', faz: '−1 casa de deslocamento', acaba: 'no início do próximo turno de Kazan', exp: { t: 'ini', ref: xr }, mods: { ds: -1 } })));
@@ -8162,6 +8174,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   let res = null;
   // ── corpo do APLICAR (usado de verdade e na prévia) ──
   function corpoAplicar(r, c, aj, msg){
+      if (r.usouDados && (r.dados || []).length) { const L = (r.linhas || []).map(l => { const t = S.times[l.alvo[0]][l.alvo[1]], m = /Defesa (\d+)/.exec(l.txt || ''); return CH[t.k].nome + (m ? ' (Def ' + m[1] + ')' : '') + (l.ok ? ' ✓' : ' ✗'); });
+        S.dh = (S.dh || []).concat([{ r: S.rodada, q: CH[c.k].nome, k: c.k, t: r.nome || 'Ataque Básico', d: r.dados.slice(), def: r.def, dm: (() => { const ds = (r.linhas || []).map(l => +((/Defesa (\d+)/.exec(l.txt || '') || [])[1] || 0)).filter(Boolean); return ds.length ? Math.min(...ds) : null; })(), al: L.join(', '), n: (r.notas || []).filter(x => /rerrol|Incontestável/.test(x)).join(' · ') }]).slice(-80); }
       if (r.ataque) (r.linhas || []).forEach(l => { if (l.alvo[0] !== aj) S.times[l.alvo[0]][l.alvo[1]].atkTk = S.tk || 0; });
       c.gastas = Math.min(c.acts, c.gastas + r.custo);
       if (r.nome && c.carona) { const v = porRef(c.carona), l0 = (r.linhas || []).find(l => l.alvo[0] !== aj), t0 = l0 && S.times[l0.alvo[0]][l0.alvo[1]];
@@ -8182,6 +8196,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (c.k === 'kazan' && r.hitsBrasa) {
         c.brAc = (c.brAc || 0) + r.hitsBrasa;
         while (c.brAc >= 3) { c.brAc -= 3; if (rec(c, 'Brasas') < 3) { setRec(c, 'Brasas', rec(c, 'Brasas') + 1); msg.push('🔥 +1 Brasa'); } }
+        msg.push('🔥 Fúria Draconiana: ' + r.hitsBrasa + (r.hitsBrasa > 1 ? ' dados passaram' : ' dado passou') + ' (' + c.brAc + '/3 para a próxima Brasa)');
       }
       if (r.ataque) c.atacou = true;
       if (r.ataque && c.k === 'genio' && !pOff(c, 'Protocolo Pressão') && c.pv * 2 <= c.max && r.linhas && r.linhas.some(l => l.ok && l.alvo[0] !== aj)) { const cu = Math.max(0, Math.min(4 - (c.cr || 0), Math.floor(c.max / 2) - c.pv)); if (cu) { c.pv += cu; msg.push('Protocolo Pressão: ' + CH[c.k].nome + ' +' + cu + ' PV'); } }
