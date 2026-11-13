@@ -6784,6 +6784,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (/ENTRE OS DOIS/.test(h.a) && !entreDois(c).length) return 'Breu e Fresta precisam estar a até 6 casas um do outro (e não adjacentes)'; }
     if (c.k === 'cambiante' && FORMA_H[h.n] && formaDe(c) !== 'Quimera Primordial' && !FORMA_H[h.n].includes(formaDe(c))) return 'Só em ' + FORMA_H[h.n].join(' ou ') + ' (escolha a forma no painel)';
     if (!sup && (c.efs || []).some(e => e.nome === 'Monstro de Sangue')) return 'Monstro de Sangue: só Ataque Básico';
+    if (h.n === 'Mala Despachada' && malaDe(c)) return 'a Mala já está no chão: pegue-a de volta antes de despachar de novo';
     if (h.n === 'Descarregando a Bagagem' && malaDe(c)) return 'a Mala está no chão: fique ao lado dela e toque em PEGAR A MALA';
     if (h.n === 'Interceptação' && c.interBloq) return 'Interceptação já foi ativada: volta no próximo turno do D.R.I.V.E.';
     if (c.imo && MOVE_SI.includes(h.n)) return 'Imóvel: não pode usar habilidade que move o personagem';
