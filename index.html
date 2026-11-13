@@ -5824,6 +5824,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         c.olhoRoxo = false;
         { const at = (c.efs || []).reduce((v2, e) => v2 + (e.at || 0), 0); if (at) { msg += ' +' + at + ' ação (efeito).'; } c.acts = clamp(3 + c.ab + desv + at, 1, 5); }
         if (!c.elim && c.pos) {
+          if (c.pv < c.max && !temEf(c, 'semAjuda') && S.times[j].some(x => x !== c && x.k === 'parlenda' && !x.elim && x.pos && !pOff(x, 'Comunidade') && dP(c.pos, x) <= 1)) { const cv = Math.max(0, Math.min(c.max - c.pv, 2 - (c.cr || 0))); if (cv) { c.pv += cv; msg += ' Comunidade: +' + cv + ' PV.'; aviso = (aviso ? aviso + ' · ' : '') + '🎭 Comunidade: +' + cv + ' PV'; } }
           S.tk = (S.tk || 0) + 1; c.andou = 0; if (c.k === 'promessa') { c.votoAli = S.times[j].filter(x => x !== c && !x.elim && x.pos && (x.atkTk || 0) > (c.votoTk || 0)).map(refDe); c.votoTk = S.tk; }
           c.combT = false; c.spT = false; c.moveuT = false; if (c.k === 'forasteiro') c.tentN = 0;
           S.times[1 - j].forEach(x => { if (!c.elim && !x.elim && x.k === 'carvao' && x.pos && !temEf(x, 'combustao') && dP(x.pos, c) <= 1) { const q = sofrerDano(c, 2, {}); msg += ' Calor Radiante: −' + q.real + ' PV.'; aviso = (aviso ? aviso + ' · ' : '') + '🔥 Calor Radiante: −' + q.real + ' PV'; } });
@@ -6889,7 +6890,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   const tipoIcone = h => h.t.includes('ATAQUE') ? '💥' : h.t.includes('PENALIDADE') ? '🌀' : h.t.includes('RESTAURAÇÃO') ? '💚' : h.t.includes('ESTRUTURA') ? '🏗️' : h.t.includes('MOBILIDADE') ? '💨' : h.t.includes('REFORÇO') ? '🛡️' : '✨';
   // Aprimorar que dá um segundo alvo
-  const DOIS_ALVOS = { 'Escopeta de Pulso': 'alc', 'Interceptor Tático': 'alc', 'Pensamento Intrusivo': 'alc', 'Cavalgar Destrutivo': 'perto2', 'Transferência de Seiva': 'alc', 'Manipulando Emoções': 'alc' };
+  const DOIS_ALVOS = { 'Escopeta de Pulso': 'alc', 'Interceptor Tático': 'alc', 'Pensamento Intrusivo': 'alc', 'Cavalgar Destrutivo': 'perto2', 'Transferência de Seiva': 'alc', 'Manipulando Emoções': 'alc', 'Intercâmbio': 'alc' };
   function segAlvos(m){
     if (!m || !m.aprim || !m.h || !DOIS_ALVOS[m.h.n] || !m.sel || m.sel.length !== 1) return [];
     const f = m.sel[0], ft = S.times[f[0]][f[1]], aj = S.ativo[0];
@@ -7381,6 +7382,19 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const e = (c.efs || []).filter(x => x.mods && x.mods.cp);
     return { mal: e.some(x => x.mods.cp === 'mal' || x.mods.cp === 'mal2'), bem: e.some(x => x.mods.cp === 'bem' || x.mods.cp === 'bem2'), um: e.filter(x => x.mods.cp === 'mal' || x.mods.cp === 'bem') };
   }
+  function ajustesParlenda(rr, c, h){
+    const aj = timeDe(c);
+    if (h.n === 'Cada Um na Sua Língua') rr.linhas.forEach(l => { if (!l.ok || l.alvo[0] === aj) return; const tr = l.alvo.join(','), tn = CH[S.times[l.alvo[0]][l.alvo[1]].k].nome;
+      l.ef.push(supFx('Não pode receber Reforços nem Restauração dos aliados' + (rr.aprim ? ' e não pode usar Medidor' : '') + ' até o fim do próximo turno de ' + tn, (t) => novoEf(t, { nome: 'Cada Um na Sua Língua: isolado', autor: 'Parlenda', faz: 'não recebe Reforços nem Restauração dos aliados' + (rr.aprim ? ' · não pode usar Medidor' : ''), acaba: 'no fim do próximo turno de ' + tn, exp: { t: 'fim', ref: tr, pula: 0 }, mods: {}, semAjuda: true, nomed: !!rr.aprim }))); });
+    if (h.n === 'Cantiga de Roda' && c.pos) {
+      const roda = S.times[aj].filter(x => x !== c && !x.elim && x.pos && dP(c.pos, x) <= 2).length, cu = Math.min(4, 2 + roda);
+      rr.linhas.forEach(l => { if (l.alvo[0] !== aj) return; l.ef = l.ef.filter(e => e.k !== 'cura'); l.ok = true; l.ef.push({ k: 'cura', v: cu, on: true, txt: '+' + cu + ' PV' });
+        if (rr.aprim) l.ef.push(supFx('Remove uma Penalidade', (t, msg) => { const e = (t.efs || []).find(ehPen); if (e) { desfazerMods(t, e); t.efs = t.efs.filter(x => x !== e); msg.push(CH[t.k].nome + ': ' + e.nome + ' removida'); } })); });
+      if (!rr.linhas.some(l => l.alvo.join(',') === refDe(c))) rr.linhas.unshift({ alvo: refDe(c).split(',').map(Number), ok: true, txt: 'ela mesma', ef: [{ k: 'cura', v: cu, on: true, txt: '+' + cu + ' PV' }].concat(rr.aprim ? [supFx('Remove uma Penalidade', (t, msg) => { const e = (t.efs || []).find(ehPen); if (e) { desfazerMods(t, e); t.efs = t.efs.filter(x => x !== e); msg.push(CH[t.k].nome + ': ' + e.nome + ' removida'); } })] : []) });
+      rr.semAlvo = false;
+      rr.notas = rr.notas.concat('Na roda: ' + roda + (roda === 1 ? ' aliado' : ' aliados') + ' no Raio 2 → cura de ' + cu + ' PV (máximo 4)');
+    }
+  }
   function cpAplicar(c, v, def, notas){
     const cp = cpDe(c);
     if (cp.mal) { const k = v.filter(x => x >= def).length; if (k) { v = v.map(x => x >= def ? d(10) : x); notas.push('Contraprova: rerrolou ' + k + (k > 1 ? ' acertos' : ' acerto') + ' (' + v.join(', ') + ')'); } }
@@ -7515,8 +7529,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       custo: custoH(c, h), nome: h.n, sup: m.sup, aprim: m.aprim, ops, multi, opSel: ops ? [0].concat(multi ? ops.map((_, i) => i).slice(1) : []) : null, m, h, usouDados: h.x >= 0,
       ataque: h.t.includes('ATAQUE')
     };
-    if (h.x >= 0) r.pend = rr => { rr.dados = rolarD10(n); { const ds = (m.sel || []).filter(a => a[0] !== S.ativo[0]).map(a => clamp(defesas(S.times[a[0]][a[1]])[h.x] + adef(c), 2, 10)); if (ds.length && (cpDe(c).mal || cpDe(c).bem)) { const nt = []; rr.dados = cpAplicar(c, rr.dados, Math.min(...ds), nt); rr.notas = rr.notas.concat(nt); } } rr.max = Math.max(...rr.dados); if (temTat(c, 'Olho Roxo')) c.olhoRoxo = true; montar(rr); if (h.n === 'Cabeça Cheia') rr.linhas.forEach(l => { if (l.ok && l.alvo[0] !== S.ativo[0]) { const tr = l.alvo.join(','), tn = CH[S.times[l.alvo[0]][l.alvo[1]].k].nome; l.ef.push(supFx('Não recebe bônus na Defesa até o fim do próximo turno de ' + tn, (t, msg) => novoEf(t, { nome: 'Cabeça Cheia', autor: 'Axioma', faz: 'não recebe bônus na Defesa', acaba: 'no fim do próximo turno de ' + tn, exp: { t: 'fim', ref: tr, pula: 0 }, mods: {}, semBonusDef: true }))); } }); incontLinhas(c, rr, S.ativo[0]); };
-    else montar(r);
+    if (h.x >= 0) r.pend = rr => { rr.dados = rolarD10(n); { const ds = (m.sel || []).filter(a => a[0] !== S.ativo[0]).map(a => clamp(defesas(S.times[a[0]][a[1]])[h.x] + adef(c), 2, 10)); if (ds.length && (cpDe(c).mal || cpDe(c).bem)) { const nt = []; rr.dados = cpAplicar(c, rr.dados, Math.min(...ds), nt); rr.notas = rr.notas.concat(nt); } } rr.max = Math.max(...rr.dados); if (temTat(c, 'Olho Roxo')) c.olhoRoxo = true; montar(rr); ajustesParlenda(rr, c, h); if (h.n === 'Cabeça Cheia') rr.linhas.forEach(l => { if (l.ok && l.alvo[0] !== S.ativo[0]) { const tr = l.alvo.join(','), tn = CH[S.times[l.alvo[0]][l.alvo[1]].k].nome; l.ef.push(supFx('Não recebe bônus na Defesa até o fim do próximo turno de ' + tn, (t, msg) => novoEf(t, { nome: 'Cabeça Cheia', autor: 'Axioma', faz: 'não recebe bônus na Defesa', acaba: 'no fim do próximo turno de ' + tn, exp: { t: 'fim', ref: tr, pula: 0 }, mods: {}, semBonusDef: true }))); } }); incontLinhas(c, rr, S.ativo[0]); };
+    else { montar(r); ajustesParlenda(r, c, h); }
     mostrarResultado(r);
   }
   // monta linhas de efeito conforme a opção escolhida
@@ -8225,8 +8239,10 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         const reg = { mods: {}, faz: [], dc: false };
         const ant = { df: t.df, dn: t.dn, dd: t.dd, ds: t.ds, red: t.red || 0, imo: t.imo, dr: t.dr || 0, cr: t.cr || 0 };
         const fnsDepois = [];
+        const isol = t !== c && timeDe(t) === timeDe(c) && temEf(t, 'semAjuda') && r.nome;
+        if (isol) msg.push(CH[t.k].nome + ' está isolado (Cada Um na Sua Língua): não recebe Reforços nem Restauração dos aliados');
         l.ef.forEach(ef => {
-          if (!ef.on || t.elim) return;
+          if (!ef.on || t.elim || isol) return;
           if (ef.k === 'fn') { fnsDepois.push(ef); return; }
           if (['def', 'dnAlvo', 'red', 'acao', 'imo', 'dados', 'desl', 'dc', 'dr', 'cr'].includes(ef.k)) { reg.faz.push(limpo(ef.txt || '')); if (ef.k === 'dc') reg.dc = true; }
           if (ef.k === 'empurra' || ef.k === 'puxa') { posEf.push([t, ef]); return; }
