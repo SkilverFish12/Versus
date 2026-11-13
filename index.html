@@ -5330,6 +5330,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (rs.length) h += '<div class="rec-linha">' + rs.map(([n, mx]) => '<div class="rec"><label>' + (c.k === 'ritmista' && n === 'Compassos' ? 'COMPASSOS · ' + ESTAGIOS[estR(c)].toUpperCase() : n.toUpperCase()) + '</label><button class="mini-btn" data-rec="' + id + ',' + n + ',-1">−</button><span>' + rec(c, n) + (mx < 60 ? '/' + mx : '') + '</span><button class="mini-btn" data-rec="' + id + ',' + n + ',1">+</button></div>').join('') + '</div>';
     [['estado', c.estado], ['aspecto', c.aspecto]].forEach(([k, e]) => { if (e && !(k === 'estado' && (c.efs || []).some(x => x.mods && x.mods.est && x.nome === e.nome))) h += '<div class="estado-tag">✦ ' + e.nome.toUpperCase() + (modsTxt(e.mods || {}) ? ' <small>' + modsTxt(e.mods) + '</small>' : '') + '<button class="mini-btn" data-estx="' + id + ',' + k + '" title="Remover">✕</button></div>'; });
     if (c.k === 'genio' && c.pv * 2 <= c.max) h += '<div class="estado-tag">⚠ PROTOCOLO PRESSÃO <small>+2 dano, +1 alcance</small></div>';
+    if (c.k === 'genio' && c.armad) Object.entries(c.armad).forEach(([rr, v]) => { const x = porRef(rr); if (v && x && !x.elim) h += '<div class="estado-tag">🦾 ARMADURA ADAPTATIVA <small>+' + v + ' na Defesa contra ' + esc(CH[x.k].nome) + (pOff(c, 'Armadura Adaptativa') ? ' (bloqueada)' : '') + '</small></div>'; });
     return h;
   }
 
@@ -7246,7 +7247,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (t.k === 'agentecaos' && real > 10) { real = 10; nota.push('Pele de Rocha: máx. 10'); }
     t.pv = Math.max(0, t.pv - real);
     if (o.atk && o.ataque && real > 0 && timeDe(o.atk) !== timeDe(t)) {
-      if (t.k === 'genio') { t.armad = t.armad || {}; const rr = refDe(o.atk); t.armad[rr] = Math.min(2, (t.armad[rr] || 0) + 1); }
+      if (t.k === 'genio' && !pOff(t, 'Armadura Adaptativa')) { t.armad = t.armad || {}; const rr = refDe(o.atk), ant = t.armad[rr] || 0; t.armad[rr] = Math.min(2, ant + 1); if (t.armad[rr] > ant) evento('🦾 Armadura Adaptativa: ' + CH[t.k].nome + ' agora tem +' + t.armad[rr] + ' na Defesa contra ' + CH[o.atk.k].nome); }
       const iv = S.times[timeDe(t)].find(x => x.k === 'invicto' && x !== t && !x.elim && x.pos && t.pos && dist(x.pos, t.pos) === 1);
       if (iv && !(o.atk.efs || []).some(e => e.respeite)) novoEf(o.atk, { nome: 'Respeite o Campeão', autor: CH[iv.k].nome, faz: '−2 na Defesa contra o próximo Ataque Básico de Invicto', acaba: 'no próximo Ataque Básico de Invicto', exp: { t: 'man' }, mods: {}, respeite: true });
     }
@@ -8090,7 +8091,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (r.ataque && !t.elim && refDe(t)[0] !== aj) {
           if (t.k === 'forasteiro') t.tentN = (t.tentN || 0) + 1;
           { const rz = risadaDe(c, t); if (rz) risadaUsa(c, rz); }
-          if (t.k === 'genio' && l.ok === false && t.armad) delete t.armad[refDe(c)];
+          if (t.k === 'genio' && l.ok === false && t.armad && t.armad[refDe(c)]) { delete t.armad[refDe(c)]; msg.push('Armadura Adaptativa: ' + CH[c.k].nome + ' errou e o bônus do ' + CH[t.k].nome + ' contra ele sumiu'); evento('🦾 Armadura Adaptativa: ' + CH[c.k].nome + ' errou, o bônus contra ele sumiu'); }
           if (!t.elim && (t.efs || []).some(e => e.naoTol)) tirarEfs(t, e => e.naoTol);
           if (!t.elim) { const px = (t.efs || []).filter(e => e.proxAtk || (e.nome === 'Lendo Intenções' && e.contra === refDe(c))); if (px.length) { tirarEfs(t, e => px.includes(e)); msg.push(px.map(e => e.nome).join(', ') + ' em ' + CH[t.k].nome + ' acabou (já valeu neste ataque)'); } }
         }
