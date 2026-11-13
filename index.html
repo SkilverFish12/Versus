@@ -6149,7 +6149,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (!mostrarTab) return;
     if (selTok && (S.times[selTok[0]][selTok[1]].elim)) selTok = null;
     const sc = selTok ? S.times[selTok[0]][selTok[1]] : null;
-    const desl = sc ? deslDe(sc) : 0;
+    const desl = sc ? deslDe(sc) : 0, MM = sc && sc.pos && !sc.imo && sc.k !== 'eclipse' ? mapaMover(sc, desl * 2) : null;
     const sul = S.prim, norte = 1 - S.prim;
     const W = HS * Math.sqrt(3) * 11 + 40, H = HS * 1.5 * 10 + HS * 2 + 20;
     let g = '';
@@ -6164,7 +6164,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (DM.casas.has(c.id)) k.push(DM.linha ? (DM.linha.has(c.id) ? 'mv' : 'mv2') : 'mv');
       { const au = AREAS.filter(a => a.cell !== c.id && dist(a.cell, c.id) <= a.raio); if (au.length) k.push('aura a' + au[0].dono + (au.some(a => a.sel) ? ' asel' : '')); }
       if (S.rodada === 1) { if (c.r === RB) k.push('ini j' + sul); if (c.r === -RB) k.push('ini j' + norte); }
-      if (!modo && sc && sc.pos && !sc.imo && !bloqueada(c.id)) { const dd = dist(sc.pos, c.id); if (dd > 0 && dd <= desl) k.push('alc1'); else if (dd > 0 && dd <= desl * 2) k.push('alc2'); }
+      if (!modo && sc && sc.pos && !sc.imo && !bloqueada(c.id)) { const dd = MM ? (c.id in MM.d ? MM.d[c.id] : 99) : dist(sc.pos, c.id); if (dd > 0 && dd <= desl) k.push('alc1'); else if (dd > 0 && dd <= desl * 2) k.push('alc2'); }
       const pts = [];
       for (let i = 0; i < 6; i++) { const a = Math.PI / 3 * i + Math.PI / 6; pts.push((c.x + HS * .97 * Math.cos(a)).toFixed(1) + ',' + (c.y + HS * .97 * Math.sin(a)).toFixed(1)); }
       g += '<g class="hx ' + k.join(' ') + '" data-cell="' + c.id + '"><polygon points="' + pts.join(' ') + '"/>' +
@@ -6983,7 +6983,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (!c) return out;
     if (modo.t === 'mover' && c.pos) {
       const desl = modo.desl || deslDe(c);
-      CELLS.forEach(x => { if ((c.k === 'eclipse' ? distBorda(c.pos, x.id) : dist(c.pos, x.id)) <= desl && x.id !== c.pos && !obstaculo(x.id) && !ocupante(x.id) && (!modo.rumo || modo.rumo.some(a => a.pos && dist(x.id, a.pos) === dist(c.pos, a.pos) - dist(c.pos, x.id)))) out.casas.add(x.id); });
+      const mm = c.k === 'eclipse' ? null : mapaMover(c, desl);
+      CELLS.forEach(x => { if ((mm ? (x.id in mm.d ? mm.d[x.id] : 99) : distBorda(c.pos, x.id)) <= desl && x.id !== c.pos && !obstaculo(x.id) && !ocupante(x.id) && (!modo.rumo || modo.rumo.some(a => a.pos && dist(x.id, a.pos) === dist(c.pos, a.pos) - dist(c.pos, x.id)))) out.casas.add(x.id); });
     } else if (modo.t === 'mover') CELLS.forEach(x => { if (!obstaculo(x.id) && !ocupante(x.id)) out.casas.add(x.id); });
     if (modo.t === 'basico') pecas((j, i, x) => alvoBasico(c, j, x)).forEach(p => out.toks.add(p.join(',')));
     if (modo.t === 'estrutura') CELLS.forEach(x => { if (!bloqueada(x.id)) out.casas.add(x.id); });
@@ -7143,9 +7144,9 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'mover') {
       if (!cellId || !d0.casas.has(cellId)) return true;
       const de = c.pos, gr = modo.gratis; modo = null;
-      { let extra = ''; mudar(() => { const jj = timeDe(c), dd = de ? dist(de, cellId) : 0; if (c.carona) { c.carona = null; extra += ' Desceu do veículo.'; } moverPeca(c, cellId); c.moveuT = true; c.andou = (c.andou || 0) + dd; { const ml = c.k === 'andarilho' && malaDe(c); if (ml && de && [de].concat(caminho(de, cellId)).some(id => dist(id, ml.cell) <= 1)) { S.est = S.est.filter(q => q !== ml); extra += ' 🧳 Pegou a Mala de volta.'; } } if (gr) { if (!['Pista', 'Par de Dança'].includes(gr)) c.usadas = (c.usadas || []).concat(gr); } else c.gastas++;
+      { let extra = ''; mudar(() => { const jj = timeDe(c), camM = de && c.k !== 'eclipse' ? caminhoMover(c, de, cellId) : null, dd = de ? (camM ? camM.length : dist(de, cellId)) : 0; if (c.carona) { c.carona = null; extra += ' Desceu do veículo.'; } moverPeca(c, cellId); c.moveuT = true; c.andou = (c.andou || 0) + dd; { const ml = c.k === 'andarilho' && malaDe(c); if (ml && de && [de].concat(camM || caminho(de, cellId)).some(id => dist(id, ml.cell) <= 1)) { S.est = S.est.filter(q => q !== ml); extra += ' 🧳 Pegou a Mala de volta.'; } } if (gr) { if (!['Pista', 'Par de Dança'].includes(gr)) c.usadas = (c.usadas || []).concat(gr); } else c.gastas++;
         if (S.bosque && S.bosque.time !== jj && S.rodada <= S.bosque.ate && dd > 1) { const q = sofrerDano(c, 2, {}); extra += ' Bosque Efêmero: −' + q.real + ' PV.'; }
-        const cam = de ? caminho(de, cellId) : [];
+        const cam = de ? (camM || caminho(de, cellId)) : [];
         if (temEf(c, 'rastro') && de) { S.est = S.est || []; [de].concat(cam.slice(0, -1)).forEach(id => { if (!ocupante(id) && !obstaculo(id) && !S.est.some(z => z.cell === id && z.tipo === 'Casa Infernal')) S.est.push({ id: Date.now() + '' + d(999) + id, tipo: 'Casa Infernal', cell: id, dono: jj, rastro: true, acaba: 'no início do próximo turno de Kazan' }); }); }
         if (!c.infT && cam.some(id => (S.est || []).some(z => z.tipo === 'Casa Infernal' && z.dono !== jj && z.cell === id))) { c.infT = true; const q = sofrerDano(c, 5, {}); extra += ' Casa Infernal: −' + q.real + ' PV.'; }
         { const tt = tintaTeste(c, cam); if (tt.length) extra += ' ' + tt.join('; ') + '.'; }
@@ -7589,6 +7590,22 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function tirarEfs(x, pred){ const sai = (x.efs || []).filter(pred); sai.forEach(e => desfazerMods(x, e)); x.efs = (x.efs || []).filter(e => !sai.includes(e)); return sai.length; }
   function limparPen(x){ let n = tirarEfs(x, ehPen); if (x.dcn) { x.dcn = 0; x.dcv = 0; n++; } if (x.imo && !(x.efs || []).some(e => e.mods && e.mods.imo)) x.imo = false; return n; }
   const custoH = (c, h) => (c.k === 'cambiante' && h.n === 'Bote' && c.estado && c.estado.nome === 'Quimera Primordial') ? 1 : h.c;
+  function passeMover(c){
+    const ef = re => (c.efs || []).some(e => re.test(e.nome || '')), fo = formaDe(c);
+    const pers = (c.k === 'fantasma' && !pOff(c, 'Movimento Fantasma')) || (c.k === 'cupido' && !pOff(c, 'Amor nas Alturas')) || (c.k === 'cambiante' && /Ágil/.test(fo)) || ef(/Levantar Voo|Ápice da Performance|Bolha d.Água/);
+    const obs = (c.k === 'fantasma' && !pOff(c, 'Movimento Fantasma')) || (c.k === 'cupido' && !pOff(c, 'Amor nas Alturas')) || (c.k === 'cambiante' && /Rapina/.test(fo)) || ef(/Levantar Voo|Ápice da Performance|Bolha d.Água/);
+    return { pers, obs };
+  }
+  function camposBorda(){ return (S.est || []).filter(e => CELL[e.cell] && (e.auras || []).some(a => /borda do campo/.test(a.txt || ''))).map(e => [e.cell, Math.max(...e.auras.map(a => a.raio))]); }
+  // distâncias de Mover: passa por aliados, não por inimigos nem Obstáculos (salvo a ficha dizer o contrário)
+  function mapaMover(c, max){
+    const tj = timeDe(c), ps = passeMover(c), cb = camposBorda(), d0 = { [c.pos]: 0 }, pai = {}, fila = [c.pos];
+    const pode = id => { if (!ps.obs && obstaculo(id)) return false; const o = ocupante(id); if (o && o[0] !== tj && !ps.pers && S.times[o[0]][o[1]] !== c) return false; return true; };
+    while (fila.length) { const a = fila.shift(); if (d0[a] >= max) continue;
+      vizinhas(a).forEach(b => { if (b in d0 || !pode(b)) return; if (cb.some(([z, r]) => (dist(z, a) <= r) !== (dist(z, b) <= r))) return; d0[b] = d0[a] + 1; pai[b] = a; fila.push(b); }); }
+    return { d: d0, pai };
+  }
+  function caminhoMover(c, de, para){ if (!de || !para) return []; const m = mapaMover(Object.assign({}, c, { pos: de }), 99), out = []; let p = para, g = 0; if (!(p in m.d)) return caminho(de, para); while (p !== de && g++ < 99) { out.unshift(p); p = m.pai[p]; } return out; }
   function caminho(a, b){ const out = []; let p = a, g = 0; if (!a || !b) return out; while (p !== b && g++ < 40) { const nx = vizinhas(p).sort((x, y) => dist(x, b) - dist(y, b))[0]; if (!nx) break; out.push(nx); p = nx; } return out; }
   function addTatF(t, n, autor, exp, acaba){ let e = (t.efs || []).find(x => x.tatF); if (!e) { novoEf(t, { nome: 'Fechar o Braço', autor, faz: 'Tatuagens que não borram', acaba, exp, mods: {}, tatF: [] }); e = t.efs.find(x => x.tatF); } if (!e.tatF.includes(n)) e.tatF.push(n); e.faz = e.tatF.join(', ') + ' (não borram)'; }
   // ondas da Misericórdia Divina no fim do turno do Superior
