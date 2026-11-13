@@ -6645,6 +6645,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     S.times.forEach(tm => tm.forEach(x => { if (!x.elim && x.pos && retratoDe(x)) h += btn('data-retrato="' + refDe(x) + '"', '🖼️', 'TROCAR COM O RETRATO (' + nomeC(x) + ')', 'sem ação · 1 vez · Retrato em ' + retratoDe(x).cell + (x === c ? '' : ' · vale fora do turno, antes de rolarem os dados de um ataque contra ele'), ''); }));
     if (c.k === 'semelhante') { const nl = copiasLivres(c).length; h += btn('data-pasv="copias"', '👥', 'CÓPIAS ATACAM', 'passiva · sem ação · Todos Sou Eu · ' + nl + (nl === 1 ? ' Cópia livre' : ' Cópias livres'), !nl ? 'nenhuma Cópia livre' : !copiaAlvos(c).length ? 'nenhum inimigo adjacente a uma Cópia' : ''); }
     guardasFora().forEach(([j, i]) => { const x = S.times[j][i], g = GUARDA_FORA[x.k]; h += btn('data-guardafora="' + j + ',' + i + '"', g[3], g[0].toUpperCase() + ' (' + CH[x.k].nome + ')', 'fora do turno · antes do ataque rolar · gasta 1 ação do próximo turno de ' + CH[x.k].nome, x.ab <= -2 ? CH[x.k].nome + ' já gastou 2 ações do próximo turno' : x.guardaR === S.rodada ? 'já usada nesta rodada' : ''); });
+    if (S.revOfer && S.revOfer.tk === S.tk) { const P = porRef(S.revOfer.p), A = porRef(S.revOfer.a); if (P && A && !P.elim && !A.elim && rec(P, 'Guarda') >= 2) h += btn('data-pasv="revide"', '↩️', 'REVIDE (PROMESSA)', 'gasta 2 Guardas · Ataque Básico em ' + CH[A.k].nome + ' sem gastar ação', ''); }
     const iv = invictoContra();
     if (iv) { const x = S.times[iv[0]][iv[1]]; h += btn('data-pasv="invicto"', '🥊', 'SEM ABERTURAS', 'Invicto ataca ' + CH[c.k].nome + ' (entrou ou saiu do Raio 1 dele) · gasta 1 ação do próximo turno de Invicto', x.ab <= -2 ? 'Invicto já gastou 2 ações do próximo turno' : ''); }
     const usou = n => (c.usadas || []).includes(n);
@@ -6946,6 +6947,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b.dataset.chute) { const zs = malasChute(c); return iniciarModo({ t: 'chute', mala: zs[0].id }); }
     if (b.dataset.bomba) { const q = b.dataset.bomba.split(',').map(Number); return iniciarModo({ t: 'bomba', quem: q }); }
     if (b.dataset.guardafora) { const q = b.dataset.guardafora.split(',').map(Number), x = S.times[q[0]][q[1]], g = GUARDA_FORA[x.k]; return iniciarModo({ t: 'guardaFora', quem: q, alc: g[2], tipo: g[1], tit: g[3] + ' ' + g[0] + ': toque no aliado de ' + CH[x.k].nome + ' (até ' + g[2] + ' casas)' }); }
+    if (b.dataset.pasv === 'revide' && S.revOfer) { const o = S.revOfer, P = porRef(o.p); mudar(() => { setRec(P, 'Guarda', rec(P, 'Guarda') - 2); if (P.revR === S.rodada) P.revN = (P.revN || 0) + 1; else { P.revR = S.rodada; P.revN = 1; } S.revOfer = null; }, () => '↩️ Promessa gasta 2 Guardas para o Revide.'); return ataqueBasico(o.a.split(',').map(Number), { atk: o.p.split(',').map(Number), custo: 0, tit: 'REVIDE' }); }
     if (b.dataset.pasv === 'invicto') { const iv = invictoContra(); return ataqueBasico(S.ativo.slice(), { atk: iv, custo: 0, pagaProx: true, tit: 'SEM ABERTURAS' }); }
     if (b.dataset.pasv === 'tocaia') { const L = c.pos ? tocaiaAlvos(c) : pecas((j, i, x) => j !== S.ativo[0]); modo = { t: 'hab', h: H_TOCAIA, sup: false, aprim: false, alvosInfo: { tipo: 'todos', alvos: L }, sel: L }; return resolverHab(); }
     if (b.dataset.pasv === 'mover') { const pm = PASM[c.k]; return iniciarModo({ t: 'mover', gratis: pm[0], desl: pm[1] || undefined, rumo: c.k === 'promessa' ? (c.votoAli || []).map(porRef).filter(x => x && !x.elim && x.pos) : undefined }); }
@@ -7451,7 +7453,64 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   const incontLinhas = (c, rr, aj) => { if (c.k !== 'axioma' || pOff(c, 'Incontestável') || !(rr.dados || []).includes(10)) return; let ok = false;
     (rr.linhas || []).forEach(l => { if (l.alvo[0] === aj) return; ok = true; l.ef.push({ k: 'acao', v: -1, on: true, txt: 'Incontestável: −1 ação no próximo turno' }); l.ef.push(supFx('Incontestável: perde os bônus na Defesa', (t, msg) => tirarBonusDef(t, msg))); });
     if (ok) rr.notas = rr.notas.concat('Incontestável: tirou 10, os alvos perdem os bônus na Defesa e 1 ação'); };
-  function rolarD10(n){ return Array.from({ length: Math.max(1, n) }, () => d(10)); }
+  let reacMenos = 0, reacApos = null;
+  function rolarD10(n){ if (reacMenos) { n = Math.max(1, n - reacMenos); reacMenos = 0; } return Array.from({ length: Math.max(1, n) }, () => d(10)); }
+  // ── reações da Promessa (antes da rolagem) ──
+  function reacCtx(r){
+    const c = r.atkRef ? S.times[r.atkRef[0]][r.atkRef[1]] : ativoC(), aj = r.atkRef ? r.atkRef[0] : S.ativo[0];
+    const T = (r.basico ? (r.alvoB ? [r.alvoB] : []) : ((r.m && r.m.sel) || [])).filter(a => a[0] !== aj);
+    const pr = pecas((j, i, x) => j !== aj && x.k === 'promessa' && !x.elim)[0], P = pr && S.times[pr[0]][pr[1]];
+    return { c, aj, T, pr, P };
+  }
+  function reacOpcoes(r){
+    if (!r.ataque && !r.basico) return [];
+    const { c, T, pr, P } = reacCtx(r); if (!P || temEf(P, 'juramento') || !T.length || r.cupCura) return [];
+    const eP = a => a[0] === pr[0] && a[1] === pr[1], out = [], g = rec(P, 'Guarda');
+    const golpeProj = r.basico || (r.h && /Golpe|Projétil/.test(r.h.k || '')), unico = T.length === 1 && (r.basico || (r.h && /^(ALVO|ADJACENTE)/.test(r.h.a || '')));
+    if (!pOff(P, 'Braçadeiras de Aço') && g >= 1 && T.some(a => eP(a) || (P.pos && S.times[a[0]][a[1]].pos && dist(P.pos, S.times[a[0]][a[1]].pos) <= 1))) {
+      out.push({ k: 'b1', nome: 'Bloqueio · 1 Guarda', txt: 'o atacante rola 1 dado a menos' });
+      if (g >= 2) out.push({ k: 'b2', nome: 'Bloqueio · 2 Guardas', txt: 'o atacante rola 2 dados a menos' }); }
+    if (!pOff(P, 'Voto de Proteção') && P.votoR !== S.rodada && unico && r.refazer && !eP(T[0]) && P.pos && S.times[T[0][0]][T[0][1]].pos && dist(P.pos, S.times[T[0][0]][T[0][1]].pos) <= 1)
+      out.push({ k: 'voto', nome: 'Voto de Proteção', txt: 'Promessa toma o lugar de ' + CH[S.times[T[0][0]][T[0][1]].k].nome + ' (1 vez por rodada)' });
+    if (!pOff(P, 'Defletir') && P.deflR !== S.rodada && !r.sup && unico && golpeProj && eP(T[0]) && !(r.reac && r.reac.defl)) {
+      out.push({ k: 'defl', nome: 'Defletir', txt: 'teste de FÍS contra a Defesa do atacante · gasta 2 ações do próximo turno dela (1 vez por rodada)' });
+      if (S.med[pr[0]] >= 1 && !temEf(P, 'nomed')) out.push({ k: 'deflA', nome: 'Defletir ⚡ +1 Medidor', txt: 'igual, e se passar Promessa ganha 2 Guardas' }); }
+    return out;
+  }
+  function reacHtml(r){
+    const L = reacOpcoes(r), R = r.reac || {}, df = R.defl;
+    if (!L.length && !df) return '';
+    return '<div class="rs-ops"><b>🛡️ REAÇÕES DA PROMESSA (antes de rolar)</b>' + (df ? '<p class="rs-nota">Defletir: ' + df.v.join(', ') + ' contra Defesa ' + df.def + ' → ' + (df.hits >= 2 ? df.hits + ' acertos: o ataque volta para o atacante (metade do dano)' : df.hits === 1 ? '1 acerto: o ataque não atinge Promessa' : 'falhou') + '</p>' : '') +
+      L.map(o => '<button data-reac="' + o.k + '" class="' + ((o.k === 'b1' && R.bloq === 1) || (o.k === 'b2' && R.bloq === 2) ? 'on' : '') + '"><strong>' + o.nome + '</strong><small>' + o.txt + '</small></button>').join('') + '</div>';
+  }
+  function cliqueReac(k){
+    const r = res; if (!r || !r.pend || r.rolado) return;
+    const { c, pr, P } = reacCtx(r); if (!P) return; r.reac = r.reac || {};
+    if (k === 'b1' || k === 'b2') { const n = k === 'b1' ? 1 : 2; r.reac.bloq = r.reac.bloq === n ? 0 : n; return mostrarResultado(r); }
+    if (k === 'voto') { mudar(() => { P.votoR = S.rodada; }, () => '🛡️ Voto de Proteção: Promessa toma o lugar do aliado.'); return r.refazer(pr.slice()); }
+    if (k === 'defl' || k === 'deflA') { let df = null;
+      mudar(() => { P.deflR = S.rodada; P.ab = clamp((P.ab || 0) - 2, -4, 2); P.abPago = (P.abPago || 0) + 2; if (k === 'deflA') S.med[pr[0]] -= 1;
+        const v = rolarD10(Math.max(1, aptE(P, 0) + mod(P, 'dd'))), def = clamp(defesas(c)[0], 2, 10), hits = v.filter(x => x >= def).length; df = { v, def, hits };
+        if (k === 'deflA' && hits) setRec(P, 'Guarda', Math.min(5, rec(P, 'Guarda') + 2)); },
+        () => '🛡️ Promessa usou Defletir' + (k === 'deflA' ? ' ⚡' : '') + ' (' + df.v.join(', ') + ' contra Defesa ' + df.def + '): ' + (df.hits >= 2 ? 'o ataque volta para ' + CH[c.k].nome : df.hits ? 'o ataque não a atinge' : 'falhou') + (k === 'deflA' && df.hits ? ', +2 Guardas' : '') + ' · −2 ações no próximo turno dela.');
+      r.reac.defl = Object.assign(df, { pr: pr.slice(), atk: refDe(c).split(',').map(Number) }); return mostrarResultado(r); }
+  }
+  function prepReac(r){
+    const R = r.reac; if (!R) return; const { P } = reacCtx(r), notas = [];
+    if (R.bloq && P) { const n = Math.min(R.bloq, rec(P, 'Guarda')); if (n) { mudar(() => { setRec(P, 'Guarda', rec(P, 'Guarda') - n); }, () => '🛡️ Bloqueio: Promessa gasta ' + n + (n > 1 ? ' Guardas' : ' Guarda') + ' (−' + n + (n > 1 ? ' dados' : ' dado') + ' no ataque).'); reacMenos = n; notas.push('🛡️ Bloqueio da Promessa: −' + n + (n > 1 ? ' dados' : ' dado')); } }
+    if (R.defl && R.defl.hits) notas.push(R.defl.hits >= 2 ? '🛡️ Defletido: o ataque volta para o atacante, que rola contra a própria Defesa e sofre metade do dano' : '🛡️ Defletido: o ataque não atinge Promessa');
+    if (notas.length) reacApos = { notas, defl: R.defl && R.defl.hits ? R.defl : null };
+  }
+  function aplicarReac(r){
+    const R = r.reacT; if (!R) return;
+    if (!r._reacN) { r._reacN = true; r.notas = (r.notas || []).concat(R.notas); }
+    const df = R.defl; if (!df || !r.linhas) return;
+    r.linhas.forEach(l => { if (l.reacX || l.alvo[0] !== df.pr[0] || l.alvo[1] !== df.pr[1]) return; l.reacX = true;
+      if (df.hits < 2) { l.ok = false; l.ef = []; l.txt = '🛡️ Defletido: não atinge Promessa'; return; }
+      const a = S.times[df.atk[0]][df.atk[1]], apt = r.bas ? r.bas.apt : (r.h ? r.h.x : 0), d2 = clamp(defesas(a)[apt], 2, 10); l.alvo = df.atk.slice();
+      if (r.bas) { const h2 = r.dados.filter(x => x >= d2).length, dn = h2 ? Math.floor(Math.max(1, h2 * r.bas.per + r.bas.bonus) / 2) : 0; l.ok = h2 > 0; l.ef = l.ok && dn ? [{ k: 'dano', v: dn, on: true, txt: dn + ' de dano (metade, Defletir)' }] : []; l.txt = 'Defletido de volta: ' + (h2 ? h2 + (h2 > 1 ? ' acertos' : ' acerto') : 'escapou') + ' (Defesa ' + d2 + ')'; }
+      else { l.ok = Math.max(...r.dados) >= d2; let ef0 = l.ef; if (l.ok && !ef0.some(e => e.k === 'dano')) { try { const tmp = Object.assign({}, r, { dados: [10], max: 10, linhas: [], notas: [], reacT: null }); montar(tmp); ajustesParlenda(tmp, a, r.h); const lt = (tmp.linhas || []).find(q => q.alvo[0] === df.pr[0] && q.alvo[1] === df.pr[1]); if (lt) ef0 = lt.ef; } catch (er) {} } l.ef = l.ok ? ef0.map(e => e.k === 'dano' ? Object.assign({}, e, { v: Math.floor(e.v / 2), txt: Math.floor(e.v / 2) + ' de dano (metade, Defletir)' }) : e) : []; l.txt = 'Defletido de volta: ' + (l.ok ? 'atingido' : 'escapou') + ' (Defesa ' + d2 + ')'; } });
+  }
   // bônus de dados vindos de recursos (Brasas escolhidas, Peso de Dor)
   // passivas que mudam dados (de quem ataca) e Defesa (de quem é atacado) contra um alvo específico
   const adjObst = x => !!x.pos && vizinhas(x.pos).some(id => obstaculo(id) || (S.est || []).some(z => z.cell === id && /Bloco/.test(z.tipo)));
@@ -7541,13 +7600,13 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (incont) notas.push('Incontestável: tirou 10, o alvo perde os bônus na Defesa e 1 ação');
     mostrarResultado({
       titulo: '👊 ATAQUE BÁSICO' + (o.tit ? ' · ' + o.tit : ''), sub: ch.nome + ' ataca ' + CH[t.k].nome + ' · ' + APT[apt] + ' ' + n + ' dados contra Defesa ' + def,
-      dados: v, def, notas, desc: '', hitsBrasa: hits, basico: true,
+      dados: v, def, notas, desc: '', hitsBrasa: hits, basico: true, bas: { per: (c.k === 'cupido' ? 1 : 2) + (o.porAcerto || 0), bonus: bonus + (covarde ? 2 : 0), apt },
       linhas: [{ alvo, ok: hits > 0, txt: hits ? hits + (hits > 1 ? ' acertos' : ' acerto') + ' → ' + dano + ' de dano' : 'errou', ef: (c.k === 'oliva' && hits >= 2 ? [supFx('O X Marca o Lugar: −1 dado contra Azeitona e −1 na Defesa contra ela', x => marcarX(c, x))] : []).concat(incont ? [{ k: 'acao', v: -1, on: true, txt: 'Incontestável: −1 ação no próximo turno' }, supFx('Incontestável: perde os bônus na Defesa', (t2, msg) => tirarBonusDef(t2, msg))] : []).concat(c.k === 'peste' && hits ? [{ k: 'contagio', v: 1, on: true, txt: 'Toque Pestilente: Contagiado (−1 na Defesa e curas −2) por 2 rodadas' }] : []).concat(hits && dano ? [{ k: 'dano', v: dano, on: true, txt: dano + ' de dano' }].concat(
         ch.habs.some(x => !x.c && /acerta um Ataque Básico, empurra/.test(x.d)) && t.pos ? [{ k: 'empurra', v: hits, on: true, txt: '↗ empurrar ' + hits + (hits > 1 ? ' casas' : ' casa') + ' (Manoplas)' }] : []) : []) }],
       extras: [], pre: [], ef: {}, custo: o.custo !== undefined ? o.custo : 1, atkRef: atkR, pagaProx: !!o.pagaProx, nome: null, sup: false, aprim: false, ataque: true, usouDados: true
     });
     };
-    mostrarResultado({ titulo: '👊 ATAQUE BÁSICO' + (o.tit ? ' · ' + o.tit : ''), sub: ch.nome + ' ataca ' + CH[t.k].nome + ' · ' + APT[apt] + ' ' + n + (n > 1 ? ' dados' : ' dado') + ' contra Defesa ' + def, dados: [], def, notas: notas.slice(), desc: '', basico: true, linhas: [], extras: [], pre: [], ef: {}, pend, usouDados: true, custo: 0, atkRef: atkR });
+    mostrarResultado({ titulo: '👊 ATAQUE BÁSICO' + (o.tit ? ' · ' + o.tit : ''), sub: ch.nome + ' ataca ' + CH[t.k].nome + ' · ' + APT[apt] + ' ' + n + (n > 1 ? ' dados' : ' dado') + ' contra Defesa ' + def, dados: [], def, notas: notas.slice(), desc: '', basico: true, linhas: [], extras: [], pre: [], ef: {}, pend, usouDados: true, custo: 0, atkRef: atkR, alvoB: alvo, ataque: true, refazer: na => ataqueBasico(na, o) });
   }
   function resolverHab(){
     const m = modo; modo = null;
@@ -7558,6 +7617,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const multi = !!(ops && m.aprim && h.p && /as duas|os dois|Os dois|Aplica as duas|Aplica duas/.test(limpo(h.p)));
     c.habAtual = h.k || '';
     const ex = h.x >= 0 ? dadosExtra(c) : { n: 0, notas: [] };
+    if (h.n === 'Quebra de Guarda' && m.aprim) { ex.n += 1; ex.notas.push('Quebra de Guarda aprimorada: +1 dado'); }
     if (h.n === 'Arpéu de Pulso' && m.aprim) { ex.n += 1; ex.notas.push('Arpéu aprimorado: +1 dado'); }
     const pa1 = h.x >= 0 && (m.sel || []).length === 1 && m.sel[0][0] !== S.ativo[0] ? pasAtk(c, S.times[m.sel[0][0]][m.sel[0][1]], false, true) : { dd: 0, notas: [] };
     if (pa1.notas.length) ex.notas = ex.notas.concat(pa1.notas.filter(x => /dado/.test(x)));
@@ -7570,6 +7630,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       custo: custoH(c, h), nome: h.n, sup: m.sup, aprim: m.aprim, ops, multi, opSel: ops ? [0].concat(multi ? ops.map((_, i) => i).slice(1) : []) : null, m, h, usouDados: h.x >= 0,
       ataque: h.t.includes('ATAQUE')
     };
+    r.refazer = na => { modo = Object.assign({}, m, { sel: [na] }); resolverHab(); };
     if (h.x >= 0) r.pend = rr => { rr.dados = rolarD10(n); { const ds = (m.sel || []).filter(a => a[0] !== S.ativo[0]).map(a => clamp(defesas(S.times[a[0]][a[1]])[h.x] + adef(c), 2, 10)); if (ds.length && (cpDe(c).mal || cpDe(c).bem)) { const nt = []; rr.dados = cpAplicar(c, rr.dados, Math.min(...ds), nt); rr.notas = rr.notas.concat(nt); } } rr.max = Math.max(...rr.dados); if (temTat(c, 'Olho Roxo')) c.olhoRoxo = true; montar(rr); ajustesParlenda(rr, c, h); if (h.n === 'Cabeça Cheia') rr.linhas.forEach(l => { if (l.ok && l.alvo[0] !== S.ativo[0]) { const tr = l.alvo.join(','), tn = CH[S.times[l.alvo[0]][l.alvo[1]].k].nome; l.ef.push(supFx('Não recebe bônus na Defesa até o fim do próximo turno de ' + tn, (t, msg) => novoEf(t, { nome: 'Cabeça Cheia', autor: 'Axioma', faz: 'não recebe bônus na Defesa', acaba: 'no fim do próximo turno de ' + tn, exp: { t: 'fim', ref: tr, pula: 0 }, mods: {}, semBonusDef: true }))); } }); incontLinhas(c, rr, S.ativo[0]); };
     else { montar(r); ajustesParlenda(r, c, h); }
     mostrarResultado(r);
@@ -8443,10 +8504,12 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   function mostrarResultado(r){
     res = r;
+    if (reacApos && !(r.pend && !r.rolado)) { r.reacT = reacApos; reacApos = null; }
+    if (r.reacT) aplicarReac(r);
     if (r.pend && !r.rolado) {
       const opsP = r.ops ? '<div class="rs-ops"><b>' + (r.multi ? 'ESCOLHA OS EFEITOS ANTES DE ROLAR (aprimorado: pode marcar os dois)' : 'ESCOLHA O EFEITO ANTES DE ROLAR') + '</b>' + r.ops.map((o, i) => '<button data-op="' + i + '" class="' + (r.opSel.includes(i) ? 'on' : '') + '"><strong>' + o.nome + '</strong><small>' + o.txt + '</small></button>').join('') + '</div>' : '';
       $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>' + r.titulo + '</h3></div><div class="dd-corpo"><p class="rs-sub">' + r.sub + '</p>' +
-        (r.notas.length ? '<p class="rs-nota">' + r.notas.join(' · ') + '</p>' : '') + opsP +
+        (r.notas.length ? '<p class="rs-nota">' + r.notas.join(' · ') + '</p>' : '') + opsP + reacHtml(r) +
         (r.desc ? '<details class="rs-desc"><summary>O que a ficha diz</summary><p>' + r.desc + '</p></details>' : '') +
         '<p class="rs-nota">' + (r.ops ? 'Escolha o efeito e role os dados.' : 'Confira e role os dados.') + ' Fechar agora não gasta nada.</p>' +
         '<div class="rd-rodape" style="padding:10px 0 0"><button class="btn-amarelo" id="rsRolar">🎲 ROLAR ' + (r.sub.match(/(\d+) dados?/) || ['', ''])[1] + ' DADO' + (/(^|\D)1 dado\b/.test(r.sub) ? '' : 'S') + '</button></div></div>';
@@ -8479,7 +8542,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (x.dataset.ef || x.dataset.ex || x.dataset.pre) { const o = $('#rsPrev'), n = prevHtml(res); if (o) o.outerHTML = n || '<div id="rsPrev"></div>'; else if (n) { const a = $('#mAcaoCaixa .rs-desc') || $('#rsAplicar').parentNode; a.insertAdjacentHTML('beforebegin', n); } }
   });
   $('#mAcao').addEventListener('click', e => {
-    if (e.target.id === 'rsRolar') { const r0 = res; if (r0.pend && !r0.rolado) { r0.rolado = true; r0.pend(r0); if (res === r0) mostrarResultado(r0); } return; }
+    { const rb = e.target.closest('[data-reac]'); if (rb) { cliqueReac(rb.dataset.reac); return; } }
+    if (e.target.id === 'rsRolar') { const r0 = res; if (r0.pend && !r0.rolado) { r0.rolado = true; prepReac(r0); r0.pend(r0); if (res === r0) mostrarResultado(r0); } return; }
     const ob = e.target.closest('[data-op]');
     if (ob) {
       if (res.pend && res.rolado) return;
@@ -8502,6 +8566,9 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     { const Q = montarPos(r, c, aj); if (Q.length) { filaPos = Q; setTimeout(proximoPos, 80); } }
     if (r.ataque && !c.elim) { const pr = pecas((j, i, x) => j !== aj && x.k === 'promessa' && temEf(x, 'juramento'))[0];
       if (pr && r.linhas.some(l => l.alvo[0] === pr[0] && S.times[l.alvo[0]][l.alvo[1]] !== S.times[pr[0]][pr[1]])) setTimeout(() => { toast('🛡️ Juramento: Promessa revida!', 1800); ataqueBasico(refDe(c).split(',').map(Number), { atk: pr, custo: 0, tit: 'JURAMENTO', porAcerto: 2 }); }, 700); }
+    if (r.ataque && !c.elim && c.pos) { const pr = pecas((j, i, x) => j !== aj && x.k === 'promessa' && !x.elim && !temEf(x, 'juramento'))[0], P = pr && S.times[pr[0]][pr[1]];
+      const golpe = r.basico ? true : r.h && r.h.k === '🥊 Golpe', l = P && (r.linhas || []).find(q => q.alvo[0] === pr[0] && q.alvo[1] === pr[1] && q.ok && q.ef.some(e => e.k === 'dano' && e.on && e.v > 0));
+      if (l && golpe && P.pos && dist(P.pos, c.pos) <= 1 && !pOff(P, 'Braçadeiras de Aço') && rec(P, 'Guarda') >= 2 && (P.revR !== S.rodada || (P.revN || 0) < 2)) { S.revOfer = { p: pr.join(','), a: refDe(c), tk: S.tk }; salvar(); render(); toast('↩️ Promessa pode usar Revide (2 Guardas)', 2200); } }
     if (r.nome === 'Bomba de Magma') setTimeout(() => { if (r.aprim) { iniciarModo({ t: 'estrutura', tipo: 'Bomba', dono: aj, resta: 1, alc: 4, de: c.pos || null, aprim: true, autor: refDe(c) }); toast('⚡ Aprimorado: coloque a segunda Bomba (casa vazia, até 4 casas)', 3000); } else limitarBombas(refDe(c)); }, 60);
     if (r.nome === 'Pouso Tático' && r.aprim) setTimeout(() => { iniciarModo({ t: 'estrutura', tipo: 'Pássaro', dono: aj, resta: 1, alc: 5, de: c.pos || null }); toast('⚡ Aprimorado: posicione ou reposicione o segundo Pássaro (até 5 casas)', 3000); }, 60);
     if (r.nome === 'Domínio Gravitacional' && c.pos) setTimeout(() => { iniciarModo({ t: 'estrutura', tipo: 'Domínio', dono: aj, resta: 5, alc: 4, de: c.pos }); toast('Marque as outras casas de Domínio: até 2 no total por 1 ação, até 6 por 2 ações', 3200); }, 60);
