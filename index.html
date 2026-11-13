@@ -8609,7 +8609,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if ($('#mAcao').hidden) abrir('mAcao');
       return;
     }
-    const dadosH = r.dados.length ? '<div class="dd-dados">' + r.dados.map((x, n) => '<i style="animation-delay:' + n * 70 + 'ms" class="' + (r.def !== null ? (x >= r.def ? 'hit' : 'miss') : (x === r.max ? 'hit' : 'miss')) + '">' + x + '</i>').join('') + '</div>' : '';
+    const defL = r.def !== null && r.def !== undefined ? r.def : (() => { const ds = (r.linhas || []).map(l => +((/Defesa (\d+)/.exec(l.txt || '') || [])[1] || 0)).filter(Boolean); return ds.length ? Math.min(...ds) : null; })();
+    const dadosH = r.dados.length ? '<div class="dd-dados">' + r.dados.map((x, n) => '<i style="animation-delay:' + n * 70 + 'ms" class="' + (defL !== null ? (x >= defL ? 'hit' : 'miss') : (x === r.max ? 'hit' : 'miss')) + '">' + x + '</i>').join('') + '</div>' : '';
     const trav = !!(r.pend && r.rolado);
     const opsH = r.ops ? '<div class="rs-ops' + (trav ? ' trav' : '') + '"><b>' + (trav ? 'EFEITO ESCOLHIDO' : r.multi ? 'EFEITOS (aprimorado: pode marcar os dois)' : 'ESCOLHA O EFEITO') + '</b>' + r.ops.map((o, i) => trav && !r.opSel.includes(i) ? '' : '<button ' + (trav ? 'disabled ' : '') + 'data-op="' + i + '" class="' + (r.opSel.includes(i) ? 'on' : '') + '"><strong>' + o.nome + '</strong><small>' + o.txt + '</small></button>').join('') + '</div>' : '';
     let lin = r.linhas.map((l, li) => {
