@@ -6369,7 +6369,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     ['Ilusão', '🃏', 0], ['Fumaça', '💨', 0], ['Pista', '🪩', 0], ['Campo', '🛡️', 0], ['Casa Infernal', '🔥', 0], ['Portal', '🚪', 0], ['Lápide', '🪦', 1], ['Miasma', '🦠', 0], ['Tempestade', '⛈️', 0], ['Nuvem', '☁️', 0], ['Retrato', '🖼️', 1], ['Tinta', '🎨', 0], ['Mala', '🧳', 1], ['Armadilha', '🪤', 0], ['Cópia', '👥', 0], ['Domínio', '🌌', 0], ['Marcador', '📍', 0]];
   const ESTI = Object.fromEntries(EST.map(e => [e[0], e]));
   const ARMI = { 'Mandíbula': '🪤', 'Laço': '➰', 'Espinhos Envenenados': '🌵', 'Explosiva': '💣' };
-  const icEst = e => e.tipo === 'Armadilha' ? (ARMI[(e.opc || '').split(' + ')[0]] || '🪤') : e.tipo === 'Muralha' && e.opc === 'Fogo' ? '🧱' : (ESTI[e.tipo] || ESTI.Marcador)[1];
+  const TATI = { 'Presas': '🦷', 'Escamas': '🐍', 'Asas': '🪽', 'Olho Aberto': '👁️', 'Raiz': '🌱' };
+  const icEst = e => e.tipo === 'Desenho' && e.tatN ? TATI[e.tatN] || '🖋️' : e.tipo === 'Armadilha' ? (ARMI[(e.opc || '').split(' + ')[0]] || '🪤') : e.tipo === 'Muralha' && e.opc === 'Fogo' ? '🧱' : (ESTI[e.tipo] || ESTI.Marcador)[1];
   const estNa = id => (S.est || []).filter(e => e.cell === id);
   const obstaculo = id => bloqueada(id) || estNa(id).some(e => ESTI[e.tipo] && ESTI[e.tipo][2]);
   function tipoEstrutura(h){
