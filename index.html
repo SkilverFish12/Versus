@@ -5339,7 +5339,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const j = timeDe(c), out = [];
     (cells || []).forEach(id => { if (c.elim) return;
       const z = (S.est || []).find(y => y.tipo === 'Tinta' && y.dono !== j && y.cell === id); if (!z) return;
-      const aq = S.times[z.dono].find(x => x.k === 'aquarela' && !x.elim); if (!aq) return;
+      const aq = (z.autor && porRef(z.autor)) || S.times[z.dono].find(x => x.k === 'aquarela' && !x.elim); if (!aq || aq.elim) return;
       const n = Math.max(1, aptE(aq, 2) + mod(aq, 'dd') + dadosCen(aq, 2)), v = rolarD10(n), def = clamp(defesas(c)[2] + adef(aq), 2, 10), ok = Math.max(...v) >= def;
       if (ok) manchar(c, 1);
       out.push('🎨 Tinta em ' + id + ' [' + v.join(',') + ' vs ' + def + ']: ' + (ok ? '+1 Mancha (' + c.manchas + ')' : 'escapou'));
