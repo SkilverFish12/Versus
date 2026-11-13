@@ -5794,6 +5794,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         const vivos = t => S.times[t].filter(x => !x.elim).length;
         const desv = (S.cen === 'sonhos' && S.sonho) ? ((S.sonho[j] * 2 <= S.sonhoMax[j] && S.sonho[1 - j] * 2 > S.sonhoMax[1 - j]) ? 1 : 0) : (vivos(j) < vivos(1 - j) ? 1 : 0);
         if (desv) { msg += ' Em desvantagem: +1 ação.'; aviso = (aviso ? aviso + ' · ' : '') + '⚖️ Em desvantagem: +1 ação'; }
+        if (estrada(c) && c.ab < -(c.abPago || 0)) { c.ab = -(c.abPago || 0); msg += ' Além da Estrada: não perde ações.'; aviso = (aviso ? aviso + ' · ' : '') + '🚗 Além da Estrada: não perdeu ações'; }
         if (temTat(c, 'Olho Aberto') && c.ab < 0) { msg += ' Olho Aberto: não perde ações.'; c.ab = 0; }
         if (temTat(c, 'Raiz') && c.pv < c.max) { c.pv = Math.min(c.max, c.pv + 2); msg += ' Raiz: +2 PV.'; aviso = (aviso ? aviso + ' · ' : '') + '🌱 Raiz: +2 PV'; }
         if (temTat(c, 'Raiz Avessa')) { sofrerDano(c, 2, {}); msg += ' Raiz Avessa: −2 PV.'; aviso = (aviso ? aviso + ' · ' : '') + '🥀 Raiz Avessa: −2 PV'; }
@@ -5838,7 +5839,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (c.k === 'cavalo' && !c.elim && !pOff(c, 'Ciclo de Sofrimento') && (c.cicloD || (c.pvFim != null && c.pv < c.pvFim)) && c.pv < c.max) { const v = Math.min(c.max - c.pv, Math.max(0, 2 - (c.cr || 0))); c.pv += v; const t2 = '🐴 Ciclo de Sofrimento: +' + v + ' PV'; msg += ' ' + t2 + '.'; aviso = (aviso ? aviso + ' · ' : '') + t2; }
           c.cicloD = false;
           if (temEf(c, 'cura4') && c.pv < c.max && !c.elim) { c.pv = Math.min(c.max, c.pv + Math.max(0, 4 - (c.cr || 0))); msg += ' Obra-Prima verde: +4 PV.'; }
-        } c.ab = 0; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0; c.rErros = 0; c.rDano = 0; c.cupCura = false; c.escP = null; c.formaT = false; c.trocaT = false; c.leitura = false; c.copAtk = []; c.sableMov = false; c.mansaoT = false; if (c.k === 'ceifadora') c.traje = null;
+        } c.ab = 0; c.abPago = 0; c.interBloq = false; c.gastas = 0; c.usadas = []; modo = null; c.condUsado = false; c.basicoFeito = false; c.kz = 0; c.rErros = 0; c.rDano = 0; c.cupCura = false; c.escP = null; c.formaT = false; c.trocaT = false; c.leitura = false; c.copAtk = []; c.sableMov = false; c.mansaoT = false; if (c.k === 'ceifadora') c.traje = null;
         if (c.aspecto && c.aspecto.ate === 'turno') c.aspecto = null;
         expiraIni(j + ',' + i); expiraDC();
         if (c.k === 'superior') { const L = (S.est || []).filter(z => z.tipo === 'Domínio' && z.dono === j); if (L.length) { S.est = S.est.filter(z => z !== L[0]); msg += ' Domínio mais antigo desfeito (' + L[0].cell + ').'; } }
@@ -6554,13 +6555,13 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function aplicarGuarda(q, t, tipo, red){
     const nm = tipo === 'fardo' ? 'Fardo Aceito' : 'Interceptação', exp = { t: 'ini', ref: refDe(q) };
     t.efs = (t.efs || []).filter(e => !(e.guarda && e.guarda.tipo === tipo));
-    novoEf(t, { nome: nm, autor: CH[q.k].nome, faz: tipo === 'fardo' ? 'o primeiro dano vai para ' + CH[q.k].nome + (red ? ' (−' + red + ')' : '') : 'o primeiro dano vem com 4 a menos; D.R.I.V.E. sofre esses 4', acaba: 'no início do próximo turno de ' + CH[q.k].nome, exp, mods: {}, guarda: { tipo, ref: refDe(q), red } });
+    novoEf(t, { nome: nm, autor: CH[q.k].nome, faz: tipo === 'fardo' ? 'o primeiro dano vai para ' + CH[q.k].nome + (red ? ' (−' + red + ')' : '') : 'no primeiro dano, D.R.I.V.E. acelera até o lado dele: o dano vem com 4 a menos e D.R.I.V.E. sofre esses 4' + (red === 'ap' ? ' · se o atacante estiver ao lado, é empurrado 2 casas' : ''), acaba: 'no início do próximo turno de ' + CH[q.k].nome, exp, mods: {}, guarda: { tipo, ref: refDe(q), red } });
     let mv = '';
-    if (tipo === 'inter' && q.pos && t.pos && dP(q.pos, t) > 1) { const cs = vizinhas(t.pos).filter(id => livre(id)).sort((a, b) => dist(q.pos, a) - dist(q.pos, b)); if (cs[0]) { moverPeca(q, cs[0]); mv = ', e D.R.I.V.E. foi para ' + cs[0]; } }
+    if (tipo === 'inter') mv = ' (quando ele sofrer dano, D.R.I.V.E. acelera até o lado dele)';
     return CH[q.k].nome + ' protege ' + CH[t.k].nome + mv;
   }
   const GUARDA_FORA = { drive: ['Interceptação', 'inter', 4, '🚗'], maligno: ['Fardo Aceito', 'fardo', 2, '🖤'] };
-  const guardasFora = () => { const aj = S.ativo[0], out = []; S.times[1 - aj].forEach((x, i) => { if (!x.elim && GUARDA_FORA[x.k]) out.push([1 - aj, i]); }); return out; };
+  const guardasFora = () => { const aj = S.ativo[0], out = []; S.times[1 - aj].forEach((x, i) => { if (!x.elim && GUARDA_FORA[x.k] && !(x.k === 'drive' && x.interBloq)) out.push([1 - aj, i]); }); return out; };
   const retratoDe = x => { const r0 = refDe(x); return (S.est || []).find(z => z.tipo === 'Retrato' && z.ref === r0 && z.cell && !z.troca); };
   function trocarRetrato(x){
     const z = retratoDe(x); if (!z || !x.pos || x.elim) return;
@@ -6719,6 +6720,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (/ENTRE OS DOIS/.test(h.a) && !entreDois(c).length) return 'Breu e Fresta precisam estar a até 6 casas um do outro (e não adjacentes)'; }
     if (c.k === 'cambiante' && FORMA_H[h.n] && formaDe(c) !== 'Quimera Primordial' && !FORMA_H[h.n].includes(formaDe(c))) return 'Só em ' + FORMA_H[h.n].join(' ou ') + ' (escolha a forma no painel)';
     if (!sup && (c.efs || []).some(e => e.nome === 'Monstro de Sangue')) return 'Monstro de Sangue: só Ataque Básico';
+    if (h.n === 'Interceptação' && c.interBloq) return 'Interceptação já foi ativada: volta no próximo turno do D.R.I.V.E.';
     if (c.imo && MOVE_SI.includes(h.n)) return 'Imóvel: não pode usar habilidade que move o personagem';
     if (pazAtiva() && h.t.includes('ATAQUE')) return 'Eu Vim em Paz: ninguém pode atacar';
     if (temEf(c, 'juramento')) return 'Ninguém Encosta Neles: Promessa não age';
@@ -6950,7 +6952,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'guardaFora') {
       if (!tok || !d0.toks.has(tok)) return true;
       const q = S.times[modo.quem[0]][modo.quem[1]], tt = tok.split(',').map(Number), t = S.times[tt[0]][tt[1]], tipo = modo.tipo; modo = null;
-      let m = ''; mudar(() => { q.ab = clamp(q.ab - 1, -4, 2); q.guardaR = S.rodada; m = aplicarGuarda(q, t, tipo, 0); }, () => '🛡️ ' + m + ' (fora do turno: −1 ação no próximo turno).');
+      let m = ''; mudar(() => { q.ab = clamp(q.ab - 1, -4, 2); q.abPago = (q.abPago || 0) + 1; q.guardaR = S.rodada; m = aplicarGuarda(q, t, tipo, 0); }, () => '🛡️ ' + m + ' (fora do turno: −1 ação no próximo turno).');
       return true;
     }
     if (modo.t === 'troca') {
@@ -6965,7 +6967,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (!t.pos || !id || !d0.casas.has(id)) return true;
       modo = null; const msg = [];
       mudar(() => {
-        if (st.t === 'teleporte') { moverPeca(t, id); msg.push(CH[t.k].nome + ' foi para ' + id); if (st.acao) { t.ab = clamp(t.ab - 1, -4, 2); msg.push(CH[t.k].nome + ' perde 1 ação no próximo turno'); } return; }
+        if (st.t === 'teleporte') { moverPeca(t, id); msg.push(CH[t.k].nome + ' foi para ' + id); if (st.acao) perdeAb(t, msg); return; }
         const di = st.t === 'empDir' ? DIR6.findIndex((_, k) => viz(t.pos, k) === id) : (() => { for (let k = 0; k < 6; k++) { let p = t.pos; for (let n = 0; n < st.alc; n++) { p = viz(p, k); if (!p) break; if (p === id) return k; } } return -1; })();
         if (di < 0) return;
         if (st.t === 'empDir' && !st.mover) { msg.push(...empurrar(t, null, st.n, { di })); return; }
@@ -6976,7 +6978,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           const o = ocupante(nx);
           if (o || obstaculo(nx)) {
             msg.push(CH[t.k].nome + ' colidiu' + (o ? ' com ' + CH[S.times[o[0]][o[1]].k].nome : ' num obstáculo'));
-            [t].concat(o ? [S.times[o[0]][o[1]]] : []).forEach(x => { dano(x, st.colDano, msg); if (st.colAcao && !x.elim) { x.ab = clamp(x.ab - 1, -4, 2); msg.push(CH[x.k].nome + ' perde 1 ação no próximo turno'); } });
+            [t].concat(o ? [S.times[o[0]][o[1]]] : []).forEach(x => { dano(x, st.colDano, msg); if (st.colAcao && !x.elim) perdeAb(x, msg); });
             break;
           }
           moverPeca(t, nx); if (nx === id) break;
@@ -7201,7 +7203,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     return null;
   }
   const ehEstado = h => h.a === 'PESSOAL' && /dura até usar esta habilidade de novo|usar outra forma/i.test(limpo(h.d));
-  const aspectoDe = ch => ch.habs.find(x => !x.c && /No início de cada turno/.test(limpo(x.d)) && limpo(x.d).indexOf('•') >= 0);
+  const aspectoDe = ch => ch.key === 'ceifadora' ? null : ch.habs.find(x => !x.c && /No início de cada turno/.test(limpo(x.d)) && limpo(x.d).indexOf('•') >= 0);
 
   // efeitos lidos do texto da ficha (ou da opção escolhida)
   function efeitos(h, aprim, optTxt){
@@ -7264,7 +7266,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (g && q && !q.elim && q !== t) {
         if (g.guarda.tipo === 'santuario') { const r2 = sofrerDano(q, Math.floor(real / 2), { psi: o.psi, desvio: true }); return { real: 0, nota: ['Santuário: ' + CH[q.k].nome + ' sofreu ' + r2.real + ' no lugar'] }; }
         if (g.guarda.tipo === 'fardo') { t.efs = t.efs.filter(e => e !== g); const v2 = Math.max(0, real - (g.guarda.red || 0)); const r2 = sofrerDano(q, v2, { psi: o.psi, desvio: true }); return { real: 0, nota: ['Fardo Aceito: ' + CH[q.k].nome + ' sofreu ' + r2.real + ' no lugar' + (g.guarda.red ? ' (−' + g.guarda.red + ')' : '')] }; }
-        if (g.guarda.tipo === 'inter') { t.efs = t.efs.filter(e => e !== g); const a = Math.min(4, real); real -= a; const r2 = sofrerDano(q, a, { desvio: true }); nota.push('Interceptação: −' + a + ', D.R.I.V.E. sofreu ' + r2.real); }
+        if (g.guarda.tipo === 'inter') { t.efs = t.efs.filter(e => e !== g); q.interBloq = true; if (q.pos && t.pos && dP(q.pos, t) > 1 && !q.imo) { const cs = vizinhas(t.pos).filter(id => livre(id) && !bloqueada(id)).sort((a, b) => dist(q.pos, a) - dist(q.pos, b)); if (cs[0]) { moverPeca(q, cs[0]); nota.push('D.R.I.V.E. acelerou até ' + cs[0]); } } if (g.guarda.red === 'ap' && o.atk && o.atk.pos && t.pos && dP(t.pos, o.atk) <= 1 && !o.atk.elim) nota.push(...empurrar(o.atk, q.pos || t.pos, 2, {})); const a = Math.min(4, real); real -= a; const r2 = sofrerDano(q, a, { desvio: true }); nota.push('Interceptação: −' + a + ', D.R.I.V.E. sofreu ' + r2.real); }
         if (g.guarda.tipo === 'consagrado' && !o.psi && real > 0) { const meio = Math.floor(real / 2), resto = real - meio; real = meio; if (!q.elim) { tirarEfs(q, e => e.dorDn); aplicarEf(q, { nome: 'Guardar a Dor (+2 de dano)', autor: CH[q.k].nome, faz: '+2 de dano nos ataques', acaba: 'no fim do próximo turno de ' + CH[q.k].nome, exp: { t: 'fim', ref: refDe(q), pula: ehAtivo(q) ? 1 : 0 }, mods: { dn: 2 }, dorDn: true }); nota.push(CH[q.k].nome + ' +2 de dano até o fim do próximo turno'); } const r2 = sofrerDano(q, Math.max(0, resto - 2), { desvio: true }); nota.push('Consagrado: metade, ' + CH[q.k].nome + ' sofreu ' + r2.real + ' (resto −2)'); }
       } }
     if (!o.psi) {
@@ -7339,6 +7341,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (!pOff(c, 'De Longe!') && ini && c.k === 'maleavel' && basico && c.pos && t.pos && dP(c.pos, t) > 1) { const k = dP(c.pos, t) - 1; dd -= k; notas.push('De Longe!: −' + k + (k > 1 ? ' dados' : ' dado') + ' pelo alcance extra'); }
     return { dd, df, notas };
   }
+  function perdeAb(t, msg){ if (estrada(t)) { msg.push('Além da Estrada: ' + CH[t.k].nome + ' não perde ação'); return; } t.ab = clamp((t.ab || 0) - 1, -4, 2); msg.push(CH[t.k].nome + ' perde 1 ação no próximo turno'); }
   const estrada = t => !!t && (t.k === 'drive' && !pOff(t, 'Além da Estrada') || (!!t.pos && S.times[timeDe(t)].some(x => x !== t && x.k === 'drive' && !x.elim && x.pos && !pOff(x, 'Além da Estrada') && dP(t.pos, x) <= 1)));
   const pOff = (x, n) => !!x && (x.efs || []).some(e => e.bloqP === n);
   const sozinho2 = t => !!t.pos && !S.times[timeDe(t)].some(x => x !== t && !x.elim && x.pos && dP(t.pos, x) <= 2);
@@ -7717,7 +7720,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         linhasR.forEach(l => { if (!ini(l)) return; sem(l, ['empurra', 'dc']);
           if (!l.ok) return;
           if (agil) l.ef.push({ k: 'dc', v: [2, 2], on: true, txt: 'Sangrando: Dano Contínuo 2 por 2 rodadas (Ágil)' });
-          if (col) fx(l, 'Colosso: empurrado 2 casas; se bater num obstáculo ou personagem, +3 de dano e −1 ação no próximo turno', (t, msg) => { const o = empurrar(t, c.pos, 2, { bloqueio: 3 }); if (o.some(x => /colidiu|obstáculo/.test(x))) { t.ab = clamp((t.ab || 0) - 1, -4, 2); o.push(CH[t.k].nome + ' −1 ação no próximo turno'); } if (msg && msg.push) msg.push(o.join(', ')); }); });
+          if (col) fx(l, 'Colosso: empurrado 2 casas; se bater num obstáculo ou personagem, +3 de dano e −1 ação no próximo turno', (t, msg) => { const o = empurrar(t, c.pos, 2, { bloqueio: 3 }); if (o.some(x => /colidiu|obstáculo/.test(x))) perdeAb(t, o); if (msg && msg.push) msg.push(o.join(', ')); }); });
         break; }
       case 'Nanobots': {
         const v = r.aprim ? 4 : 3, n = r.aprim ? 4 : 3;
@@ -7920,7 +7923,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const linhasR = [], extras = [], pre = [];
     let hitsBrasa = 0;
     if ((h.n === 'Interceptação' || h.n === 'Fardo Aceito') && alvos.length && alvos[0][0] === aj) { delete ef.esc; delete ef.dano; delete ef.red;
-      extras.push({ k: 'guarda', v: alvos[0], tipo: h.n === 'Fardo Aceito' ? 'fardo' : 'inter', red: h.n === 'Fardo Aceito' && r.aprim ? 4 : 0, on: true, txt: h.n === 'Fardo Aceito' ? 'O primeiro dano que o aliado sofrer vai para Maligno' + (r.aprim ? ' (−4)' : '') : 'D.R.I.V.E. vai para o lado do aliado; o primeiro dano nele vem com 4 a menos, e D.R.I.V.E. sofre esses 4' }); }
+      extras.push({ k: 'guarda', v: alvos[0], tipo: h.n === 'Fardo Aceito' ? 'fardo' : 'inter', red: h.n === 'Fardo Aceito' ? (r.aprim ? 4 : 0) : (r.aprim ? 'ap' : 0), on: true, txt: h.n === 'Fardo Aceito' ? 'O primeiro dano que o aliado sofrer vai para Maligno' + (r.aprim ? ' (−4)' : '') : 'Quando o aliado sofrer o primeiro dano, D.R.I.V.E. acelera até o lado dele: o dano vem com 4 a menos e D.R.I.V.E. sofre esses 4' + (r.aprim ? '; se o atacante estiver ao lado do aliado, é empurrado 2 casas' : '') }); }
     if (h.n === 'Petrificação') { delete ef.def; if (r.aprim) extras.push({ k: 'petrAli', on: true, txt: 'Aliados adjacentes ao Guardião recebem +1 na Defesa até o início do próximo turno dele' }); }
     if (h.n === 'Foco Absoluto' && alvos.length && alvos[0][0] !== aj) { delete ef.def; delete ef.dados; delete ef.dano; const tf = S.times[alvos[0][0]][alvos[0][1]];
       extras.push({ k: 'foco', v: alvos[0], aprim: r.aprim, on: true, txt: 'Foco em ' + CH[tf.k].nome + ': −1 na Defesa contra ' + ch.nome + (r.aprim ? ', +2 de dano de ' + ch.nome + ' contra ele' : '') + '; ' + ch.nome + ' tem −1 dado contra outros inimigos' }); }
@@ -8088,7 +8091,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (r.nome && c.carona) { const v = porRef(c.carona), l0 = (r.linhas || []).find(l => l.alvo[0] !== aj), t0 = l0 && S.times[l0.alvo[0]][l0.alvo[1]];
         const cel = v && v.pos ? vizinhas(v.pos).filter(id => livre(id) && !bloqueada(id)).sort((a, b) => (t0 && t0.pos ? dist(a, t0.pos) - dist(b, t0.pos) : 0))[0] : null;
         c.carona = null; if (cel) c.pos = cel; msg.push(CH[c.k].nome + ' desceu do veículo' + (cel ? ' em ' + cel : '')); }
-      if (r.pagaProx) { c.ab = clamp((c.ab || 0) - 1, -4, 2); msg.push(CH[c.k].nome + ' gastou 1 ação do próximo turno'); }
+      if (r.pagaProx) { c.ab = clamp((c.ab || 0) - 1, -4, 2); c.abPago = (c.abPago || 0) + 1; msg.push(CH[c.k].nome + ' gastou 1 ação do próximo turno'); }
       if (r.nome) { c.usadas = c.usadas || []; c.usadas.push(r.nome); }
       if (r.sup) { S.med[aj] -= 3; c.med = true; c.sup = true; }
       else if (r.aprim && c.possPor) aprimorarMarcado = false;
