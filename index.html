@@ -5719,6 +5719,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   function eliminar(j, i){
     const c = S.times[j][i];
+    if (S.cen === 'ruptura') setTimeout(() => { if (!c.elim) return; S.times.flat().forEach(x => { if (x.duelo === c.k) { x.duelo = null; log('⚔ ' + CH[x.k].nome + ' ficou sem duelante e volta a lutar normalmente.'); } }); c.duelo = null; salvar(); render(); }, 0);
     if (S.cen === 'sonhos' && S.sonho) { c.pv = 0; return; }
     if (c.k === 'invicto' && !c.ntUsado && !(S.cen === 'sonhos')) { c.ntUsado = true; c.pv = 10; novoEf(c, { nome: 'Não Toleramos Perdedores', autor: CH[c.k].nome, faz: '+2 na Defesa contra o próximo teste feito contra ele', acaba: 'depois do próximo teste contra ele', exp: { t: 'man' }, mods: {}, naoTol: true }); log('🥇 Invicto nunca perde: volta com 10 PV e +2 na Defesa contra o próximo teste.'); setTimeout(() => toast('🥇 NÃO TOLERAMOS PERDEDORES! Invicto volta com 10 PV', 3000), 30); return; }
     if (c.k === 'cobrador') S.times.forEach(t => t.forEach(x => { x.div = 0; }));
@@ -5904,7 +5905,11 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   $('#ptTimes').addEventListener('change', e => {
     const s = e.target.closest('[data-duelo]'); if (!s) return;
     const [, , c] = pega(s.dataset.duelo);
-    mudar(() => { c.duelo = s.value || null; }, s.value ? '⚔ ' + CH[c.k].nome + ' duela com ' + CH[s.value].nome + '.' : null);
+    mudar(() => { const jj = timeDe(c), op = S.times[1 - jj];
+      if (c.duelo) op.forEach(o => { if (o.k === c.duelo && o.duelo === c.k) o.duelo = null; });
+      c.duelo = s.value || null;
+      if (c.duelo) { S.times[jj].forEach(x => { if (x !== c && x.duelo === c.duelo) x.duelo = null; }); op.forEach(o => { if (o.k === c.duelo) { if (o.duelo) S.times[jj].forEach(x => { if (x.k === o.duelo) x.duelo = null; }); o.duelo = c.k; } }); } },
+      s.value ? '⚔ ' + CH[c.k].nome + ' duela com ' + CH[s.value].nome + '.' : null);
   });
   $('#ptDesfazer').addEventListener('click', () => {
     if (!hist.length) return;
@@ -7448,6 +7453,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   function ajustesParlenda(rr, c, h){
     const aj = timeDe(c);
+    if (S.cen === 'ruptura' && c.duelo) rr.linhas.forEach(l => { if (l.alvo[0] === aj || l.duelOk) return; const t = S.times[l.alvo[0]][l.alvo[1]], du = c.duelo === t.k; l.ef.forEach(e => { if (e.k === 'dano' && e.v > 0) { l.duelOk = true; e.v = Math.max(1, e.v + (du ? 2 : -2)); e.txt = e.v + (e.psi ? ' de Dano Psíquico' : ' de dano') + (du ? ' (duelo +2)' : ' (fora do duelo −2)'); } }); });
     if (h.n === 'Descarregando a Bagagem') { const ir = (rr.pre || []).find(p => p.k === 'irPara'), apx = (rr.pre || []).find(p => p.k === 'aprox'), apT = apx && S.times[apx.v[0]] && S.times[apx.v[0]][apx.v[1]], adv = ir && c.pos ? dist(c.pos, ir.v) : (apT && apT.pos && c.pos && dist(c.pos, apT.pos) > 1 ? (vizinhas(apT.pos).filter(livre).map(v => dist(v, c.pos)).sort((x, y) => x - y)[0] || 0) : 0), tot = (c.andou || 0) + adv, ex = Math.floor(tot / 3);
       rr.linhas.forEach(l => l.ef.forEach(e => { if (e.k === 'dano' && !e.malaOk) { e.v += ex; e.malaOk = true; e.txt = e.v + ' de dano'; } }));
       rr.notas = rr.notas.concat('Andou ' + tot + (tot === 1 ? ' casa' : ' casas') + ' neste turno (com o avanço): +' + ex + ' de dano'); }
@@ -7551,6 +7557,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     let dd = 0, df = 0; const notas = [];
     if (!t || !c) return { dd, df, notas };
     const ini = timeDe(c) !== timeDe(t);
+    if (!basico && ini && S.cen === 'ruptura' && c.duelo) { if (c.duelo === t.k) { dd++; notas.push('Duelo: +1 dado'); } else { df++; notas.push('Fora do duelo: +1 na Defesa do alvo'); } }
     if (!pOff(c, 'Cauda Obscura') && basico && c.k === 'gatoxadrez') { dd++; notas.push('Cauda Obscura: +1 dado'); }
     if (!pOff(c, 'Guarda Alta') && basico && c.k === 'invicto') { dd++; notas.push('Guarda Alta: +1 dado no Ataque Básico'); }
     if (!pOff(c, 'Sem Perdão') && ini && c.k === 'ceifadora' && !c.spT) { const vivos = S.times[timeDe(t)].filter(x => !x.elim), mn = Math.min(...vivos.map(x => x.pv)); if (t.pv === mn) { dd++; notas.push('Sem Perdão: +1 dado (inimigo com menos PV)'); if (consumir) c.spT = true; } }
