@@ -4782,6 +4782,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     hist.push(JSON.stringify(S));
     if (hist.length > 80) hist.shift();
     fn();
+    fendaVarre();
     sonhoSync();
     if (msg) log(typeof msg === 'function' ? msg() : msg);
     salvar(); render();
@@ -7874,6 +7875,10 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   function camposBorda(){ return (S.est || []).filter(e => CELL[e.cell] && (e.auras || []).some(a => /borda do campo/.test(a.txt || ''))).map(e => [e.cell, Math.max(...e.auras.map(a => a.raio))]); }
   // distâncias de Mover: passa por aliados, não por inimigos nem Obstáculos (salvo a ficha dizer o contrário)
+  function fendaVarre(){
+    if (!(S.est || []).some(z => z.tipo === 'Fenda' && z.par)) return;
+    S.times.forEach(t => t.forEach(x => { if (x.elim || !x.pos || x.carona) return; const fo = fendaPar(x.pos); if (!fo) return; const de = x.pos, dst = vizinhas(fo).filter(id => livre(id) && !bloqueada(id)).sort((a, b) => dist(a, de) - dist(b, de))[0]; if (!dst) return; moverPeca(x, dst); const t2 = '🌀 ' + CH[x.k].nome + ' caiu na Fenda em ' + de + ' e apareceu em ' + dst; log(t2); evento(t2); }));
+  }
   function fendaPar(id){ const f = (S.est || []).find(z => z.tipo === 'Fenda' && z.cell === id && z.par), o = f && S.est.find(z => z.tipo === 'Fenda' && z.par === f.par && z !== f); return o ? o.cell : null; }
   function mapaMover(c, max){
     const tj = timeDe(c), ps = passeMover(c), cb = camposBorda(), d0 = { [c.pos]: 0 }, pai = {}, fila = [c.pos];
