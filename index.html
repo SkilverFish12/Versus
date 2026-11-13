@@ -6567,6 +6567,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   // ── passivas de escolha no início do turno ──
   const ESCP = { vale: ['Raízes Protetoras', '🌿', 'aliado adjacente'], arquiteto: ['Primeira Impressão', '👁️', 'inimigo'], ninguem: ['Lendo Intenções', '🧠', 'inimigo'], relicario: ['Guardar a Dor', '🕯️', 'aliado'] };
+  const ESC_TRAVA = ['arquiteto', 'ninguem'];
   function escElegiveis(c){
     const aj = S.ativo[0], tp = ESCP[c.k][2];
     return pecas((pj, pi, x) => x !== c && (tp === 'inimigo' ? pj !== aj : pj === aj) && (tp !== 'aliado adjacente' || !c.pos || (x.pos && dP(c.pos, x) === 1)));
@@ -6579,7 +6580,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function escolhaPassiva(c){
     const e = ESCP[c.k]; if (!e || pOff(c, e[0])) return '';
     const L = escElegiveis(c);
-    let h = '<div class="ac-linha"><b>' + e[1] + ' ' + e[0].toUpperCase() + ':</b>' + (L.length ? L.map(p => '<button class="tg' + (c.escP === p.join(',') ? ' on' : '') + '" data-escp="' + p.join(',') + '">' + CH[S.times[p[0]][p[1]].k].nome + '</button>').join('') : '<small>nenhum ' + e[2] + '</small>') + '<small>escolha um ' + e[2] + '</small></div>';
+    let h = '<div class="ac-linha"><b>' + e[1] + ' ' + e[0].toUpperCase() + ':</b>' + (L.length ? L.map(p => '<button class="tg' + (c.escP === p.join(',') ? ' on' : '') + '"' + (ESC_TRAVA.includes(c.k) && c.escP && c.escP !== p.join(',') ? ' disabled' : '') + ' data-escp="' + p.join(',') + '">' + CH[S.times[p[0]][p[1]].k].nome + '</button>').join('') : '<small>nenhum ' + e[2] + '</small>') + '<small>' + (ESC_TRAVA.includes(c.k) && c.escP ? 'alvo escolhido: não dá para trocar até o próximo turno' : 'escolha um ' + e[2] + (ESC_TRAVA.includes(c.k) ? ' (não dá para trocar depois)' : '')) + '</small></div>';
     if (c.k === 'ninguem' && c.escP) h += '<div class="ac-linha"><button class="tg' + (c.leitura ? ' on' : '') + '" data-leitura' + (c.leitura || restam(c) < 1 ? ' disabled' : '') + '>📡 COMPARTILHAR A LEITURA (1 ação)</button><small>aliados: +1 na Defesa contra o próximo ataque de ' + CH[S.times[+c.escP[0]][+c.escP[2]].k].nome + '</small></div>';
     return h;
   }
@@ -6970,7 +6971,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b.dataset.pasv === 'tocaia') { const L = c.pos ? tocaiaAlvos(c) : pecas((j, i, x) => j !== S.ativo[0]); modo = { t: 'hab', h: H_TOCAIA, sup: false, aprim: false, alvosInfo: { tipo: 'todos', alvos: L }, sel: L }; return resolverHab(); }
     if (b.dataset.pasv === 'mover') { const pm = PASM[c.k]; return iniciarModo({ t: 'mover', gratis: pm[0], desl: pm[1] || undefined, rumo: c.k === 'promessa' ? (c.votoAli || []).map(porRef).filter(x => x && !x.elim && x.pos) : undefined }); }
     if (b.dataset.ac === 'atkest') return iniciarModo({ t: 'atkEst', alvos: estAtacaveis(c).map(z => z.cell) });
-    if (b.dataset.escp) { const [tj, ti] = b.dataset.escp.split(',').map(Number), t = S.times[tj][ti]; return mudar(() => aplicarEscolha(c, t), ESCP[c.k][1] + ' ' + CH[c.k].nome + ' (' + ESCP[c.k][0] + ') escolheu ' + CH[t.k].nome + '.'); }
+    if (b.dataset.escp) { const [tj, ti] = b.dataset.escp.split(',').map(Number), t = S.times[tj][ti]; if (ESC_TRAVA.includes(c.k) && c.escP) return toast(ESCP[c.k][0] + ': o alvo já foi escolhido neste turno.', 2200); return mudar(() => aplicarEscolha(c, t), ESCP[c.k][1] + ' ' + CH[c.k].nome + ' (' + ESCP[c.k][0] + ') escolheu ' + CH[t.k].nome + '.'); }
     if (b.dataset.leitura !== undefined) { const [tj, ti] = c.escP.split(',').map(Number), t = S.times[tj][ti]; return mudar(() => { c.gastas++; c.leitura = true; S.times[S.ativo[0]].forEach(x => { if (x !== c && !x.elim) novoEf(x, { nome: 'Lendo Intenções', autor: CH[c.k].nome, faz: '+1 na Defesa contra o próximo ataque de ' + CH[t.k].nome + ' (some depois do primeiro ataque)', acaba: 'no início do próximo turno de ' + CH[c.k].nome, exp: { t: 'ini', ref: refDe(c) }, contra: c.escP, cmods: { df: 1 }, mods: {} }); }); }, '📡 ' + CH[c.k].nome + ' compartilhou a leitura de ' + CH[t.k].nome + ' com os aliados.'); }
     if (b.dataset.kz !== undefined) { c.kz = +b.dataset.kz; salvar(); rPainel(); return; }
     if (b.dataset.forma2) { const f = b.dataset.forma2; if (formaDe(c) === f) { c.formaT = true; salvar(); rPainel(); return; }
