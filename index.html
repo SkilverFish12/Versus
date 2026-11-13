@@ -7295,6 +7295,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (!c.infT && cam.some(id => (S.est || []).some(z => z.tipo === 'Casa Infernal' && z.dono !== jj && z.cell === id))) { c.infT = true; const q = sofrerDano(c, 5, {}); extra += ' Casa Infernal: −' + q.real + ' PV.'; }
         { const tt = tintaTeste(c, cam); if (tt.length) extra += ' ' + tt.join('; ') + '.'; }
         { const qg = quadradoGat(c, cam, de); if (qg) extra += ' ' + qg + '.'; }
+        { const fp = cam.slice(0, -1).find(id => fendaPar(id)); if (fp) extra += ' 🌀 Passou pela Fenda em ' + fp + ' e saiu do outro lado.'; }
         { const fz = (S.est || []).find(z => z.tipo === 'Fenda' && z.cell === cellId && z.par);
           const out = fz && (S.est || []).find(z => z.tipo === 'Fenda' && z.par === fz.par && z !== fz);
           if (out) { const dst = vizinhas(out.cell).filter(id => livre(id) && !bloqueada(id)).sort((a, b) => dist(a, cellId) - dist(b, cellId))[0]; if (dst) { moverPeca(c, dst); extra += ' 🌀 Atravessou a Fenda e apareceu em ' + dst + '.'; } } }
@@ -7327,6 +7328,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       }
       if (a.tipo === 'casa' && a.fendaS) {
         const id = cellId; if (!id || !d0.casas.has(id)) return true;
+        if (!modo.fA && c.pos && dist(c.pos, id) !== 1) { toast('🌀 A 1ª Fenda fica numa casa ao lado da Saltadora', 2200); return true; }
         if (!modo.fA) { modo.fA = id; rBoard(); rPainel(); toast('1ª Fenda em ' + id + '. Agora toque em qualquer casa vazia para a 2ª', 2200); return true; }
         if (id === modo.fA) return true;
         modo.fB = id; modo.cel = id; modo.sel = []; return resolverHab(), true;
@@ -7872,12 +7874,13 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   function camposBorda(){ return (S.est || []).filter(e => CELL[e.cell] && (e.auras || []).some(a => /borda do campo/.test(a.txt || ''))).map(e => [e.cell, Math.max(...e.auras.map(a => a.raio))]); }
   // distâncias de Mover: passa por aliados, não por inimigos nem Obstáculos (salvo a ficha dizer o contrário)
+  function fendaPar(id){ const f = (S.est || []).find(z => z.tipo === 'Fenda' && z.cell === id && z.par), o = f && S.est.find(z => z.tipo === 'Fenda' && z.par === f.par && z !== f); return o ? o.cell : null; }
   function mapaMover(c, max){
     const tj = timeDe(c), ps = passeMover(c), cb = camposBorda(), d0 = { [c.pos]: 0 }, pai = {}, fila = [c.pos];
     const pode = id => { if (!ps.obs && obstaculo(id)) return false; const o = ocupante(id); if (o && o[0] !== tj && !ps.pers && S.times[o[0]][o[1]] !== c) return false; return true; };
-    while (fila.length) { const a = fila.shift(); if (d0[a] >= max) continue; if (S.cen === 'atelie' && a !== c.pos && FIOS.includes(a)) continue;
-      const viz = vizinhas(a).concat(S.cen === 'nave' && PORTAIS.includes(a) ? PORTAIS.filter(p => p !== a && !ocupante(p)) : []);
-      viz.forEach(b => { if (!pode(b)) return; if (cb.some(([z, r]) => (dist(z, a) <= r) !== (dist(z, b) <= r))) return; const nd = d0[a] + (S.cen === 'fazenda' && S.rodada > 4 && MATO.includes(b[0]) ? 2 : 1); if (nd > max || (b in d0 && d0[b] <= nd)) return; d0[b] = nd; pai[b] = a; fila.push(b); }); }
+    while (fila.length) { const a = fila.shift(), fz = a !== c.pos ? fendaPar(a) : null; if (d0[a] >= max && !fz) continue; if (S.cen === 'atelie' && a !== c.pos && FIOS.includes(a)) continue;
+      const viz = fz ? vizinhas(fz).filter(id => livre(id) && !bloqueada(id) && id !== c.pos) : vizinhas(a).concat(S.cen === 'nave' && PORTAIS.includes(a) ? PORTAIS.filter(p => p !== a && !ocupante(p)) : []);
+      viz.forEach(b => { if (!pode(b)) return; if (!fz && cb.some(([z, r]) => (dist(z, a) <= r) !== (dist(z, b) <= r))) return; const nd = d0[a] + (fz ? 0 : S.cen === 'fazenda' && S.rodada > 4 && MATO.includes(b[0]) ? 2 : 1); if (nd > max || (b in d0 && d0[b] <= nd)) return; d0[b] = nd; pai[b] = a; fila.push(b); }); }
     return { d: d0, pai };
   }
   function caminhoMover(c, de, para){ if (!de || !para) return []; const m = mapaMover(Object.assign({}, c, { pos: de }), 99), out = []; let p = para, g = 0; if (!(p in m.d)) return caminho(de, para); while (p !== de && g++ < 99) { out.unshift(p); p = m.pai[p]; } return out; }
@@ -8139,7 +8142,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       case 'Fenda Espacial': {
         const mm = r.m || {};
         for (let k = extras.length - 1; k >= 0; k--) if (extras[k].k === 'est' || extras[k].k === 'mover') extras.splice(k, 1);
-        if (mm.fA && mm.fB) extras.push(supFx('Abrir as Fendas em ' + mm.fA + ' e ' + mm.fB + ' (quem terminar o movimento numa aparece ao lado da outra) até o início do ' + (r.aprim ? 'segundo turno seguinte' : 'próximo turno') + ' de ' + nm, () => {
+        if (mm.fA && mm.fB) extras.push(supFx('Abrir as Fendas em ' + mm.fA + ' e ' + mm.fB + ' (quem pisar numa aparece ao lado da outra, e pode continuar andando) até o início do ' + (r.aprim ? 'segundo turno seguinte' : 'próximo turno') + ' de ' + nm, () => {
           S.est = S.est || []; const par = Date.now() + '' + d(999), exp = { t: 'ini', ref: cref, pula: r.aprim ? 1 : 0 }, acaba = 'no início do ' + (r.aprim ? 'segundo turno seguinte' : 'próximo turno') + ' de ' + nm;
           [mm.fA, mm.fB].forEach((cell, k) => S.est.push({ id: par + k, tipo: 'Fenda', cell, dono: aj, par, hab: 'Fenda Espacial', autor: cref, autorNome: nm, acaba, exp: Object.assign({}, exp), info: 'Quem pisar numa Fenda aparece numa casa adjacente à outra.' })); }));
         break; }
