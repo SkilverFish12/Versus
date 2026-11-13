@@ -6536,7 +6536,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   const TRAJE = { escudo: ['Escudo Retrátil', '🛡️', '+1 na Defesa contra Golpe, Projétil ou Energia'], lamina: ['Lâmina Ceifeira', '🗡️', 'Ataques Básicos +2 de dano e +1 dado'], visor: ['Visor Tático', '🎯', '+1 casa de alcance; alvos −1 na Defesa contra ela'] };
   function trajeHtml(c){
     if (c.k !== 'ceifadora' || pOff(c, 'Traje Ceifador')) return '';
-    return '<div class="ac-linha"><b>🦺 TRAJE CEIFADOR:</b>' + Object.keys(TRAJE).map(k => '<button class="tg' + (c.traje === k ? ' on' : '') + '" data-traje="' + k + '" title="' + TRAJE[k][2] + '">' + TRAJE[k][1] + ' ' + TRAJE[k][0] + '</button>').join('') + '<small>' + (c.traje ? TRAJE[c.traje][2] : 'escolha o modo deste turno') + '</small></div>';
+    return '<div class="ac-linha"><b>🦺 TRAJE CEIFADOR:</b>' + Object.keys(TRAJE).map(k => '<button class="tg' + (c.traje === k ? ' on' : '') + '"' + (c.traje && c.traje !== k ? ' disabled' : '') + ' data-traje="' + k + '" title="' + TRAJE[k][2] + '">' + TRAJE[k][1] + ' ' + TRAJE[k][0] + '</button>').join('') + '<small>' + (c.traje ? TRAJE[c.traje][2] + ' · fica até o início do próximo turno dela' : 'escolha o modo: não dá para trocar até o próximo turno') + '</small></div>';
   }
   function escolhaPassiva(c){
     const e = ESCP[c.k]; if (!e || pOff(c, e[0])) return '';
@@ -6873,7 +6873,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b.dataset.ac === 'pagar') return mudar(() => { c.div = divDe(c) - 1; c.gastas += 1; }, '💰 ' + CH[c.k].nome + ' pagou 1 Dívida (' + (divDe(c) - 1) + ' restante(s)).');
     if (b.dataset.ac === 'carga') return mudar(() => { setRec(c, 'Cargas', rec(c, 'Cargas') + 1); c.gastas += 2; }, '⚛️ ' + CH[c.k].nome + ' carregou: ' + (rec(c, 'Cargas') + 1) + ' Carga(s).');
     if (b.dataset.retrato) return trocarRetrato(porRef(b.dataset.retrato));
-    if (b.dataset.traje) { const k = b.dataset.traje; return mudar(() => { c.traje = k; tirarEfs(c, e => e.traje);
+    if (b.dataset.traje) { const k = b.dataset.traje; if (c.traje) { toast('🦺 O Traje já foi escolhido neste turno: fica até o início do próximo turno da Ceifadora', 2400); return; } return mudar(() => { c.traje = k; tirarEfs(c, e => e.traje);
       novoEf(c, Object.assign({ nome: 'Traje: ' + TRAJE[k][0], autor: CH[c.k].nome, faz: TRAJE[k][2], acaba: 'no início do próximo turno de ' + CH[c.k].nome, exp: { t: 'ini', ref: refDe(c) }, mods: {}, traje: true }, k === 'lamina' ? { basDn: 2 } : {})); }, '🦺 ' + CH[c.k].nome + ' escolheu ' + TRAJE[k][0] + '.'); }
     if (b.dataset.marca) return voltarMarca(porRef(b.dataset.marca));
     if (b.dataset.pasv === 'copias') return iniciarModo({ t: 'copiaAtk' });
