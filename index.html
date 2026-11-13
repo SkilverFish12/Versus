@@ -1721,6 +1721,13 @@
   }
   .pt-cen[hidden]{display:none}
   .hx.mv2 polygon{fill:#fff3b0; stroke:#a08000}
+  .alvo-lista{flex-basis:100%; display:flex; flex-wrap:wrap; gap:6px; font-family:inherit; letter-spacing:0}
+  .alvo-lista small{flex-basis:100%; font-family:'Bangers',cursive; letter-spacing:1px; font-size:12px}
+  .alvo-bt{display:flex; align-items:center; gap:6px; background:#fff; border:3px solid #000; border-left-width:8px; padding:4px 10px 4px 6px; cursor:pointer; font-size:13px; text-align:left; box-shadow:2px 2px 0 #000}
+  .alvo-bt.j0{border-left-color:var(--j0)} .alvo-bt.j1{border-left-color:var(--j1)}
+  .alvo-bt img{width:30px; height:30px; border-radius:50%} .alvo-bt .ai{font-size:22px}
+  .alvo-bt b{font-family:'Bangers',cursive; letter-spacing:1px; font-size:15px} .alvo-bt em{font-style:normal; font-size:11.5px; color:#555; font-family:system-ui,sans-serif; font-weight:700}
+  .alvo-bt.on{background:#fff6b0} .alvo-bt i{font-style:normal; font-weight:900; color:#1a8a2a}
   .pt-board .ac-modo{margin:-12px -12px 10px; border:none; border-bottom:3px solid #000}
   @media (min-width:860px) and (max-width:1099px){
     .pt-mesa{display:grid; grid-template-columns:340px minmax(0,1fr); gap:10px; align-items:start}
@@ -6859,12 +6866,26 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     return h;
   }
   let aprimorarMarcado = false;
+  function listaAlvos(c){
+    if (!modo) return '';
+    let D; try { D = destaquesModo(); } catch (e) { return ''; }
+    if (!D.toks.size) return '';
+    const aj = S.ativo ? S.ativo[0] : -1, sel = (modo.sel || []).map(x => x.join(','));
+    const L = [...D.toks].map(k => { const [j, i] = k.split(',').map(Number), x = S.times[j][i]; return [k, j, i, x, c && c.pos && x.pos ? dP(c.pos, x) : null]; }).filter(([, , , x]) => x && !x.elim && x.pos).sort((a, b) => (a[1] === aj) - (b[1] === aj) || (a[4] || 0) - (b[4] || 0));
+    if (!L.length) return '';
+    return '<div class="alvo-lista"><small>ALVOS NO ALCANCE · toque para escolher</small>' + L.map(([k, j, i, x, dd]) => '<button class="alvo-bt j' + j + (sel.includes(k) ? ' on' : '') + '" data-alvotk="' + k + '">' + (embC(x) ? '<img src="' + embC(x) + '" alt="">' : '<span class="ai">' + CH[x.k].icon + '</span>') + '<b>' + esc(nomeC(x)) + '</b><em>' + (j === aj ? 'aliado' : 'inimigo') + ' · ' + x.pv + '/' + x.max + ' PV' + (dd !== null ? ' · ' + (dd === 0 ? 'ele mesmo' : dd + (dd > 1 ? ' casas' : ' casa')) : '') + '</em>' + (sel.includes(k) ? '<i>✓</i>' : '') + '</button>').join('') + '</div>';
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-alvotk]'); if (!b || !modo) return;
+    e.stopPropagation(); const [tj, ti] = b.dataset.alvotk.split(',').map(Number), x = S.times[tj][ti];
+    if (x && x.pos) cliqueModo(x.pos, b.dataset.alvotk);
+  }, true);
   function bannerModo(){
     const c = ativoC(), desl = (modo && modo.desl) || (c ? deslDe(c) : 2);
     const nomeM = modo.t === 'mover' ? '👣 ' + (modo.gratis ? 'MOVER GRÁTIS (' + modo.gratis + ')' : 'MOVER') + ': toque numa casa amarela (até ' + desl + ' casas)' : modo.t === 'basico' ? '👊 ATAQUE BÁSICO: toque num inimigo adjacente' :
       modo.t === 'bomba' ? '🌋 DETONAR: toque na Bomba que vai explodir' : modo.t === 'tiraBomba' ? '🌋 Kazan tem 3 Bombas: toque na que vai sumir' : modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo + (modo.resta ? ' (faltam até ' + modo.resta + (modo.alc ? ', a até ' + modo.alc + ' casas' + (modo.tipo === 'Domínio' ? ' do Superior' : '') : '') + ')' : '') : (modo.t === 'empDir' || modo.t === 'arremesso' || modo.t === 'teleporte' || modo.t === 'troca' || modo.t === 'guardaFora' || (modo.t === 'mover' && modo.tit)) ? modo.tit : modo.t === 'pincel' ? '🎨 PINCELADA: toque para pintar (vermelho), toque de novo para trocar a cor (azul, verde) · faltam ' + modo.n + ' casa(s)' : modo.t === 'brasaLinha' ? '🔥 BRASA: toque numa casa ao lado de Kazan; a Linha 3 de Casas Infernais sai nessa direção (faltam ' + modo.n + ')' : modo.t === 'ceus' ? '☁️ CÉUS: toque na casa ao lado do alvo na direção do empurrão (3 casas)' : modo.t === 'copiaAtk' ? '👥 CÓPIAS ATACAM: toque num inimigo adjacente a uma Cópia livre' : modo.t === 'atkEst' ? '🎯 ATACAR ESTRUTURA: toque na casa da estrutura' : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
     const conf = modo.t === 'hab' && (modo.alvosInfo.tipo === 'todos' || modo.alvosInfo.tipo === 'linha') && (modo.dir !== undefined || modo.alvosInfo.tipo === 'todos');
-    return '<div class="ac-modo"><span>' + nomeM + '</span>' + ((modo.t === 'estrutura' && modo.resta) || modo.t === 'pincel' ? '<button class="btn-amarelo sm" data-cancelar>✓ PRONTO</button>' : '') + (conf ? '<button class="btn-amarelo sm" data-confirmar>USAR ▶</button>' : '') + '<button class="btn-ghost sm" data-cancelar>✕ CANCELAR</button></div>';
+    return '<div class="ac-modo"><span>' + nomeM + '</span>' + listaAlvos(c) + ((modo.t === 'estrutura' && modo.resta) || modo.t === 'pincel' ? '<button class="btn-amarelo sm" data-cancelar>✓ PRONTO</button>' : '') + (conf ? '<button class="btn-amarelo sm" data-confirmar>USAR ▶</button>' : '') + '<button class="btn-ghost sm" data-cancelar>✕ CANCELAR</button></div>';
   }
   const tipoIcone = h => h.t.includes('ATAQUE') ? '💥' : h.t.includes('PENALIDADE') ? '🌀' : h.t.includes('RESTAURAÇÃO') ? '💚' : h.t.includes('ESTRUTURA') ? '🏗️' : h.t.includes('MOBILIDADE') ? '💨' : h.t.includes('REFORÇO') ? '🛡️' : '✨';
   // Aprimorar que dá um segundo alvo
