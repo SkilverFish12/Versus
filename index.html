@@ -6553,7 +6553,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (c.k === 'espreitador') { const L = tocaiaAlvos(c); h += btn('data-pasv="tocaia"', '🎯', 'TIRO DE TOCAIA', 'passiva · sem ação · VIS contra todos a 4+ casas · 4 de dano', pOff(c, 'Tiro de Tocaia') ? 'Bloqueio Mental' : usou('Tiro de Tocaia') ? 'já usado neste turno' : c.pos && !L.length ? 'nenhum inimigo a 4 casas ou mais' : ''); }
     const pm = PASM[c.k];
     if (pm) { const semDC = c.k === 'johnny' && !S.times[1 - S.ativo[0]].some(x => !x.elim && x.dcn > 0);
-      h += btn('data-pasv="mover"', '👣', 'MOVER GRÁTIS', 'passiva · sem ação · ' + pm[2], pOff(c, pm[0]) ? 'Bloqueio Mental' : usou(pm[0]) ? 'já usado neste turno' : c.imo ? 'Imóvel' : c.carona ? 'no veículo' : semDC ? 'nenhum inimigo com Dano Contínuo' : ''); }
+      h += btn('data-pasv="mover"', '👣', 'MOVER GRÁTIS', 'passiva · sem ação · ' + pm[2], pOff(c, pm[0]) ? 'Bloqueio Mental' : usou(pm[0]) ? 'já usado neste turno' : c.imo ? 'Imóvel' : semDC ? 'nenhum inimigo com Dano Contínuo' : ''); }
     return h;
   }
   // para onde o personagem vai antes do teste (lido da nota ↪ da ficha)
@@ -6721,7 +6721,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     h += statusTurno(c, j, i);
     if (modo) h += bannerModo();
     h += '<div class="ac-grade">' +
-      btn('data-ac="mover"', '👣', 'MOVER', '1 ação · até ' + desl + ' casas', c.carona ? 'no veículo: use DESCER' : c.imo ? 'Imóvel' : r < 1 ? 'sem ações' : '') +
+      btn('data-ac="mover"', '👣', 'MOVER', '1 ação · até ' + desl + ' casas' + (c.carona ? ' · desce do veículo' : ''), c.imo ? 'Imóvel' : r < 1 ? 'sem ações' : '') +
       btn('data-ac="basico"', '👊', 'ATAQUE BÁSICO', '1 ação · ' + (c.k === 'espreitador' ? 'adjacente DES ' + aptE(c, 1) + ' · de longe 🎯 VIS ' + aptE(c, 2) + ' dados' : (c.k === 'cupido' ? 'alcance 3 · 🎯 Projétil' : c.k === 'bispo' ? 'alcance 2 · 🥊 Golpe' : 'adjacente · 🥊 Golpe') + ' · ' + (['FÍS', 'DES', 'VIS', 'AST'][atkIdx(ch)]) + ' ' + aptE(c, atkIdx(ch)) + ' dados'), r < 1 ? 'sem ações' : pazAtiva() ? 'Eu Vim em Paz' : temEf(c, 'juramento') ? 'Promessa não age' : (c.pos && !enem.length) ? 'nenhum alvo ao alcance' : '');
     h += botoesPassivas(c, btn);
     if (estAtacaveis(c, true).length) h += btn('data-ac="atkest"', '🎯', 'ATACAR ESTRUTURA', '1 ação · Ataque Básico num Galho, Pássaro, Ilusão, Retrato ou Cópia', r < 1 ? 'sem ações' : !estAtacaveis(c).length ? 'nenhuma estrutura ao alcance' : '');
@@ -7006,7 +7006,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'mover') {
       if (!cellId || !d0.casas.has(cellId)) return true;
       const de = c.pos, gr = modo.gratis; modo = null;
-      { let extra = ''; mudar(() => { const jj = timeDe(c), dd = de ? dist(de, cellId) : 0; moverPeca(c, cellId); c.moveuT = true; if (gr) { if (!['Pista', 'Par de Dança'].includes(gr)) c.usadas = (c.usadas || []).concat(gr); } else c.gastas++;
+      { let extra = ''; mudar(() => { const jj = timeDe(c), dd = de ? dist(de, cellId) : 0; if (c.carona) { c.carona = null; extra += ' Desceu do veículo.'; } moverPeca(c, cellId); c.moveuT = true; if (gr) { if (!['Pista', 'Par de Dança'].includes(gr)) c.usadas = (c.usadas || []).concat(gr); } else c.gastas++;
         if (S.bosque && S.bosque.time !== jj && S.rodada <= S.bosque.ate && dd > 1) { const q = sofrerDano(c, 2, {}); extra += ' Bosque Efêmero: −' + q.real + ' PV.'; }
         const cam = de ? caminho(de, cellId) : [];
         if (temEf(c, 'rastro') && de) { S.est = S.est || []; [de].concat(cam.slice(0, -1)).forEach(id => { if (!ocupante(id) && !obstaculo(id) && !S.est.some(z => z.cell === id && z.tipo === 'Casa Infernal')) S.est.push({ id: Date.now() + '' + d(999) + id, tipo: 'Casa Infernal', cell: id, dono: jj, rastro: true, acaba: 'no início do próximo turno de Kazan' }); }); }
@@ -8046,6 +8046,9 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const msg = [];
     mudar(() => {
       c.gastas = Math.min(c.acts, c.gastas + r.custo);
+      if (r.nome && c.carona) { const v = porRef(c.carona), l0 = (r.linhas || []).find(l => l.alvo[0] !== aj), t0 = l0 && S.times[l0.alvo[0]][l0.alvo[1]];
+        const cel = v && v.pos ? vizinhas(v.pos).filter(id => livre(id) && !bloqueada(id)).sort((a, b) => (t0 && t0.pos ? dist(a, t0.pos) - dist(b, t0.pos) : 0))[0] : null;
+        c.carona = null; if (cel) c.pos = cel; msg.push(CH[c.k].nome + ' desceu do veículo' + (cel ? ' em ' + cel : '')); }
       if (r.pagaProx) { c.ab = clamp((c.ab || 0) - 1, -4, 2); msg.push(CH[c.k].nome + ' gastou 1 ação do próximo turno'); }
       if (r.nome) { c.usadas = c.usadas || []; c.usadas.push(r.nome); }
       if (r.sup) { S.med[aj] -= 3; c.med = true; c.sup = true; }
