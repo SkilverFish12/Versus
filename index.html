@@ -5832,7 +5832,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         { const at = (c.efs || []).reduce((v2, e) => v2 + (e.at || 0), 0); if (at) { msg += ' +' + at + ' ação (efeito).'; } c.acts = clamp(3 + c.ab + desv + at, 1, 5); }
         if (!c.elim && c.pos) {
           if (c.pv < c.max && !temEf(c, 'semAjuda') && S.times[j].some(x => x !== c && x.k === 'parlenda' && !x.elim && x.pos && !pOff(x, 'Comunidade') && dP(c.pos, x) <= 1)) { const cv = Math.max(0, Math.min(c.max - c.pv, 2 - (c.cr || 0))); if (cv) { c.pv += cv; msg += ' Comunidade: +' + cv + ' PV.'; aviso = (aviso ? aviso + ' · ' : '') + '🎭 Comunidade: +' + cv + ' PV'; } }
-          S.tk = (S.tk || 0) + 1; c.andou = 0; { const sd = (c.efs || []).reduce((v, e) => v + ((e.mods && e.mods.ds) || 0), 0); if ((c.ds || 0) !== sd) c.ds = sd; } if (c.k === 'promessa') { c.votoAli = S.times[j].filter(x => x !== c && !x.elim && x.pos && (x.atkTk || 0) > (c.votoTk || 0)).map(refDe); c.votoTk = S.tk; }
+          S.tk = (S.tk || 0) + 1; c.andou = 0; (S.est || []).forEach(z => { if (z.tipo === 'Ilusão' && z.aprim && z.iluAlvo === refDe(c) && !z.t1) z.t1 = S.tk; }); { const sd = (c.efs || []).reduce((v, e) => v + ((e.mods && e.mods.ds) || 0), 0); if ((c.ds || 0) !== sd) c.ds = sd; } if (c.k === 'promessa') { c.votoAli = S.times[j].filter(x => x !== c && !x.elim && x.pos && (x.atkTk || 0) > (c.votoTk || 0)).map(refDe); c.votoTk = S.tk; }
           c.combT = false; c.spT = false; c.moveuT = false; if (c.k === 'forasteiro') c.tentN = 0;
           S.times[1 - j].forEach(x => { if (!c.elim && !x.elim && x.k === 'carvao' && x.pos && !temEf(x, 'combustao') && dP(x.pos, c) <= 1) { const q = sofrerDano(c, 2, {}); msg += ' Calor Radiante: −' + q.real + ' PV.'; aviso = (aviso ? aviso + ' · ' : '') + '🔥 Calor Radiante: −' + q.real + ' PV'; } });
           S.times[1 - j].forEach(x => { if (!c.combT && !x.elim && x.pos && temEf(x, 'combustao') && dP(x.pos, c) <= 1) { c.combT = true; const q = sofrerDano(c, 6, {}); msg += ' Combustão: −' + q.real + ' PV.'; aviso = (aviso ? aviso + ' · ' : '') + '🔥 Combustão: −' + q.real + ' PV'; } });
@@ -6347,6 +6347,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function fimDeTurno(c){
     let aviso = '';
     mudar(() => {
+      if (c.k === 'magnus') c.sofDesde = 0; if (c.k === 'arquiteto') c.simTk = S.tk;
       ondaMisericordia(c);
       { const mz = (c.efs || []).find(e => e.miasma); const j0 = mz && +mz.miasma.split(',')[0], pe = mz && S.times[j0][+mz.miasma.split(',')[1]];
         if (mz && c.pos && !c.elim && (S.est || []).some(z => z.tipo === 'Miasma' && z.dono === j0 && CELL[z.cell] && dist(z.cell, c.pos) <= Math.max(2, ...(z.auras || []).map(a => a.raio)))) {
@@ -6749,6 +6750,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (/ENTRE OS DOIS/.test(h0.a)) { const L = entreDois(c); return { tipo: 'todos', alvos: pecas((j, i, x) => j !== aj && x.pos && L.includes(x.pos) && !temEf(x, 'intocavel')) }; }
     if (h0.n === 'Passagem da Morte') return { tipo: 'casa', casas: CELLS.map(x => x.id), faixa: true };
     if (h0.n === 'Meia-Noite') return { tipo: 'casa', casas: CELLS.filter(x => !bloqueada(x.id) && !obstaculo(x.id) && (!ocupante(x.id) || S.times[ocupante(x.id)[0]][ocupante(x.id)[1]] === c)).map(x => x.id), meia: true };
+    if (h0.n === 'Cortina de Fumaça') return { tipo: 'casa', casas: CELLS.filter(x => (!c.pos || dist(c.pos, x.id) <= 3) && !bloqueada(x.id)).map(x => x.id), faixa: true, fumN: ap ? 5 : 3 };
+    if (h0.n === 'Algo Irreal') return { tipo: 'casa', casas: CELLS.filter(x => (!c.pos || dist(c.pos, x.id) <= 3) && livre(x.id) && !bloqueada(x.id)).map(x => x.id), iluS: true };
     if (h0.n === 'Mala Despachada') return { tipo: 'casa', casas: c.pos ? CELLS.filter(x => dist(c.pos, x.id) === 1 && livre(x.id) && !bloqueada(x.id)).map(x => x.id) : [] };
     if (h0.n === 'Fenda Espacial') return { tipo: 'casa', casas: CELLS.filter(x => livre(x.id) && !bloqueada(x.id)).map(x => x.id), fendaS: true };
     if (h0.n === 'Fechar o Braço') return { tipo: 'peca', alvos: pecas(() => true) };
@@ -6829,7 +6832,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       btn('data-ac="basico"', '👊', 'ATAQUE BÁSICO', '1 ação · ' + (c.k === 'espreitador' ? 'adjacente DES ' + aptE(c, 1) + ' · de longe 🎯 VIS ' + aptE(c, 2) + ' dados' : (c.k === 'cupido' ? 'alcance 3 · 🎯 Projétil' : c.k === 'bispo' ? 'alcance 2 · 🥊 Golpe' : 'adjacente · 🥊 Golpe') + ' · ' + (['FÍS', 'DES', 'VIS', 'AST'][atkB(c)]) + ' ' + aptE(c, atkB(c)) + ' dados'), r < 1 ? 'sem ações' : pazAtiva() ? 'Eu Vim em Paz' : temEf(c, 'juramento') ? 'Promessa não age' : (c.pos && !enem.length) ? 'nenhum alvo ao alcance' : '');
     h += botoesPassivas(c, btn);
     if (estAtacaveis(c, true).length) h += btn('data-ac="atkest"', '🎯', 'ATACAR ESTRUTURA', '1 ação · Ataque Básico num Galho, Pássaro, Ilusão, Retrato ou Cópia', r < 1 ? 'sem ações' : !estAtacaveis(c).length ? 'nenhuma estrutura ao alcance' : '');
-    ch.habs.forEach((hb, k) => {
+    habsDe(c).forEach((hb, k) => {
       if (!hb.c) return;
       const mot = motivo(hb, false);
       h += btn('data-hab="' + k + '"', tipoIcone(hb), hb.n.toUpperCase(), hb.c + (hb.c > 1 ? ' ações' : ' ação') + ' · ' + (aprimAtivo(hb) && alcAprim(hb).aOrig ? '⚡ ' + alcAprim(hb).a.replace(/ 99$/, ' todo tabuleiro') : hb.a).toLowerCase() + ' · ' + (hb.x >= 0 ? 'teste ' + APT[hb.x] : 'sem teste') + (hb.k ? ' · ' + hb.k : ''), mot);
@@ -6970,7 +6973,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       return mudar(() => { c.carona = vj + ',' + vi; c.pos = v.pos; c.gastas++; }, '🚗 ' + CH[c.k].nome + ' subiu no ' + CH[v.k].nome + '.');
     }
     if (b.dataset.hab !== undefined) {
-      const sup = b.dataset.hab === 'sup', h = sup ? CH[c.k].supH : CH[c.k].habs[+b.dataset.hab];
+      const sup = b.dataset.hab === 'sup', h = sup ? CH[c.k].supH : habsDe(c)[+b.dataset.hab];
+      if (!sup && h.n === 'Simulacro' && c.k === 'arquiteto') return abrirSimulacro(c);
       const aprim = c.possPor ? !sup && aprimorarMarcado && !!h.p && !!c.possAprim : !sup && aprimorarMarcado && !!h.p && !c.med && S.med[S.ativo[0]] >= 1;
       const ai = alvosDe(h, aprim);
       const m = { t: 'hab', h, sup, aprim, alvosInfo: ai, sel: [] };
@@ -6988,8 +6992,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (!c) return out;
     if (modo.t === 'mover' && c.pos) {
       const desl = modo.desl || deslDe(c);
-      const mm = c.k === 'eclipse' ? null : mapaMover(c, desl);
-      CELLS.forEach(x => { if ((mm ? (x.id in mm.d ? mm.d[x.id] : 99) : distBorda(c.pos, x.id)) <= desl && x.id !== c.pos && !obstaculo(x.id) && !ocupante(x.id) && (!modo.rumo || modo.rumo.some(a => a.pos && dist(x.id, a.pos) === dist(c.pos, a.pos) - dist(c.pos, x.id)))) out.casas.add(x.id); });
+      const mm = c.k === 'eclipse' ? null : mapaMover(c, desl), mb = (c.efs || []).map(e => e.marcaB && porRef(e.marcaB)).find(x => x && !x.elim && x.pos);
+      CELLS.forEach(x => { if ((mm ? (x.id in mm.d ? mm.d[x.id] : 99) : distBorda(c.pos, x.id)) <= desl && x.id !== c.pos && (!mb || dist(mb.pos, x.id) <= 3) && !obstaculo(x.id) && !ocupante(x.id) && (!modo.rumo || modo.rumo.some(a => a.pos && dist(x.id, a.pos) === dist(c.pos, a.pos) - dist(c.pos, x.id)))) out.casas.add(x.id); });
     } else if (modo.t === 'mover') CELLS.forEach(x => { if (!obstaculo(x.id) && !ocupante(x.id)) out.casas.add(x.id); });
     if (modo.t === 'basico') pecas((j, i, x) => alvoBasico(c, j, x)).forEach(p => out.toks.add(p.join(',')));
     if (modo.t === 'estrutura') CELLS.forEach(x => { if (!bloqueada(x.id)) out.casas.add(x.id); });
@@ -7153,6 +7157,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (S.bosque && S.bosque.time !== jj && S.rodada <= S.bosque.ate && dd > 1) { const q = sofrerDano(c, 2, {}); extra += ' Bosque Efêmero: −' + q.real + ' PV.'; }
         const cam = de ? (camM || caminho(de, cellId)) : [];
         if (temEf(c, 'rastro') && de) { S.est = S.est || []; [de].concat(cam.slice(0, -1)).forEach(id => { if (!ocupante(id) && !obstaculo(id) && !S.est.some(z => z.cell === id && z.tipo === 'Casa Infernal')) S.est.push({ id: Date.now() + '' + d(999) + id, tipo: 'Casa Infernal', cell: id, dono: jj, rastro: true, acaba: 'no início do próximo turno de Kazan' }); }); }
+        if (cam.some(id => (S.est || []).some(z => z.tipo === 'Fumaça' && z.dono !== jj && z.cell === id))) { const zf = (S.est || []).find(z => z.tipo === 'Fumaça' && z.dono !== jj && cam.includes(z.cell)), q = sofrerDano(c, 2, {}); c.fumT = Math.max(c.fumT || 0, zf && zf.aprim ? 2 : 1); extra += ' 💨 Fumaça: −' + q.real + ' PV e −1 dado no' + (zf && zf.aprim ? 's 2 próximos testes.' : ' próximo teste.'); }
         if (!c.infT && cam.some(id => (S.est || []).some(z => z.tipo === 'Casa Infernal' && z.dono !== jj && z.cell === id))) { c.infT = true; const q = sofrerDano(c, 5, {}); extra += ' Casa Infernal: −' + q.real + ' PV.'; }
         { const tt = tintaTeste(c, cam); if (tt.length) extra += ' ' + tt.join('; ') + '.'; }
         { const qg = quadradoGat(c, cam, de); if (qg) extra += ' ' + qg + '.'; }
@@ -7181,6 +7186,11 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (a.tipo === 'peca') { if (!tok || !d0.toks.has(tok)) return true; modo.sel = [tok.split(',').map(Number)];
         if (segAlvos(modo).length) { modo.seg = true; rBoard(); rPainel(); toast('⚡ Agora toque no 2º alvo (ou de novo no 1º para ficar só com ele)', 2400); return true; }
         return resolverHab(), true; }
+      if (a.tipo === 'casa' && a.iluS) {
+        const id = cellId; if (!id || !d0.casas.has(id)) return true;
+        modo.cel = id; modo.alvosInfo = { tipo: 'peca', alvos: pecas((j, i, x) => j !== S.ativo[0] && !x.elim && x.pos && !temEf(x, 'intocavel')) };
+        rBoard(); rPainel(); toast('🃏 Ilusão em ' + id + '. Agora toque no inimigo que vai vê-la', 2400); return true;
+      }
       if (a.tipo === 'casa' && a.fendaS) {
         const id = cellId; if (!id || !d0.casas.has(id)) return true;
         if (!modo.fA) { modo.fA = id; rBoard(); rPainel(); toast('1ª Fenda em ' + id + '. Agora toque em qualquer casa vazia para a 2ª', 2200); return true; }
@@ -7203,8 +7213,9 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (!modo.faixaA) { modo.faixaA = id; rBoard(); rPainel(); toast('Agora toque numa casa vizinha para escolher a direção da faixa', 2200); return true; }
         if (dist(modo.faixaA, id) !== 1) { modo.faixaA = id; rBoard(); return true; }
         const di = dirPara(modo.faixaA, id), cs = [modo.faixaA];
-        [di, (di + 3) % 6].forEach(d2 => { let p = modo.faixaA; while ((p = viz(p, d2))) cs.push(p); });
-        modo.faixa = cs; modo.cel = id; modo.sel = pecas((j, i, x) => j !== S.ativo[0] && x.pos && cs.includes(x.pos));
+        if (a.fumN) { let p = modo.faixaA; while (cs.length < a.fumN && (p = viz(p, di)) && CELL[p]) cs.push(p); }
+        else [di, (di + 3) % 6].forEach(d2 => { let p = modo.faixaA; while ((p = viz(p, d2))) cs.push(p); });
+        modo.faixa = cs; modo.cel = a.fumN ? modo.faixaA : id; modo.sel = a.fumN ? [] : pecas((j, i, x) => j !== S.ativo[0] && x.pos && cs.includes(x.pos));
         return resolverHab(), true;
       }
       if (a.tipo === 'casa') {
@@ -7357,6 +7368,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const q = sofrerDano0(t, v, o);
     if (t && q && q.real > 0) (t.efs || []).filter(e => e.dreno).forEach(e => { const g = porRef(e.dreno); if (!g || g.elim || pOff(g, 'Dreno')) return; const cu = Math.min(g.max - g.pv, Math.max(0, 2 - (g.cr || 0))); if (cu > 0) { g.pv += cu; evento('🐙 Dreno de Energia: ' + CH[g.k].nome + ' +' + cu + ' PV'); } });
     if (t && t.k === 'cavalo' && q && q.real > 0 && !(S.ativo && ativoC() === t)) t.cicloD = true;
+    if (t && t.k === 'magnus' && q && q.real > 0) t.sofDesde = (t.sofDesde || 0) + q.real;
     if (q && q.nota && !(o && o.desvio)) { if (q.nota.some(n => RX_EV.test(n))) evento(CH[t.k].nome + ' −' + q.real + ' PV (' + q.nota.join(', ') + ')'); }
     return q;
   }
@@ -7508,6 +7520,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function aplicarReac(r){
     const R = r.reacT; if (!R) return;
     if (!r._reacN) { r._reacN = true; r.notas = (r.notas || []).concat(R.notas); }
+    if (R.falha && r.linhas) r.linhas.forEach(l => { if (l.reacF || l.alvo[0] === R.aj) return; l.reacF = true; l.ok = false; l.ef = []; l.txt = '🃏 o ataque falhou (Ilusão)'; });
     const df = R.defl; if (!df || !r.linhas) return;
     r.linhas.forEach(l => { if (l.reacX || l.alvo[0] !== df.pr[0] || l.alvo[1] !== df.pr[1]) return; l.reacX = true;
       if (df.hits < 2) { l.ok = false; l.ef = []; l.txt = '🛡️ Defletido: não atinge Promessa'; return; }
@@ -7558,12 +7571,38 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   const estrada = t => !!t && (t.k === 'drive' && !pOff(t, 'Além da Estrada') || (!!t.pos && S.times[timeDe(t)].some(x => x !== t && x.k === 'drive' && !x.elim && x.pos && !pOff(x, 'Além da Estrada') && dP(t.pos, x) <= 1)));
   const pOff = (x, n) => !!x && (x.efs || []).some(e => e.bloqP === n);
   const sozinho2 = t => !!t.pos && !S.times[timeDe(t)].some(x => x !== t && !x.elim && x.pos && dP(t.pos, x) <= 2);
+  const fumacaEntre = (a, b) => { const L = linhaHex(a, b).filter(id => id !== a && id !== b); return (S.est || []).some(z => z.tipo === 'Fumaça' && L.includes(z.cell)); };
+  const iluDe = c => (S.est || []).find(z => z.tipo === 'Ilusão' && z.hab === 'Algo Irreal' && z.iluAlvo === refDe(c) && z.cell);
+  function ilusaoTeste(r){
+    if (!r.ataque && !r.basico) return; const c = r.atkRef ? S.times[r.atkRef[0]][r.atkRef[1]] : ativoC(); if (!c) return; const z = iluDe(c); if (!z) return;
+    const auto = z.aprim && z.t1 === S.tk, dv = auto ? null : d(10), falha = auto || dv <= 5;
+    reacApos = reacApos || { notas: [], defl: null }; reacApos.notas.push('🃏 Ilusão do Golpista: ' + (auto ? 'primeiro turno, o ataque falha' : 'dado ' + dv + (falha ? ' (1 a 5): o ataque falha' : ': o ataque segue')));
+    if (falha) { reacApos.falha = true; reacApos.aj = timeDe(c); }
+  }
+  const habsDe = c => (c.k === 'arquiteto' && c.estado && c.estado.copiaK && CH[c.estado.copiaK]) ? CH[c.estado.copiaK].habs : CH[c.k].habs;
+  let simLista = [];
+  function abrirSimulacro(c){
+    const vistos = new Set(); simLista = [];
+    (S.usoHab || []).filter(u => u.tk > (c.simTk || 0) && u.n !== 'Simulacro').forEach(u => { if (vistos.has(u.n)) return; const k = Object.keys(CH).find(k2 => CH[k2].habs.some(x => x.n === u.n && x.c)); if (!k) return; vistos.add(u.n); simLista.push(Object.assign({}, CH[k].habs.find(x => x.n === u.n), { simulK: k })); });
+    if (!simLista.length) { toast('Nenhuma habilidade ativa foi usada desde o fim do último turno do Golpista', 2600); return; }
+    $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>✨ SIMULACRO</h3></div><div class="dd-corpo"><p class="rs-sub">Escolha a habilidade para copiar. Custa 2 ações e usa as aptidões do Golpista' + (aprimorarMarcado && S.med[S.ativo[0]] >= 1 ? '; com ⚡ Aprimorar marcado, usa a versão aprimorada' : '') + '.</p><div class="rs-ops">' +
+      simLista.map((h, i) => '<button data-simul="' + i + '"><strong>' + h.n + '</strong><small>' + CH[h.simulK].nome + ' · ' + h.a.toLowerCase() + ' · ' + (h.x >= 0 ? 'teste ' + APT[h.x] : 'sem teste') + '</small></button>').join('') + '</div></div>';
+    if ($('#mAcao').hidden) abrir('mAcao');
+  }
+  function iniciarSimul(h0){
+    const c = ativoC(); if (!c) return; const hc = Object.assign({}, h0, { c: 2, simul: true });
+    const aprim = aprimorarMarcado && !!hc.p && !c.med && S.med[S.ativo[0]] >= 1, ai = alvosDe(hc, aprim), m = { t: 'hab', h: hc, sup: false, aprim, alvosInfo: ai, sel: [] };
+    if (ai.tipo === 'nenhum') { m.sel = [S.ativo]; modo = m; return resolverHab(); }
+    if (ai.tipo === 'todos') m.sel = ai.alvos;
+    iniciarModo(m);
+  }
   function dadosExtra(c){
     let n = 0, notas = [];
     (c.efs || []).filter(e => e.parD).forEach(e => { const [pj, pi] = e.parD.split(',').map(Number), o = S.times[pj] && S.times[pj][pi]; if (o && !o.elim && o.pos && c.pos && dP(c.pos, o) <= 1) { n += 1; notas.push('Par de Dança com ' + CH[o.k].nome + ': +1 dado'); } });
     if (c.k === 'kazan' && c.kz) { n += c.kz; notas.push(c.kz + ' Brasa(s): +' + c.kz + ' dado'); }
     if (c.k === 'maligno' && rec(c, 'Peso de Dor') && !pOff(c, 'Peso de Dor')) { n += rec(c, 'Peso de Dor'); notas.push('Peso de Dor: +' + rec(c, 'Peso de Dor') + ' dado'); }
     if (c.fioDd) { const fn0 = (c.efs || []).filter(e => e.fioEf).map(e => e.nome); tirarEfs(c, e => e.fioEf); n -= c.fioDd; notas.push('−' + c.fioDd + (c.fioDd > 1 ? ' dados' : ' dado') + ' neste teste (' + (fn0.length ? fn0.join(', ') : 'Fio Tenso, Clarão ou Estrondo') + ')'); c.fioDd = 0; }
+    if (c.fumT) { n -= 1; c.fumT -= 1; notas.push('💨 Fumaça: −1 dado neste teste'); }
     if (c.manchas) { n -= c.manchas; notas.push('🎨 ' + c.manchas + (c.manchas > 1 ? ' Manchas' : ' Mancha') + ': −' + c.manchas + (c.manchas > 1 ? ' dados' : ' dado') + ' (somem depois deste teste)'); c.manchas = 0; }
     return { n, notas };
   }
@@ -7575,6 +7614,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const pa = pasAtk(c, t, true, true);
     let n = Math.max(1, aptE(c, apt) + dadosCen(c, apt) + mod(c, 'dd') + contraAlvo(c, t, 'dd') + ex.n + pa.dd), bonus = mod(c, 'dn') + contraAlvo(c, t, 'dn'), def = clamp(defesas(t)[apt] + adef(c) + pa.df, 2, 10), notas = ex.notas.concat(pa.notas);
     if (S.cen === 'ruptura' && c.duelo) { if (c.duelo === t.k) { n++; bonus += 2; notas.push('duelo: +1 dado e +2 de dano'); } else { bonus -= 2; def = clamp(def + 1, 2, 10); notas.push('fora do duelo: −2 de dano e +1 na Defesa do alvo'); } }
+    if (c.pos && t.pos && fumacaEntre(c.pos, t.pos)) { n = Math.max(1, n - 1); notas.push('💨 O ataque passa pela Fumaça: −1 dado'); }
     if (c.k === 'reator' && rec(c, 'Cargas')) { bonus += 2 * rec(c, 'Cargas'); notas.push(rec(c, 'Cargas') + ' Carga(s): +' + 2 * rec(c, 'Cargas') + ' de dano se acertar'); }
     if (c.k === 'dinamo' && !c.condUsado && rec(c, 'Dano sofrido') >= 6) { const b = 2 * Math.floor(rec(c, 'Dano sofrido') / 6); bonus += b; notas.push('Condutor Natural: +' + b + ' de dano'); }
     if (temTat(c, 'Presas')) { bonus += 1; notas.push('Presas: +1 de dano'); }
@@ -7621,6 +7661,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const multi = !!(ops && m.aprim && h.p && /as duas|os dois|Os dois|Aplica as duas|Aplica duas/.test(limpo(h.p)));
     c.habAtual = h.k || '';
     const ex = h.x >= 0 ? dadosExtra(c) : { n: 0, notas: [] };
+    if (h.n === 'Mão Leve' && (c.andou || 0) >= 3) { ex.n += 1; ex.notas.push('Mão Leve: andou ' + c.andou + ' casas neste turno, +1 dado'); }
+    if (h.x >= 0 && h.k !== '🧠 Mental' && (m.sel || []).length === 1 && m.sel[0][0] !== S.ativo[0] && c.pos) { const t1 = S.times[m.sel[0][0]][m.sel[0][1]]; if (t1.pos && fumacaEntre(c.pos, t1.pos)) { ex.n -= 1; ex.notas.push('💨 O ataque passa pela Fumaça: −1 dado'); } }
     if (h.n === 'Quebra de Guarda' && m.aprim) { ex.n += 1; ex.notas.push('Quebra de Guarda aprimorada: +1 dado'); }
     if (h.n === 'Arpéu de Pulso' && m.aprim) { ex.n += 1; ex.notas.push('Arpéu aprimorado: +1 dado'); }
     const pa1 = h.x >= 0 && (m.sel || []).length === 1 && m.sel[0][0] !== S.ativo[0] ? pasAtk(c, S.times[m.sel[0][0]][m.sel[0][1]], false, true) : { dd: 0, notas: [] };
@@ -8112,6 +8154,16 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           const gs = (S.est || []).filter(z => z.tipo === 'Galho' && z.dono === aj && z.cell && dist(z.cell, t.pos) === 1), g = gs.find(z => !usados.has(z)) || gs[0], on = !!g && !usados.has(g); if (g) usados.add(g);
           if (g) l.ef.push(supFx('consumir o Galho em ' + g.cell + ' (adjacente a ' + CH[t.k].nome + ') para curar 10 em vez de 8', (x, msg) => { const g2 = (S.est || []).find(z => z.tipo === 'Galho' && z.dono === aj && z.cell && x.pos && dist(z.cell, x.pos) === 1); if (!g2) return; S.est = S.est.filter(z => z !== g2); x.pv = Math.min(x.max, x.pv + 2); msg.push('Galho em ' + g2.cell + ' consumido: +2 PV a mais para ' + CH[x.k].nome); }, on)); }); }
         break;
+      case 'Marca da Brasa':
+        linhasR.forEach(l => { if (!ini(l) || !l.ok) return; fx(l, 'Não termina movimento fora do Raio 3 de Carvão até o fim do próximo turno dele', t => novoEf(t, { nome: 'Marca da Brasa', autor: nm, faz: 'não termina movimento fora do Raio 3 de Carvão', acaba: txtFim(c), exp: fimP(c), mods: {}, marcaB: cref }));
+          if (r.aprim && !l.ef.some(e => e.k === 'dc')) l.ef.push({ k: 'dc', v: [2, 2], on: true, txt: 'Dano Contínuo 2 por 2' }); });
+        break;
+      case 'Tratamento de Emergência': {
+        const sd = c.sofDesde || 0, cu = Math.floor(sd / 2);
+        linhasR.forEach(l => { l.ef = l.ef.filter(e => e.k !== 'cura'); });
+        extras.push(supFx('Magnus recupera ' + cu + ' PV (metade de ' + sd + ' de dano sofrido desde o fim do último turno dele)', msg => { const g = Math.min(c.max - c.pv, Math.max(0, cu - (c.cr || 0))); c.pv += g; msg.push('Magnus +' + g + ' PV'); }));
+        if (r.aprim) extras.push(supFx('Remove todas as Penalidades de Magnus', msg => { const n = limparPen(c); msg.push(n ? n + ' Penalidade(s) removida(s)' : 'nenhuma Penalidade'); }));
+        break; }
       case 'Ignição':
         if (!r.aprim) break;
         linhasR.forEach(l => { if (!ini(l) || !l.ok) return; l.ef.forEach(e => { if (e.k === 'dc') { e.v = [e.v[0], 3]; e.txt = 'Dano Contínuo ' + e.v[0] + ' por 3'; } });
@@ -8180,7 +8232,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (c.k === 'kael' && h.n === 'Marca Titânica') { delete ef.dano; delete ef.cura; delete ef.empurra; delete ef.desl; if (r.ops && r.opSel.some(i => r.ops[i].nome === 'Céus')) { const nc = 'Céus: depois de aplicar, toque na casa ao lado do alvo para onde ele vai ser empurrado (3 casas).'; if (!r.notas.includes(nc)) r.notas = r.notas.concat(nc); } const nt = 'Raiz e Fúria disparam sozinhos no próximo ataque contra o alvo.'; if (!r.notas.includes(nt)) r.notas = r.notas.concat(nt); }
     if (c.k === 'magnus' && h.n === 'Eu Escolho o Monstro') extras.push({ k: 'estado', v: { nome: 'Monstro de Sangue', mods: { apt: [Math.max(0, 4 - ch.apt[0]), 0, 0, 0], dn: 2 }, hab: h.n, dtx: 'até o fim do seu próximo turno' }, on: true, txt: 'Virar o Monstro de Sangue até o fim do próximo turno (Físico 4, +2 de dano nos Ataques Básicos, sem habilidades)' });
     if (c.k === 'assobio' && h.n === 'O Canto Final') extras.push({ k: 'estado', v: { nome: 'O Canto Final', mods: { apt: [0, 0, Math.max(0, 4 - ch.apt[2]), 0] }, hab: h.n, dtx: 'durante 2 rodadas' }, on: true, txt: 'Assobio fica com Visão 4 durante 2 rodadas' });
-    if (c.k === 'arquiteto' && h.n === 'Assalto de Identidade') S.times.flat().filter(x => !x.elim && x !== c).forEach(x => extras.push({ k: 'estado', v: { nome: 'Assalto de Identidade: ' + CH[x.k].nome, mods: { apt: CH[x.k].apt.map((v, a) => v - ch.apt[a]) }, hab: h.n, dtx: 'durante 2 rodadas' }, on: false, txt: 'Copiar as aptidões de ' + CH[x.k].nome + ' (' + CH[x.k].apt.join('/') + ') durante 2 rodadas' }));
+    if (c.k === 'arquiteto' && h.n === 'Assalto de Identidade') S.times.flat().filter(x => !x.elim && x !== c).forEach(x => extras.push({ k: 'estado', v: { nome: 'Assalto de Identidade: ' + CH[x.k].nome, mods: { apt: CH[x.k].apt.map((v, a) => v - ch.apt[a]) }, hab: h.n, dtx: 'durante 2 rodadas', copiaK: x.k }, on: false, txt: 'Copiar as aptidões de ' + CH[x.k].nome + ' (' + CH[x.k].apt.join('/') + ') durante 2 rodadas' }));
     if (c.k === 'cambiante' && h.n === 'Quimera Primordial') extras.push({ k: 'estado', v: { nome: 'Quimera Primordial', mods: { apt: [1, 1, 1, 0], dn: 2, ds: 2 }, hab: h.n, dtx: 'até o fim do seu próximo turno' }, on: true, txt: 'Entrar na Quimera: as três formas sem perder Astúcia (+1 FÍS, +1 DES, +1 VIS, +2 de dano, +2 desloc.); Bote custa 1 ação' });
     if (ehEstado(h)) {
       const nome = r.ops ? r.ops[r.opSel[0]].nome : h.n;
@@ -8252,7 +8304,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       linhasR.push({ alvo: al, ok, txt, ef: lista });
     });
     if (c.k === 'oliva' && h.x >= 0) linhasR.forEach(l => { if (l.alvo[0] === aj) return; const dm = /Defesa (\d+)/.exec(l.txt || ''); if (dm && r.dados.filter(x => x >= +dm[1]).length >= 2) l.ef.push(supFx('O X Marca o Lugar: −1 dado contra Azeitona e −1 na Defesa contra ela', t => marcarX(c, t))); });
-    if (m.sup || ['Borrão', 'Ignição', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto', 'Retrato Vivo', 'Bote', 'Nanobots', 'Penitência', 'Garra Longa', 'Execução Silenciosa', 'Extração Vital', 'Parte da Assimilação', 'Par de Dança', 'Bloqueio Mental', 'Pensamento Intrusivo', 'Pista de Dança', 'Passo de Combate', 'Dreno de Energia', 'Velocidade Impossível', 'Corte Geométrico', 'Amarração', 'Arpéu de Pulso', 'Rede Elétrica', 'Nãna Neném', 'Véu de Ilusões', 'Acelerando Movimento', 'Reverter o Tempo', 'Marca Temporal'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
+    if (m.sup || ['Borrão', 'Ignição', 'Marca da Brasa', 'Tratamento de Emergência', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto', 'Retrato Vivo', 'Bote', 'Nanobots', 'Penitência', 'Garra Longa', 'Execução Silenciosa', 'Extração Vital', 'Parte da Assimilação', 'Par de Dança', 'Bloqueio Mental', 'Pensamento Intrusivo', 'Pista de Dança', 'Passo de Combate', 'Dreno de Energia', 'Velocidade Impossível', 'Corte Geométrico', 'Amarração', 'Arpéu de Pulso', 'Rede Elétrica', 'Nãna Neném', 'Véu de Ilusões', 'Acelerando Movimento', 'Reverter o Tempo', 'Marca Temporal'].includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
     const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
     { const mTxt = limpo(h.m || '');
@@ -8273,7 +8325,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       const livre = ids.find(id => dist(c.pos, id) === 1 && vaga(id)) || ids.find(id => base.some(b => dist(b, id) === 1) && vaga(id));
       if (livre) extras.push({ k: 'est', v: ['Cópia', livre], on: true, txt: 'Criar 👥 Cópia em ' + livre + ' (toque nela no tabuleiro para mudar de casa)' });
     }
-    if (m.cel && h.t.includes('ESTRUTURA') && h.n !== 'Fenda Espacial' && h.n !== 'Pincelada' && h.n !== 'Retrato Vivo') { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, m.cel], on: true, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + m.cel }); }
+    if (m.cel && h.t.includes('ESTRUTURA') && h.n !== 'Fenda Espacial' && h.n !== 'Pincelada' && h.n !== 'Retrato Vivo') { const tp = tipoEstrutura(h); (h.n === 'Cortina de Fumaça' && m.faixa ? m.faixa : [m.cel]).forEach(cc => extras.push({ k: 'est', v: [tp, cc], on: true, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + cc })); }
     if (m.cel && !ef.ocupar && h.t.includes('MOBILIDADE') && h.n !== 'Fenda Espacial' && !(h.n === 'Salto no Espaço' && m.aprim) && /aparece|desloca\b|despenca|avança|desliza|dispara/i.test(h.d) && !ocupante(m.cel)) extras.push({ k: 'mover', v: m.cel, on: true, txt: 'Mover ' + ch.nome + ' para ' + m.cel });
     if (!m.cel && h.t.includes('ESTRUTURA') && c.pos && h.a === 'PESSOAL' && h.n !== 'Rastro Infernal' && h.n !== 'Marca Temporal') { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, c.pos], on: false, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + c.pos }); }
     if (AURA_APAR.includes(h.n)) {
@@ -8309,7 +8361,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         const cel = v && v.pos ? vizinhas(v.pos).filter(id => livre(id) && !bloqueada(id)).sort((a, b) => (t0 && t0.pos ? dist(a, t0.pos) - dist(b, t0.pos) : 0))[0] : null;
         c.carona = null; if (cel) c.pos = cel; msg.push(CH[c.k].nome + ' desceu do veículo' + (cel ? ' em ' + cel : '')); }
       if (r.pagaProx) { c.ab = clamp((c.ab || 0) - 1, -4, 2); c.abPago = (c.abPago || 0) + 1; msg.push(CH[c.k].nome + ' gastou 1 ação do próximo turno'); }
-      if (r.nome) { c.usadas = c.usadas || []; c.usadas.push(r.nome); }
+      if (r.nome) { c.usadas = c.usadas || []; c.usadas.push(r.nome); if (r.h && r.h.simul) c.usadas.push('Simulacro'); if (!r.sup && r.h && r.h.c) S.usoHab = (S.usoHab || []).slice(-40).concat([{ n: r.nome, tk: S.tk }]); }
       if (r.sup) { S.med[aj] -= 3; c.med = true; c.sup = true; }
       else if (r.aprim && c.possPor) aprimorarMarcado = false;
       else if (r.aprim) { S.med[aj] -= 1; c.med = true; aprimorarMarcado = false; }
@@ -8401,7 +8453,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (ef.k === 'div') { t.div = Math.min(6, divDe(t) + ef.v); msg.push(CH[t.k].nome + ': ' + t.div + ' Dívida(s)'); }
           if (ef.k === 'divset') t.div = ef.v;
           if (ef.k === 'penhora') { ['df', 'dd', 'dn'].forEach(k => { if (t[k] > 0) t[k] = 0; }); t.red = 0; t.esc = 0; msg.push(CH[t.k].nome + ' perdeu os bônus (Penhora)'); }
-          if (ef.k === 'dano') { let vv = ef.v; if (temEf(c, 'zeraDano')) { vv = 0; msg.push('Supressão Total: dano vira 0'); } else if (temEf(c, 'meioDano')) vv = Math.floor(vv / 2); const hk = r.basico ? null : CH[c.k].habs.concat(CH[c.k].supH ? [CH[c.k].supH] : []).find(x => x.n === r.nome), golpe = r.ataque && (r.basico ? !!(c.pos && t.pos && dP(c.pos, t) === 1) : !!(hk && /Golpe/.test(hk.k || ''))); const q = sofrerDano(t, vv, { psi: ef.psi, ataque: r.ataque, basico: r.basico, golpe, atk: c }); if (golpe && t.k === 'kael' && q.real > 0 && c !== t && !c.elim) { const qb = sofrerDano(c, 1, { blind: true }); if (qb.real) msg.push('Blindagem do Guardião: ' + CH[c.k].nome + ' −' + qb.real + ' PV'); } if (S.cen === 'mansao' && golpe && q.real > 0 && !c.mansaoT && !c.elim && c.pv < c.max) { c.mansaoT = true; c.pv += 1; msg.push('🍷 ' + CH[c.k].nome + ' +1 PV (Mansão)'); } msg.push(CH[t.k].nome + ' −' + q.real + ' PV' + (q.nota.length ? ' (' + q.nota.join(', ') + ')' : '')); }
+          if (ef.k === 'dano') { let vv = ef.v; if (temEf(c, 'zeraDano')) { vv = 0; msg.push('Supressão Total: dano vira 0'); } else if (temEf(c, 'meioDano')) vv = Math.floor(vv / 2); const hk = r.basico ? null : CH[c.k].habs.concat(CH[c.k].supH ? [CH[c.k].supH] : []).find(x => x.n === r.nome), golpe = r.ataque && (r.basico ? !!(c.pos && t.pos && dP(c.pos, t) === 1) : !!(hk && /Golpe/.test(hk.k || ''))); const q = sofrerDano(t, vv, { psi: ef.psi, ataque: r.ataque, basico: r.basico, golpe, atk: c }); if (golpe && t.k === 'kael' && q.real > 0 && c !== t && !c.elim) { const qb = sofrerDano(c, 1, { blind: true }); if (qb.real) msg.push('Blindagem do Guardião: ' + CH[c.k].nome + ' −' + qb.real + ' PV'); } if (r.nome === 'Mordida Vampírica' && c.k === 'duque' && q.real > 0 && !c.elim) { const cb = (t.efs || []).some(e => e.nome === 'Soro Experimental'), g = Math.min(c.max - c.pv, Math.max(0, q.real + (cb ? 2 : 0) - (c.cr || 0))); c.pv += g; msg.push('🦇 Duque +' + g + ' PV' + (cb ? ' (Cobaia +2)' : '')); } if (S.cen === 'mansao' && golpe && q.real > 0 && !c.mansaoT && !c.elim && c.pv < c.max) { c.mansaoT = true; c.pv += 1; msg.push('🍷 ' + CH[c.k].nome + ' +1 PV (Mansão)'); } msg.push(CH[t.k].nome + ' −' + q.real + ' PV' + (q.nota.length ? ' (' + q.nota.join(', ') + ')' : '')); }
           if (ef.k === 'cura') { const cv = Math.max(0, (contagiado(t) ? ef.v - 2 : ef.v) - (t.cr || 0)); t.pv = Math.min(t.max, t.pv + cv); msg.push(CH[t.k].nome + ' +' + cv + ' PV' + (cv < ef.v ? ' (cura reduzida)' : '')); }
           if (ef.k === 'dc') { t.dcv = Math.max(t.dcv, ef.v[0]); t.dcn = Math.max(t.dcn, ef.v[1]); }
           if (ef.k === 'def') t.df = clamp(t.df + ef.v, -99, 99);
@@ -8461,6 +8513,10 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
             info: limpo(r.desc || '').split(/(?<=\.)\s/).slice(0, 3).join(' ') };
           if (AURAS[r.nome]) { const a = AURAS[r.nome](r, opN); a.nome = r.nome; ne.auras = [a]; }
           if (ne.tipo === 'Muralha') S.est = S.est.filter(z => !(z.tipo === 'Muralha' && z.autor === ne.autor));
+          if (ne.tipo === 'Fumaça' && r.nome === 'Cortina de Fumaça') { S.est = S.est.filter(z => !(z.tipo === 'Fumaça' && z.autor === ne.autor && z.tk !== S.tk)); ne.tk = S.tk; ne.exp = { t: 'ini', ref: refDe(c) }; ne.acaba = 'no início do próximo turno de ' + CH[c.k].nome; ne.info = 'Inimigo que atravessar sofre 2 de dano e −1 dado no' + (ne.aprim ? 's 2 próximos testes' : ' próximo teste') + '. Ataques que passam por ela têm −1 dado.'; }
+          if (r.nome === 'Algo Irreal') { const l0 = (r.linhas || []).find(l => l.alvo[0] !== aj); if (!l0 || !l0.ok) { msg.push('a Ilusão não se formou (errou o teste)'); return; } const vt = S.times[l0.alvo[0]][l0.alvo[1]];
+            S.est = S.est.filter(z => !(z.tipo === 'Ilusão' && z.hab === 'Algo Irreal' && z.autor === ne.autor)); ne.iluAlvo = l0.alvo.join(','); ne.exp = { t: 'fim', ref: refDe(c), pula: 1 }; ne.acaba = 'no fim do próximo turno de ' + CH[c.k].nome;
+            ne.info = 'Só ' + CH[vt.k].nome + ' vê a Ilusão. Cada ataque dele rola 1 dado: com 1 a 5, falha' + (ne.aprim ? ' (no primeiro turno dele, todos falham)' : '') + '.'; msg.push('🃏 ' + CH[vt.k].nome + ' vê a Ilusão'); }
           if (ne.tipo === 'Mala') { if (ocupante(ne.cell) || obstaculo(ne.cell)) { msg.push('a Mala precisa de uma casa vazia'); return; } S.est = S.est.filter(z => !(z.tipo === 'Mala' && z.autor === ne.autor)); }
           S.est.push(ne);
           if (ne.tipo === 'Domínio') { const sai = limitarDominio(ne.dono); if (sai.length) msg.push('Domínio desfeito em ' + sai.join(', ')); }
@@ -8564,7 +8620,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   });
   $('#mAcao').addEventListener('click', e => {
     { const rb = e.target.closest('[data-reac]'); if (rb) { cliqueReac(rb.dataset.reac); return; } }
-    if (e.target.id === 'rsRolar') { const r0 = res; if (r0.pend && !r0.rolado) { r0.rolado = true; prepReac(r0); r0.pend(r0); if (res === r0) mostrarResultado(r0); } return; }
+    { const sb = e.target.closest('[data-simul]'); if (sb) { const h0 = simLista[+sb.dataset.simul]; fechar('mAcao'); if (h0) iniciarSimul(h0); return; } }
+    if (e.target.id === 'rsRolar') { const r0 = res; if (r0.pend && !r0.rolado) { r0.rolado = true; prepReac(r0); ilusaoTeste(r0); r0.pend(r0); if (res === r0) mostrarResultado(r0); } return; }
     const ob = e.target.closest('[data-op]');
     if (ob) {
       if (res.pend && res.rolado) return;
