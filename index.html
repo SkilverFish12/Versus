@@ -1819,6 +1819,11 @@
   .apts span b.mod{color:var(--red); text-decoration:underline}
   .hx.aura polygon{stroke-dasharray:4 3; stroke-width:2}
   .hx.tinta.tn-vermelho polygon{fill:#ffb3b3} .hx.tinta.tn-azul polygon{fill:#b3d4ff} .hx.tinta.tn-verde polygon{fill:#bfeec0}
+.tinta.tj0 polygon{stroke:var(--j0);stroke-width:2.5;stroke-dasharray:5 3}
+.tinta.tj1 polygon{stroke:var(--j1);stroke-width:2.5;stroke-dasharray:5 3}
+.tinta.tdois polygon{stroke:#222;stroke-dasharray:2 2}
+.es-gp circle{fill:#2a2238;stroke:#c9a6ff;stroke-width:1.5}
+.es-gp text{font-size:9px;text-anchor:middle}
 
   .ef-fichas{border:2px solid #000; background:#fffbe0; padding:6px 8px; margin-bottom:10px}
   .ef-fichas summary{font-family:'Bangers',cursive; letter-spacing:1px; cursor:pointer; font-size:15px}
@@ -5620,6 +5625,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   const timeDe = c => { const r = refDe(c); return r ? +r[0] : -1; };
   // áreas mostradas no tabuleiro (estruturas e personagens com efeito em Raio)
   const AREA_TIPO = { Tempestade: 2, Pista: 2, Bomba: 1, Campo: 2 };
+  const estGolpe = e => { const a = e && e.autor && porRef(e.autor); return !!(a && a.k === 'arquiteto' && e.hab && !CH.arquiteto.habs.concat([CH.arquiteto.supH]).some(h => h.n === e.hab)); };
   function areasTab(){
     const out = [];
     (S.est || []).forEach(e => { if (!CELL[e.cell]) return;
@@ -6159,7 +6165,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       const k = marcas(c);
       if (CER[c.id] !== undefined) k.push('cerco c' + CER[c.id]);
       if (SOMB[c.id] !== undefined) k.push('sombra s' + SOMB[c.id]);
-      { const tz = (S.est || []).find(z => z.tipo === 'Tinta' && z.cor && z.cell === c.id); if (tz) k.push('tinta tn-' + tz.cor); }
+      { const tzs = (S.est || []).filter(z => z.tipo === 'Tinta' && z.cor && z.cell === c.id), tz = tzs[tzs.length - 1]; if (tz) k.push('tinta tn-' + tz.cor + ' tj' + tz.dono + (tzs.some(z => z.dono !== tz.dono) ? ' tdois' : '')); }
       { const dm = dominioEm(c.id); if (dm) k.push('dominio d' + dm.dono); }
       if (DM.casas.has(c.id)) k.push(DM.linha ? (DM.linha.has(c.id) ? 'mv' : 'mv2') : 'mv');
       { const au = AREAS.filter(a => a.cell !== c.id && dist(a.cell, c.id) <= a.raio); if (au.length) k.push('aura a' + au[0].dono + (au.some(a => a.sel) ? ' asel' : '')); }
@@ -6180,7 +6186,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     (S.est || []).forEach(e => {
       const p = CELL[e.cell]; if (!p) return;
       const n = estNa(e.cell).indexOf(e), off = n * 9;
-      toks += '<g class="es j' + e.dono + (estSel === e.id ? ' sel' : '') + '" data-est="' + e.id + '" transform="translate(' + (p.x + off).toFixed(1) + ',' + (p.y - off).toFixed(1) + ')"><polygon points="0,-17 15,-8.5 15,8.5 0,17 -15,8.5 -15,-8.5"/><text y="7">' + icEst(e) + '</text>' + (!modo && sc && sc.pos && sc.pos !== e.cell && !ocupante(e.cell) ? '<g class="tk-dist es-dist"><circle cx="15" cy="-15" r="9"/><text x="15" y="-11">' + dist(sc.pos, e.cell) + '</text></g>' : '') + '</g>';
+      toks += '<g class="es j' + e.dono + (estSel === e.id ? ' sel' : '') + '" data-est="' + e.id + '" transform="translate(' + (p.x + off).toFixed(1) + ',' + (p.y - off).toFixed(1) + ')"><polygon points="0,-17 15,-8.5 15,8.5 0,17 -15,8.5 -15,-8.5"/><text y="7">' + icEst(e) + '</text>' + (estGolpe(e) ? '<g class="es-gp"><circle cx="-14" cy="-14" r="8"/><text x="-14" y="-10">🃏</text></g>' : '') + (!modo && sc && sc.pos && sc.pos !== e.cell && !ocupante(e.cell) ? '<g class="tk-dist es-dist"><circle cx="15" cy="-15" r="9"/><text x="15" y="-11">' + dist(sc.pos, e.cell) + '</text></g>' : '') + '</g>';
     });
     let selos = '';
     [false, true].forEach(passo => [0, 1].forEach(j => S.times[j].forEach((c, i) => {
@@ -6212,7 +6218,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo) info = bannerModo();
     else if (es) {
       const aus = (es.auras || []).map(a => '<small class="tb-aura">✦ <b>' + esc(a.nome) + '</b> · Raio ' + a.raio + ': ' + esc(a.txt) + (a.acaba ? ' ⌛ acaba ' + esc(a.acaba) : '') + '</small>').join('');
-      info = '<div class="tb-info" style="--tc:var(--j' + es.dono + ')"><span class="tb-ic">' + icEst(es) + '</span><div><b>' + es.tipo.toUpperCase() + (es.opc ? ' DE ' + esc(es.opc).toUpperCase() : '') + (es.hab ? ' · ' + esc(es.hab) : '') + '</b><small>' + (es.autorNome ? 'por ' + esc(es.autorNome) + ' · ' : 'de ' + nomeJ(es.dono) + ' · ') + 'em ' + es.cell + ((ESTI[es.tipo] || [])[2] ? ' · obstáculo' : '') + '</small>' +
+      info = '<div class="tb-info" style="--tc:var(--j' + es.dono + ')"><span class="tb-ic">' + icEst(es) + '</span><div><b>' + es.tipo.toUpperCase() + (es.opc ? ' DE ' + esc(es.opc).toUpperCase() : '') + (es.hab ? ' · ' + esc(es.hab) : '') + '</b><small>' + (es.autorNome ? 'por ' + esc(es.autorNome) + (estGolpe(es) ? ' (cópia, time de ' + nomeJ(es.dono) + ')' : '') + ' · ' : 'de ' + nomeJ(es.dono) + ' · ') + 'em ' + es.cell + ((ESTI[es.tipo] || [])[2] ? ' · obstáculo' : '') + '</small>' +
         (aus || (es.info ? '<small>' + esc(es.info) + '</small>' : '')) + '<small class="tb-ate">⌛ acaba ' + esc(es.acaba || 'quando for removida') + '</small><small>Toque numa casa para mover a estrutura.</small></div>' +
         '<div class="tb-bt"><button class="icon-btn" data-estdel="' + es.id + '" title="Remover">🗑</button><button class="icon-btn" data-tbsoltar title="Soltar">✕</button></div></div>';
     } else if (sc) {
