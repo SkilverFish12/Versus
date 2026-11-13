@@ -2588,7 +2588,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         <dt>Deslocamento</dt>
         <dd>Quantas casas cada ação de Mover anda. Começa em 2 para todos.</dd>
         <dt>Estrutura</dt>
-        <dd>Algo criado no tabuleiro por uma habilidade: Galho, Muralha, Bomba, Aparato, Pássaro, Fenda, Ilusão, Retrato, Mala, Bloco de Aço, Armadilha, Domínio. Não é personagem e não pode ser empurrado, a não ser que a ficha diga o contrário.</dd>
+        <dd>Algo criado no tabuleiro por uma habilidade: Galho, Muralha, Bomba, Aparato, Pássaro, Fenda, Ilusão, Retrato, Mala, Bloco de Aço, Armadilha, Domínio. Não é personagem e não pode ser empurrado, a não ser que a ficha diga o contrário. Várias Estruturas podem dividir a mesma casa, menos Obstáculos: um Obstáculo só pode surgir numa casa sem nenhuma Estrutura.</dd>
         <dt>Obstáculo</dt>
         <dd>Estrutura que bloqueia a passagem. A ficha diz quando ela também bloqueia alcance.</dd>
         <dt>Atravessar</dt>
@@ -6752,7 +6752,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (h0.n === 'Meia-Noite') return { tipo: 'casa', casas: CELLS.filter(x => !bloqueada(x.id) && !obstaculo(x.id) && (!ocupante(x.id) || S.times[ocupante(x.id)[0]][ocupante(x.id)[1]] === c)).map(x => x.id), meia: true };
     if (h0.n === 'Cortina de Fumaça') return { tipo: 'casa', casas: CELLS.filter(x => (!c.pos || dist(c.pos, x.id) <= 3) && !bloqueada(x.id)).map(x => x.id), faixa: true, fumN: ap ? 5 : 3 };
     if (h0.n === 'Algo Irreal') return { tipo: 'casa', casas: CELLS.filter(x => (!c.pos || dist(c.pos, x.id) <= 3) && livre(x.id) && !bloqueada(x.id)).map(x => x.id), iluS: true };
-    if (h0.n === 'Mala Despachada') return { tipo: 'casa', casas: c.pos ? CELLS.filter(x => dist(c.pos, x.id) === 1 && livre(x.id) && !bloqueada(x.id)).map(x => x.id) : [] };
+    if (h0.n === 'Mala Despachada') return { tipo: 'casa', casas: c.pos ? CELLS.filter(x => dist(c.pos, x.id) === 1 && livre(x.id) && !bloqueada(x.id) && !estNa(x.id).length).map(x => x.id) : [] };
     if (h0.n === 'Fenda Espacial') return { tipo: 'casa', casas: CELLS.filter(x => livre(x.id) && !bloqueada(x.id)).map(x => x.id), fendaS: true };
     if (h0.n === 'Fechar o Braço') return { tipo: 'peca', alvos: pecas(() => true) };
     if (h0.n === 'Misericórdia Divina') return { tipo: 'todos', alvos: pecas((j, i, x) => j !== aj && !temEf(x, 'intocavel') && (!c.pos || (x.pos && dP(c.pos, x) <= 1))) };
@@ -6767,7 +6767,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (ta === 'RAIO') return { tipo: 'todos', alvos: pecas((j, i, x) => ok(j, i) && x !== c && (!temPos || (x.pos && dP(c.pos, x) <= n))) };
     const mato = (j, x) => S.cen === 'fazenda' && j !== aj && h.t.includes('ATAQUE') && temPos && x.pos && MATO.includes(x.pos[0]) && dP(c.pos, x) >= 4;
     if (ta === 'alvo' || ta === 'ALVO') return { tipo: 'peca', alvos: pecas((j, i, x) => ok(j, i) && !mato(j, x) && !(h0.n === 'Manipulando Emoções' && x === c) && !(h.a === 'ADJACENTE' && x.k === 'cupido' && j !== aj) && (!temPos || (x.pos && dP(c.pos, x) <= n))) };
-    if (ta === 'ALCANCE') return { tipo: 'casa', casas: temPos ? CELLS.filter(x => dist(c.pos, x.id) <= n && !bloqueada(x.id)).map(x => x.id) : CELLS.map(x => x.id) };
+    if (ta === 'ALCANCE') { const obE = h0.t.includes('ESTRUTURA') && (() => { const tp = tipoEstrutura(h0); return ESTI[tp] && ESTI[tp][2]; })(); return { tipo: 'casa', casas: (temPos ? CELLS.filter(x => dist(c.pos, x.id) <= n && !bloqueada(x.id)) : CELLS).filter(x => !obE || (!estNa(x.id).length && livre(x.id))).map(x => x.id) }; }
     if (ta === 'LINHA') return { tipo: 'linha', casas: temPos ? linhas(c.pos, n) : [] };
     return { tipo: 'nenhum' };
   }
@@ -7036,6 +7036,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (tipo === 'Bomba' && modo.autor && (ocupante(cellId) || obstaculo(cellId))) { toast('A Bomba precisa de uma casa vazia', 1400); return true; }
       if (modo.de && dist(modo.de, cellId) > (modo.alc || 99)) { toast('Fora do alcance (até ' + modo.alc + ' casas)', 1400); return true; }
       if (tipo === 'Domínio' && dominioEm(cellId)) return true;
+      if (ESTI[tipo] && ESTI[tipo][2] && estNa(cellId).length) { toast('Obstáculo só pode surgir numa casa sem nenhuma Estrutura', 1800); return true; }
       if (modo.resta > 1) { modo.resta--; } else modo = null;
       mudar(() => { S.est = S.est || []; const ne = { id: Date.now() + '' + d(999), tipo, cell: cellId, dono, acaba: tipo === 'Domínio' ? 'quando for desfeito' : undefined }; if (modo0.autor) { ne.autor = modo0.autor; ne.aprim = !!modo0.aprim; ne.hab = 'Bomba de Magma'; ne.autorNome = 'Kazan'; } const hp = { Galho: 'Brotamento', Campo: 'Contendo o Mal', Miasma: 'Miasma' }[tipo]; if (hp) { const a = AURAS[hp]({}, []); a.nome = hp; ne.auras = [a]; ne.hab = hp; } S.est.push(ne); if (tipo === 'Domínio') limitarDominio(dono); if (tipo === 'Pássaro') limitarPassaros(dono); }, ESTI[tipo][1] + ' ' + tipo + ' colocado em ' + cellId + '.');
       if (tipo === 'Bomba' && modo0.autor && !modo) setTimeout(() => limitarBombas(modo0.autor), 60);
@@ -8517,6 +8518,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (r.nome === 'Algo Irreal') { const l0 = (r.linhas || []).find(l => l.alvo[0] !== aj); if (!l0 || !l0.ok) { msg.push('a Ilusão não se formou (errou o teste)'); return; } const vt = S.times[l0.alvo[0]][l0.alvo[1]];
             S.est = S.est.filter(z => !(z.tipo === 'Ilusão' && z.hab === 'Algo Irreal' && z.autor === ne.autor)); ne.iluAlvo = l0.alvo.join(','); ne.exp = { t: 'fim', ref: refDe(c), pula: 1 }; ne.acaba = 'no fim do próximo turno de ' + CH[c.k].nome;
             ne.info = 'Só ' + CH[vt.k].nome + ' vê a Ilusão. Cada ataque dele rola 1 dado: com 1 a 5, falha' + (ne.aprim ? ' (no primeiro turno dele, todos falham)' : '') + '.'; msg.push('🃏 ' + CH[vt.k].nome + ' vê a Ilusão'); }
+          if (ESTI[ne.tipo] && ESTI[ne.tipo][2] && estNa(ne.cell).length) { msg.push(ne.tipo + ' não surgiu em ' + ne.cell + ': Obstáculo só pode surgir numa casa sem nenhuma Estrutura'); return; }
           if (ne.tipo === 'Mala') { if (ocupante(ne.cell) || obstaculo(ne.cell)) { msg.push('a Mala precisa de uma casa vazia'); return; } S.est = S.est.filter(z => !(z.tipo === 'Mala' && z.autor === ne.autor)); }
           S.est.push(ne);
           if (ne.tipo === 'Domínio') { const sai = limitarDominio(ne.dono); if (sai.length) msg.push('Domínio desfeito em ' + sai.join(', ')); }
