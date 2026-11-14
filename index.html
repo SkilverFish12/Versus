@@ -6468,7 +6468,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b && b.dataset.confirmar !== undefined) { resolverHab(); return; }
     const tmn = e.target.closest('[data-tokm]');
     if (tmn && !b) { const [tj, ti, rk] = tmn.dataset.tokm.split(','), x = S.times[+tj][+ti];
-      if (modo) { cliqueModo(robCell(x, rk), tj + ',' + ti); return; }
+      if (modo) { if (x !== ativoC() && (x.robA || 'copas') !== rk && robCell(x, rk)) { if (!x.robVolta) x.robVolta = x.robA || 'copas'; robSwap(x, rk); salvar(); toast('🃏 ' + ROBN[rk] + ' é o robô afetado', 1600); } cliqueModo(robCell(x, rk), tj + ',' + ti); return; }
       selTok = [+tj, +ti]; estSel = null; mudar(() => { robSwap(x, rk); }, '🃏 Agora age ' + ROBN[rk] + '.'); return; }
     const t2 = e.target.closest('[data-tok2]');
     if (modo && !b && t2) { const [tj, ti] = t2.dataset.tok2.split(',').map(Number); cliqueModo(S.times[tj][ti].pos2, t2.dataset.tok2); return; }
@@ -6560,6 +6560,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function fimDeTurno(c){
     let aviso = '';
     mudar(() => {
+      S.times.forEach(tm => tm.forEach(x => { if (x.k === 'manilhas' && x.robVolta) { if (!x.elim && (x.robA || 'copas') !== x.robVolta) robSwap(x, x.robVolta); x.robVolta = null; } }));
       if (c.k === 'magnus' || c.k === 'arquiteto') c.sofDesde = 0; if (c.k === 'arquiteto') c.simTk = S.tk;
       ondaMisericordia(c);
       torretas(c);
@@ -7039,6 +7040,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (r.sup && nm === 'Passagem da Morte') ok.forEach(a => Q.push({ t: 'empDir', alvo: a, n: 2, tit: '🚐 Empurre ' + nmC(a) + ' 2 casas para fora da faixa' }));
     if (nm === 'Sumir no Mato') mv(r.aprim ? 5 : 3, 'Sumir no Mato');
     if (nm === 'Revoada' && c.k === 'duque') { const adj = r.aprim ? S.times[aj].map((x, i) => [x, i]).filter(([x]) => x !== c && !x.elim && x.pos && c.pos && dP(c.pos, x) === 1) : []; mv(4, 'Revoada'); adj.forEach(([x, i]) => Q.push({ t: 'teleporte', alvo: [aj, i], centro: refDe(c), alc: 1, tit: '🦇 Levar ' + CH[x.k].nome + ' para o lado do Duque (ou cancele)' })); }
+    if (nm === 'Multiplicar' && c.k === 'semelhante' && c.pos) { const n = r.aprim ? 2 : 1; Q.unshift({ t: 'estrutura', tipo: 'Cópia', dono: aj, resta: n, cop: refDe(c), tit: '👥 Multiplicar: toque ' + (n > 1 ? 'em 2 casas vazias' : 'numa casa vazia') + ' ao lado do Semelhante ou de uma Cópia' }); }
     if (nm === 'Troca de Lugar') { Q.push({ t: 'troca', tit: '👥 Troca de Lugar: toque na Cópia' }); if (r.aprim) mv(2, 'Troca de Lugar'); }
     if (nm === 'Vem Cirandar') S.times[aj].forEach((x, i) => { if (x !== c && !x.elim && x.pos) Q.push({ t: 'teleporte', alvo: [aj, i], centro: refDe(c), alc: 1, tit: '🎭 ' + CH[x.k].nome + ' vai para uma casa ao lado da Parlenda' }); });
     if (nm === 'Caravana') S.times[aj].forEach((x, i) => { if (x !== c && !x.elim && x.pos) Q.push({ t: 'teleporte', alvo: [aj, i], de: x.pos, alc: 2, caminha: true, tit: '🧳 ' + CH[x.k].nome + ' pode andar 2 casas (ou cancele)' }); });
@@ -7425,10 +7427,13 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     }
   });
   // destaques do modo no tabuleiro
+  function copVagas(m){ const [qj, qi] = m.cop.split(',').map(Number), q = S.times[qj][qi]; if (!q || !q.pos) return [];
+    const base = [q.pos].concat((S.est || []).filter(z => z.tipo === 'Cópia' && z.dono === m.dono && z.cell).map(z => z.cell));
+    return CELLS.map(x => x.id).filter(id => !bloqueada(id) && !obstaculo(id) && !ocupante(id) && !estNa(id).length && base.some(b => dist(b, id) === 1)); }
   function destaquesModo(){
     const out = { casas: new Set(), toks: new Set() };
     const c = ativoC(); if (!modo) return out;
-    if (modo.t === 'estrutura') { CELLS.forEach(x => { if (!bloqueada(x.id)) out.casas.add(x.id); }); return out; }
+    if (modo.t === 'estrutura') { if (modo.cop) copVagas(modo).forEach(id => out.casas.add(id)); else CELLS.forEach(x => { if (!bloqueada(x.id)) out.casas.add(x.id); }); return out; }
     if (!c) return out;
     if (modo.t === 'mover' && c.pos) {
       const desl = modo.desl || deslDe(c);
@@ -7477,11 +7482,13 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (tipo === 'Bomba' && modo.autor && (ocupante(cellId) || obstaculo(cellId))) { toast('A Bomba precisa de uma casa vazia', 1400); return true; }
       if (modo.de && dist(modo.de, cellId) > (modo.alc || 99)) { toast('Fora do alcance (até ' + modo.alc + ' casas)', 1400); return true; }
       if (tipo === 'Domínio' && dominioEm(cellId)) return true;
+      if (modo.cop && !copVagas(modo).includes(cellId)) { toast('A Cópia vai numa casa vazia ao lado do Semelhante ou de outra Cópia', 2000); return true; }
       let domPaga = false;
       if (tipo === 'Domínio' && modo.dom) { const ca = ativoC(); if ((modo.feitas || 1) === 2) { if (!ca || restam(ca) < 1) { modo = null; toast('Domínio: mais de 2 casas custa 2 ações, e não sobrou ação', 2400); rPainel(); rBoard(); return true; } domPaga = true; } modo.feitas = (modo.feitas || 1) + 1; }
       if (ESTI[tipo] && ESTI[tipo][2] && estNa(cellId).length) { toast('Obstáculo só pode surgir numa casa sem nenhuma Estrutura', 1800); return true; }
       if (modo.resta > 1) { modo.resta--; } else modo = null;
       mudar(() => { S.est = S.est || []; const ne = { id: Date.now() + '' + d(999), tipo, cell: cellId, dono, acaba: tipo === 'Domínio' ? 'quando for desfeito' : undefined }; if (modo0.autor) { ne.autor = modo0.autor; ne.aprim = !!modo0.aprim; ne.hab = 'Bomba de Magma'; ne.autorNome = 'Kazan'; } if (domPaga) { const ca = ativoC(); if (ca) ca.gastas = Math.min(ca.acts, ca.gastas + 1); } const hp = { Galho: 'Brotamento', Campo: 'Contendo o Mal', Miasma: 'Miasma' }[tipo]; if (hp) { const a = AURAS[hp]({}, []); a.nome = hp; ne.auras = [a]; ne.hab = hp; } S.est.push(ne); if (tipo === 'Domínio') limitarDominio(dono); if (tipo === 'Pássaro') limitarPassaros(dono); }, ESTI[tipo][1] + ' ' + tipo + ' colocado em ' + cellId + '.' + (domPaga ? ' (a 3ª casa custou a 2ª ação do Domínio)' : ''));
+      if (tipo === 'Cópia' && modo0.cop) { mudar(() => { const mi = S.est.filter(z => z.tipo === 'Cópia' && z.dono === dono); if (mi.length > 3) S.est = S.est.filter(z => z !== mi[0]); }, '👥 Cópia criada em ' + cellId + '.'); if (!modo && filaPos.length) setTimeout(proximoPos, 50); }
       if (tipo === 'Bomba' && modo0.autor && !modo) setTimeout(() => limitarBombas(modo0.autor), 60);
       rPainel(); return true;
     }
@@ -9248,12 +9255,6 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (c.k === 'drive' && h.n === 'Rasante' && m.cel) {
       const linha = alvosDe(h, r.aprim).casas.filter(([, di]) => di === m.dir).map(([id]) => id);
       pecas((pj, pi, x) => pj === aj && x !== c && !x.carona && x.pos && linha.some(id => dist(id, x.pos) <= 1)).forEach(p => extras.push({ k: 'carona', v: p, on: false, txt: CH[S.times[p[0]][p[1]].k].nome + ' sobe no veículo (grátis)' }));
-    }
-    if (c.k === 'semelhante' && h.n === 'Multiplicar' && c.pos) {
-      const base = [c.pos].concat((S.est || []).filter(z => z.tipo === 'Cópia' && z.dono === aj).map(z => z.cell));
-      const vaga = id => !bloqueada(id) && !ocupante(id) && !estNa(id).length, ids = CELLS.map(x => x.id);
-      const livre = ids.find(id => dist(c.pos, id) === 1 && vaga(id)) || ids.find(id => base.some(b => dist(b, id) === 1) && vaga(id));
-      if (livre) extras.push({ k: 'est', v: ['Cópia', livre], on: true, txt: 'Criar 👥 Cópia em ' + livre + ' (toque nela no tabuleiro para mudar de casa)' });
     }
     if (m.cel && h.t.includes('ESTRUTURA') && h.n !== 'Fenda Espacial' && h.n !== 'Pincelada' && h.n !== 'Retrato Vivo') { const tp = tipoEstrutura(h); ((h.n === 'Cortina de Fumaça' || h.n === 'Muralha Térmica') && m.faixa ? m.faixa : [m.cel]).forEach(cc => extras.push({ k: 'est', v: [tp, cc], on: true, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + cc })); }
     if (m.cel && !ef.ocupar && h.t.includes('MOBILIDADE') && h.n !== 'Fenda Espacial' && !(h.n === 'Salto no Espaço' && m.aprim) && /aparece|desloca\b|despenca|avança|desliza|dispara/i.test(h.d) && !ocupante(m.cel)) extras.push({ k: 'mover', v: m.cel, on: true, txt: 'Mover ' + ch.nome + ' para ' + m.cel });
