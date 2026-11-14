@@ -6836,6 +6836,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   function botoesPassivas(c, btn){
     let h = '';
+    if (c.tat && Object.values(AVESSA).includes(c.tat)) { const cu = c.tatR ? 2 : 1, fb = (c.efs || []).some(e => e.tatF);
+      h += btn('data-ac="borrar"', '🧽', 'BORRAR A TATUAGEM', cu + (cu > 1 ? ' ações (Reforçada)' : ' ação') + ' · apaga a ' + c.tat, fb ? 'Fechar o Braço: não borra' : restam(c) < cu ? 'sem ações' : ''); }
     if (c.k === 'andarilho' && malaDe(c) && c.pos && dist(malaDe(c).cell, c.pos) <= 1) h += btn('data-pegamala="1"', '🧳', 'PEGAR A MALA', 'sem ação · ele está ao lado dela', pOff(c, 'Mala Despachada') ? 'Bloqueio Mental' : '');
     if (malasChute(c).length) h += btn('data-chute="1"', '🧳', 'CHUTAR A MALA', '1 ação · desliza até 5 casas · teste de FÍS se parar num inimigo', restam(c) < 1 ? 'sem ações' : '');
     S.times.forEach((tm, tj) => tm.forEach((x, ti) => { if (x.elim || x.k !== 'kazan') return; const bs = bombasDe(x); if (!bs.length) return; const meu = x === c;
@@ -7226,6 +7228,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b.dataset.ac === 'estrutura') return abrirEstruturas();
     if (b.dataset.ac === 'carona') return iniciarModo({ t: 'carona' });
     if (b.dataset.descer) return iniciarModo({ t: 'descer', quem: b.dataset.descer });
+    if (b.dataset.ac === 'borrar') { const cu = c.tatR ? 2 : 1, n0 = c.tat; if (!n0 || restam(c) < cu || (c.efs || []).some(e => e.tatF)) return; return mudar(() => { c.gastas += cu; c.tatB = { n: n0, r: S.rodada }; c.tat = ''; c.tat2 = ''; c.tatR = false; }, '🧽 ' + CH[c.k].nome + ' borrou a Tatuagem ' + n0 + ' (' + cu + (cu > 1 ? ' ações' : ' ação') + ').'); }
     if (b.dataset.ac === 'pagar') return mudar(() => { c.div = divDe(c) - 1; c.gastas += 1; }, '💰 ' + CH[c.k].nome + ' pagou 1 Dívida (' + (divDe(c) - 1) + ' restante(s)).');
     if (b.dataset.ac === 'arrancar') return mudar(() => { S.est = (S.est || []).filter(z => !(z.tipo === 'Aparato' && z.em === refDe(c))); c.gastas += 1; }, '🧲 ' + CH[c.k].nome + ' arrancou o Aparato.');
     if (b.dataset.ac === 'carga') return mudar(() => { setRec(c, 'Cargas', rec(c, 'Cargas') + 1); c.gastas += 2; }, '⚛️ ' + CH[c.k].nome + ' carregou: ' + (rec(c, 'Cargas') + 1) + ' Carga(s).');
@@ -7740,9 +7743,9 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     (t.efs || []).forEach(e => { if (e.fim && e.fim.memento) e.fim.memento.dano += real; });
     if (o.ataque && !o.teia && real > 0 && temEf(t, 'teia')) S.times[timeDe(t)].forEach(y => { if (y === t || y.elim) return; const e2 = (y.efs || []).find(e => e.teia); if (e2) { const q2 = sofrerDano(y, e2.teia, { psi: true, teia: true }); if (q2.real) nota.push('teia: ' + CH[y.k].nome + ' −' + q2.real); } });
     if (t.k === 'dinamo') setRec(t, 'Dano sofrido', rec(t, 'Dano sofrido') + real);
-    if (o.ataque && real >= 5 && t.tat && t.pv > real && !(t.efs || []).some(e => e.tatF)) { if (t.tatR) { t.tatR = false; nota.push('a Tatuagem Reforçada segurou o borrão'); } else { t.tatB = { n: t.tat, r: S.rodada }; nota.push('a Tatuagem ' + t.tat + (t.tat2 ? ' e ' + t.tat2 : '') + ' borrou'); t.tat = ''; t.tat2 = ''; } }
-    if (t.k === 'promessa' && o.ataque && real > 0 && t.pv > real) { setRec(t, 'Guarda', rec(t, 'Guarda') + 1); nota.push('Promessa +1 Guarda'); }
-    if (t.k === 'ritmista' && real > 0 && t.pv > real) { t.rDano = (t.rDano || 0) + real; if (t.rDano >= 8) { quebraRitmo(t); nota.push('Ritmista perdeu o Ritmo'); } }
+    if (o.ataque && real >= 5 && t.tat && t.pv > 0 && !(t.efs || []).some(e => e.tatF)) { if (t.tatR) { t.tatR = false; nota.push('a Tatuagem Reforçada segurou o borrão'); } else { t.tatB = { n: t.tat, r: S.rodada }; nota.push('a Tatuagem ' + t.tat + (t.tat2 ? ' e ' + t.tat2 : '') + ' borrou'); t.tat = ''; t.tat2 = ''; } }
+    if (t.k === 'promessa' && o.ataque && real > 0 && t.pv > 0) { setRec(t, 'Guarda', rec(t, 'Guarda') + 1); nota.push('Promessa +1 Guarda'); }
+    if (t.k === 'ritmista' && real > 0 && t.pv > 0) { t.rDano = (t.rDano || 0) + real; if (t.rDano >= 8) { quebraRitmo(t); nota.push('Ritmista perdeu o Ritmo'); } }
     if (t.k === 'maligno' && o.ataque && real > 0) setRec(t, 'Peso de Dor', rec(t, 'Peso de Dor') + 1);
     if (!t.pv) { const [a, b] = refDe(t).split(',').map(Number); eliminar(a, b); }
     return { real, nota };
