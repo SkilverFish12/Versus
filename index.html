@@ -6461,7 +6461,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function fimDeTurno(c){
     let aviso = '';
     mudar(() => {
-      if (c.k === 'magnus') c.sofDesde = 0; if (c.k === 'arquiteto') c.simTk = S.tk;
+      if (c.k === 'magnus' || c.k === 'arquiteto') c.sofDesde = 0; if (c.k === 'arquiteto') c.simTk = S.tk;
       ondaMisericordia(c);
       torretas(c);
       (S.est || []).forEach(z => { if (z.tipo === 'Transmutado' && z.autor === refDe(c) && z.fixo > 0) z.fixo--; });
@@ -7077,7 +7077,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (h.n === 'Defletir') return 'reação: use no ataque do inimigo (tire 2 ações do próximo turno)';
     if (sup && c.possPor) return 'Possessão: Fantasma nunca usa a Suprema do alvo';
     if (sup) { if (c.sup) return 'já usada na partida'; if (c.med) return 'Medidor já gasto nesta rodada'; if (S.med[j] < 3) return 'precisa de 3 de Medidor'; }
-    if (c.k === 'assobio' && h.n === 'Bico de Aço' && !passarosDe(j).length) return 'precisa de um Pássaro no tabuleiro';
+    if ((c.k === 'assobio' || h.simul) && h.n === 'Bico de Aço' && !passarosDe(j).length) return 'precisa de um Pássaro no tabuleiro';
     const a = alvosDe(h);
     if (c.pos && a.tipo === 'peca' && !a.alvos.length) return h.n === 'Ascensão' ? 'ninguém numa casa de Domínio' : h.n === 'Atração Forçada' ? 'ninguém está com um Aparato' : 'nenhum alvo no alcance';
     if (h.n === 'Transmutação' && c.pos && !a.casas.length) return 'precisa estar adjacente a um Obstáculo ou a uma Estrutura inimiga';
@@ -7206,7 +7206,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   function textoModo(m){
     const a = m.alvosInfo;
-    if (a.tipo === 'casa' && a.fendaS) return m.fA ? '🌀 toque em qualquer casa vazia para a 2ª Fenda' : '🌀 toque numa casa vazia ao lado da Saltadora para a 1ª Fenda';
+    if (a.tipo === 'casa' && a.fendaS) return m.fA ? '🌀 toque em qualquer casa vazia para a 2ª Fenda' : '🌀 toque numa casa vazia ao lado de ' + CH[ativoC().k].nome + ' para a 1ª Fenda';
     if (a.tipo === 'peca' && m.seg && PAR[m.h.n]) return ({ 'Elo de Sangue': 'toque no aliado que vai recuperar PV (a até 3 casas de Maligno, pode ser ele)', 'Amor Cego': 'toque no personagem para onde o Hipnotizado vai ter de andar', 'Amor à Primeira Vista': 'toque no aliado por quem ele vai ficar Apaixonado', 'Sessão Rápida': 'toque no 2º personagem a tatuar (ou de novo no 1º para ficar só com ele)', 'Tinta Gêmea': 'toque no 2º personagem tatuado do mesmo time', 'Até que a Morte nos Separe': 'toque no 2º personagem (ele vai para o lado do primeiro)' })[m.h.n];
     if (a.tipo === 'peca' && m.seg) return '⚡ toque no 2º alvo' + (DOIS_ALVOS[m.h.n] === 'perto2' ? ' (a até 2 casas do primeiro)' : '') + ', ou de novo no 1º para ficar só com ele';
     if (a.tipo === 'peca') return 'toque no alvo' + (m.aprim && DOIS_ALVOS[m.h.n] ? ' (o Aprimorar deixa escolher um 2º)' : '');
@@ -7697,7 +7697,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (t && q && q.real > 0 && !(o && o.sobre) && temEf(t, 'sobreD') && t.pos) pecas((pj, pi, x) => x !== t && !x.elim && x.pos && dP(t.pos, x) <= 1).forEach(([pj, pi]) => { const y = S.times[pj][pi], q2 = sofrerDano(y, 2, { sobre: true }); evento('⚡ Sobrecarga: ' + CH[y.k].nome + ' −' + q2.real + ' PV'); });
     if (t && q && q.real > 0 && !(o && (o.vinc || o.casal))) { const ev = (t.efs || []).find(e => e.vinc); if (ev) { const p = porRef(ev.vinc.par), v = Math.max(1, ev.vinc.cima ? Math.ceil(q.real / 2) : Math.floor(q.real / 2)); if (p && !p.elim) { const q2 = sofrerDano(p, v, { vinc: true, psi: o && o.psi }); evento('🕸️ Vínculo de Agonia: ' + CH[p.k].nome + ' −' + q2.real + ' PV'); } [t, p].forEach(x => { if (!x) return; const ee = (x.efs || []).find(z => z.vinc); if (ee) { ee.vinc.n--; if (ee.vinc.n <= 0) x.efs = x.efs.filter(z => z !== ee); } }); }
       const ec = (t.efs || []).find(e => e.casal && e.casalDn); if (ec) { const p = porRef(ec.casal); if (p && !p.elim) { const q2 = sofrerDano(p, ec.casalDn, { casal: true }); evento('💔 Até que a Morte: ' + CH[p.k].nome + ' −' + q2.real + ' PV'); } } }
-    if (t && t.k === 'magnus' && q && q.real > 0) t.sofDesde = (t.sofDesde || 0) + q.real;
+    if (t && (t.k === 'magnus' || t.k === 'arquiteto') && q && q.real > 0) t.sofDesde = (t.sofDesde || 0) + q.real;
     if (S.cen === 'ferrovelho' && t && t.pos && q && q.real >= 6 && o && o.ataque) { const ps = SUCATA.filter(z => sucataEm(z) && dist(z, t.pos) === 1); if (ps.length) { S.ce = S.ce || {}; S.ce.sucCai = (S.ce.sucCai || []).concat(ps); evento('🔩 A Pilha de Sucata em ' + ps.join(' e ') + ' desabou e sumiu'); } }
     if (q && q.nota && !(o && o.desvio)) { if (q.nota.some(n => RX_EV.test(n))) evento(CH[t.k].nome + ' −' + q.real + ' PV (' + q.nota.join(', ') + ')'); }
     return q;
@@ -7942,14 +7942,22 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   let simLista = [];
   function abrirSimulacro(c){
     const vistos = new Set(); simLista = [];
-    (S.usoHab || []).filter(u => u.tk > (c.simTk || 0) && u.n !== 'Simulacro').forEach(u => { if (vistos.has(u.n)) return; const k = Object.keys(CH).find(k2 => CH[k2].habs.some(x => x.n === u.n && x.c)); if (!k) return; vistos.add(u.n); simLista.push(Object.assign({}, CH[k].habs.find(x => x.n === u.n), { simulK: k })); });
+    (S.usoHab || []).filter(u => u.tk > (c.simTk || 0) && u.n !== 'Simulacro').forEach(u => { if (vistos.has(u.n)) return; const k = Object.keys(CH).find(k2 => habsBig(CH[k2].habs).some(x => x.n === u.n && x.c)); if (!k) return; vistos.add(u.n); simLista.push(Object.assign({}, habsBig(CH[k].habs).find(x => x.n === u.n), { simulK: k })); });
     if (!simLista.length) { toast('Nenhuma habilidade ativa foi usada desde o fim do último turno do Golpista', 2600); return; }
     $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>✨ SIMULACRO</h3></div><div class="dd-corpo"><p class="rs-sub">Escolha a habilidade para copiar. Custa 2 ações e usa as aptidões do Golpista' + (aprimorarMarcado && S.med[S.ativo[0]] >= 1 ? '; com ⚡ Aprimorar marcado, usa a versão aprimorada' : '') + '.</p><div class="rs-ops">' +
-      simLista.map((h, i) => '<button data-simul="' + i + '"><strong>' + h.n + '</strong><small>' + CH[h.simulK].nome + ' · ' + h.a.toLowerCase() + ' · ' + (h.x >= 0 ? 'teste ' + APT[h.x] : 'sem teste') + '</small></button>').join('') + '</div></div>';
+      simLista.map((h, i) => { const mt = motivo(simHab(h)); return '<button data-simul="' + i + '"' + (mt ? ' disabled style="opacity:.5"' : '') + '><strong>' + h.n + '</strong><small>' + CH[h.simulK].nome + ' · ' + h.a.toLowerCase() + ' · ' + (h.x >= 0 ? 'teste ' + APT[h.x] : 'sem teste') + (mt ? ' · ⛔ ' + mt : '') + '</small></button>'; }).join('') + '</div></div>';
     if ($('#mAcao').hidden) abrir('mAcao');
   }
+  function simTexto(t, k){
+    if (!t || !CH[k] || k === 'arquiteto') return t;
+    const esc = x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), nm = esc(CH[k].nome), fim = '(?![A-Za-zÀ-ÿ])';
+    const art = { da: 'do', na: 'no', a: 'o', pela: 'pelo', das: 'dos', nas: 'nos', as: 'os' };
+    t = t.replace(new RegExp('(^|[^A-Za-zÀ-ÿ])(da|na|a|pela|do|no|o|pelo)\\s+' + nm + fim, 'gi'), (m0, p, a) => p + (art[a.toLowerCase()] ? (a[0] === a[0].toUpperCase() ? art[a.toLowerCase()][0].toUpperCase() + art[a.toLowerCase()].slice(1) : art[a.toLowerCase()]) : a) + ' Golpista');
+    return t.replace(new RegExp('(^|[^A-Za-zÀ-ÿ])' + nm + fim, 'gi'), (m0, p) => p + 'Golpista');
+  }
+  const simHab = h0 => Object.assign({}, h0, { c: 2, simul: true, d: simTexto(h0.d, h0.simulK), m: simTexto(h0.m, h0.simulK), p: simTexto(h0.p, h0.simulK) });
   function iniciarSimul(h0){
-    const c = ativoC(); if (!c) return; const hc = Object.assign({}, h0, { c: 2, simul: true });
+    const c = ativoC(); if (!c) return; const hc = simHab(h0);
     const aprim = aprimorarMarcado && !!hc.p && !c.med && S.med[S.ativo[0]] >= 1, ai = alvosDe(hc, aprim), m = { t: 'hab', h: hc, sup: false, aprim, alvosInfo: ai, sel: [] };
     if (ai.tipo === 'nenhum') { m.sel = [S.ativo]; modo = m; return resolverHab(); }
     if (ai.tipo === 'todos') m.sel = ai.alvos;
@@ -8670,14 +8678,14 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           if (g) l.ef.push(supFx('consumir o Galho em ' + g.cell + ' (adjacente a ' + CH[t.k].nome + ') para curar 10 em vez de 8', (x, msg) => { const g2 = (S.est || []).find(z => z.tipo === 'Galho' && z.dono === aj && z.cell && x.pos && dist(z.cell, x.pos) === 1); if (!g2) return; S.est = S.est.filter(z => z !== g2); x.pv = Math.min(x.max, x.pv + 2); msg.push('Galho em ' + g2.cell + ' consumido: +2 PV a mais para ' + CH[x.k].nome); }, on)); }); }
         break;
       case 'Marca da Brasa':
-        linhasR.forEach(l => { if (!ini(l) || !l.ok) return; fx(l, 'Não termina movimento fora do Raio 3 de Carvão até o fim do próximo turno dele', t => novoEf(t, { nome: 'Marca da Brasa', autor: nm, faz: 'não termina movimento fora do Raio 3 de Carvão', acaba: txtFim(c), exp: fimP(c), mods: {}, marcaB: cref }));
+        linhasR.forEach(l => { if (!ini(l) || !l.ok) return; fx(l, 'Não termina movimento fora do Raio 3 de ' + nm + ' até o fim do próximo turno de ' + nm, t => novoEf(t, { nome: 'Marca da Brasa', autor: nm, faz: 'não termina movimento fora do Raio 3 de ' + nm, acaba: txtFim(c), exp: fimP(c), mods: {}, marcaB: cref }));
           if (r.aprim && !l.ef.some(e => e.k === 'dc')) l.ef.push({ k: 'dc', v: [2, 2], on: true, txt: 'Dano Contínuo 2 por 2' }); });
         break;
       case 'Tratamento de Emergência': {
         const sd = c.sofDesde || 0, cu = Math.floor(sd / 2);
         linhasR.forEach(l => { l.ef = l.ef.filter(e => e.k !== 'cura'); });
-        extras.push(supFx('Magnus recupera ' + cu + ' PV (metade de ' + sd + ' de dano sofrido desde o fim do último turno dele)', msg => { const g = Math.min(c.max - c.pv, Math.max(0, cu - (c.cr || 0))); c.pv += g; msg.push('Magnus +' + g + ' PV'); }));
-        if (r.aprim) extras.push(supFx('Remove todas as Penalidades de Magnus', msg => { const n = limparPen(c); msg.push(n ? n + ' Penalidade(s) removida(s)' : 'nenhuma Penalidade'); }));
+        extras.push(supFx(nm + ' recupera ' + cu + ' PV (metade de ' + sd + ' de dano sofrido desde o fim do último turno dele)', msg => { const g = Math.min(c.max - c.pv, Math.max(0, cu - (c.cr || 0))); c.pv += g; msg.push(nm + ' +' + g + ' PV'); }));
+        if (r.aprim) extras.push(supFx('Remove todas as Penalidades de ' + nm, msg => { const n = limparPen(c); msg.push(n ? n + ' Penalidade(s) removida(s)' : 'nenhuma Penalidade'); }));
         break; }
       case 'Ignição':
         if (!r.aprim) break;
@@ -8828,7 +8836,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (h.n === 'Quebra de Guarda' && inimigo && def !== null) {
         const hq = r.dados.filter(x => x >= def).length; ok = hq > 0;
         txt = ok ? hq + (hq > 1 ? ' acertos' : ' acerto') + ' (Defesa ' + def + ')' : 'escapou (Defesa ' + def + ')';
-        if (ok) { const dv = 2 * hq + bonusDn; lista.push({ k: 'dano', v: dv, on: true, txt: dv + ' de dano' }); lista.push({ k: 'def', v: -Math.min(3, hq), on: true, txt: '−' + Math.min(3, hq) + ' na Defesa até o início do próximo turno de Promessa' }); }
+        if (ok) { const dv = 2 * hq + bonusDn; lista.push({ k: 'dano', v: dv, on: true, txt: dv + ' de dano' }); lista.push({ k: 'def', v: -Math.min(3, hq), on: true, txt: '−' + Math.min(3, hq) + ' na Defesa até o início do próximo turno de ' + ch.nome }); }
         linhasR.push({ alvo: al, ok, txt, ef: lista }); return;
       }
       if (ok) {
