@@ -4550,6 +4550,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   </div>
   <div class="log" id="mnLogBox" hidden></div>
 </div></div>
+<div class="modal" id="mAuto" hidden><div class="modal-caixa larga" id="mAutoCaixa"></div></div>
 <div class="modal" id="mDados" hidden><div class="modal-caixa larga"><div class="modal-h"><h3>🧾 HISTÓRICO DE DADOS</h3><button class="modal-x" data-fecha>✕</button></div><div id="mDadosCorpo" class="dd-corpo"></div></div></div>
 <div class="modal" id="mResumo" hidden><div class="modal-caixa larga resumo">
   <div class="modal-h"><h3>📋 RESUMO DAS REGRAS</h3><button class="modal-x" data-fecha>✕</button></div>
@@ -5403,7 +5404,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       S.est = S.est.filter(y => y !== z);
       const es = (z.autor && porRef(z.autor)) || S.times[z.dono].find(x => x.k === 'espreitador' && !x.elim), tps = (z.opc || '').split(' + ').filter(Boolean);
       if (!es || es.elim) { out.push('🪤 a Armadilha em ' + id + ' se desfez'); continue; }
-      const n = Math.max(1, aptE(es, 2) + mod(es, 'dd') + dadosCen(es, 2)), v = rolarD10(n), def = clamp(defesas(c)[2] + adef(es), 2, 10), ok = Math.max(...v) >= def;
+      const n = Math.max(1, aptE(es, 2) + mod(es, 'dd') + dadosCen(es, 2)), v = rolarD10(n), def = clamp(defesas(c)[2] + adef(es), 2, 10), ok = Math.max(...v) >= def; regAuto({ q: es, t: 'Armadilha de Caça' + (z.opc ? ' (' + z.opc + ')' : ''), apt: 2, d: v, al: [{ t: c, def, ok }], sim: 'a armadilha dispara', nao: 'a armadilha se desfaz' });
       if (!ok) { out.push('🪤 Armadilha (' + (z.opc || '?') + ') em ' + id + ' [' + v.join(',') + ' vs ' + def + ']: errou e se desfez'); continue; }
       const fx = []; let parou = false; const nE = CH[es.k].nome;
       tps.forEach(tp => {
@@ -5426,7 +5427,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     (cells || []).forEach(id => { if (c.elim) return;
       const z = (S.est || []).find(y => y.tipo === 'Tinta' && y.dono !== j && y.cell === id); if (!z) return;
       const aq = (z.autor && porRef(z.autor)) || S.times[z.dono].find(x => x.k === 'aquarela' && !x.elim); if (!aq || aq.elim) return;
-      const n = Math.max(1, aptE(aq, 2) + mod(aq, 'dd') + dadosCen(aq, 2)), v = rolarD10(n), def = clamp(defesas(c)[2] + adef(aq), 2, 10), ok = Math.max(...v) >= def;
+      const n = Math.max(1, aptE(aq, 2) + mod(aq, 'dd') + dadosCen(aq, 2)), v = rolarD10(n), def = clamp(defesas(c)[2] + adef(aq), 2, 10), ok = Math.max(...v) >= def; regAuto({ q: aq, t: 'Tinta em ' + id, apt: 2, d: v, al: [{ t: c, def, ok }], sim: '+1 Mancha', nao: 'escapou' });
       if (ok) manchar(c, 1);
       out.push('🎨 Tinta em ' + id + ' [' + v.join(',') + ' vs ' + def + ']: ' + (ok ? '+1 Mancha (' + c.manchas + ')' : 'escapou'));
     });
@@ -5935,12 +5936,12 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           { const ec = (c.efs || []).find(e => e.casal && e.cura4); if (ec && c.pv < c.max) { const cv = Math.max(0, Math.min(c.max - c.pv, 4 - (c.cr || 0) - (contagiado(c) ? 2 : 0))); c.pv += cv; msg += ' Até que a Morte: +' + cv + ' PV.'; } }
           { const dz = (S.est || []).find(z => z.tipo === 'Desenho' && z.cell === c.pos && z.tatN); if (dz) { const nv = dz.dono === j ? dz.tatN : AVESSA[dz.tatN]; c.tat = nv; c.tat2 = ''; c.tatR = false; S.est = S.est.filter(z => z !== dz); msg += ' 🖋️ Pegou a Tatuagem do chão: ' + nv + '.'; aviso = (aviso ? aviso + ' · ' : '') + '🖋️ ' + CH[c.k].nome + ' recebeu ' + nv; } }
           (S.est || []).filter(z => z.tipo === 'Transmutado' && z.dono !== j && z.cell && dist(z.cell, c.pos) <= 1).slice(0, 1).forEach(z => { const b = porRef(z.autor); if (!b || b.elim || c.elim) return;
-            const n = Math.max(1, aptE(b, 0) + mod(b, 'dd') + dadosCen(b, 0)), v = rolarD10(n), def = clamp(defesas(c)[0] + adef(b), 2, 10), ok = Math.max(...v) >= def;
+            const n = Math.max(1, aptE(b, 0) + mod(b, 'dd') + dadosCen(b, 0)), v = rolarD10(n), def = clamp(defesas(c)[0] + adef(b), 2, 10), ok = Math.max(...v) >= def; regAuto({ q: b, t: 'Obstáculo Transmutado', apt: 0, d: v, al: [{ t: c, def, ok }], sim: '2 de dano', nao: 'escapou' });
             let t2 = '⛓️ Obstáculo Transmutado [' + v.join(',') + ' vs ' + def + ']: '; if (ok) { const q = sofrerDano(c, 2, { ataque: true, golpe: true, atk: b }); t2 += '−' + q.real + ' PV'; } else t2 += 'escapou';
             msg += ' ' + t2 + '.'; aviso = (aviso ? aviso + ' · ' : '') + t2; });
           (S.est || []).filter(z => z.tipo === 'Tempestade' && z.dono !== j && z.cell && z.estr !== false && dist(z.cell, c.pos) <= 2).slice(0, 1).forEach(() => { const v2 = temEf(c, 'clarao') ? 5 : 3, q = sofrerDano(c, v2, {}); msg += ' Tempestade: −' + q.real + ' PV.'; aviso = (aviso ? aviso + ' · ' : '') + '⛈️ Tempestade: −' + q.real + ' PV'; });
           S.times[1 - j].forEach(x => { if (c.elim || x.elim || x.k !== 'juiza' || !x.pos || temEf(x, 'banido') || dP(x.pos, c) > 2) return;
-            const n = Math.max(1, aptE(x, 3) + mod(x, 'dd') + dadosCen(x, 3)), v = rolarD10(n), def = clamp(defesas(c)[3] + adef(x), 2, 10), ok = Math.max(...v) >= def;
+            const n = Math.max(1, aptE(x, 3) + mod(x, 'dd') + dadosCen(x, 3)), v = rolarD10(n), def = clamp(defesas(c)[3] + adef(x), 2, 10), ok = Math.max(...v) >= def; regAuto({ q: x, t: 'Presença de Tribunal', apt: 3, d: v, al: [{ t: c, def, ok }], sim: 'a Juíza escolhe Multa ou Restrição', nao: 'escapou' });
             let t2 = '⚖️ Presença de Tribunal [' + v.join(',') + ' vs ' + def + ']: ';
             if (!ok) t2 += 'escapou';
             else { c.tribunal = { tk: S.tk, j: refDe(x) }; t2 += 'passou! A Juíza escolhe Multa ou Restrição nos botões do painel'; }
@@ -6620,7 +6621,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const alvos = r.alvoB ? [r.alvoB] : ((r.m && r.m.sel) || []), cells = [c.pos];
     alvos.forEach(a => { const t = S.times[a[0]][a[1]]; if (t && t.pos && a[0] !== ja) { linhaHex(c.pos, t.pos).forEach(id => cells.push(id)); cells.push(t.pos); } });
     const z = doms.find(q => cells.includes(q.cell)); if (!z) return;
-    const n = Math.max(1, aptE(sup, 3) + mod(sup, 'dd')), def = clamp(defesas(c)[3], 2, 10), v = rolarD10(n), ok = Math.max(...v) >= def;
+    const n = Math.max(1, aptE(sup, 3) + mod(sup, 'dd')), def = clamp(defesas(c)[3], 2, 10), v = rolarD10(n), ok = Math.max(...v) >= def; regAuto({ q: sup, t: 'Domínio em ' + z.cell, apt: 3, d: v, al: [{ t: c, def, ok }], pop: false });
     reacApos = reacApos || { notas: [], defl: null };
     reacApos.notas.push('🌌 Domínio em ' + z.cell + ': Superior testa Astúcia (' + v.join(', ') + ' contra Defesa ' + def + ')' + (ok ? ': o ataque não acontece e as ações são perdidas' : ': o ataque segue') + '. A casa deixa de ser Domínio.');
     reacApos.domTira = z.id;
@@ -6717,6 +6718,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     let def = defEst(z, apt), ok;
     if (def === null) ok = typeof confirm === 'function' && confirm('Ataque Básico no ' + z.tipo + ' em ' + z.cell + '\nDados: ' + v.join(', ') + '\n\nO ' + z.tipo + ' tem a Defesa do aliado copiado. Algum dado passou dela?\nOK: atingiu (o ' + z.tipo + ' some). Cancelar: errou.');
     else ok = mx >= def;
+    regAuto({ q: c, t: 'Ataque Básico em ' + z.tipo, apt, d: v, al: [{ nome: z.tipo + ' (' + z.cell + ')', def: def === null ? Math.min(...v) : def, ok }], sim: 'atingiu', nao: '', pop: def !== null });
     const txt = '🎯 ' + ch.nome + ' atacou ' + (z.tipo === 'Ilusão' || z.tipo === 'Cópia' ? 'a ' : 'o ') + z.tipo + ' em ' + z.cell + ': ' + v.join(', ') + (def !== null ? ' contra Defesa ' + def : '') + (ok ? (z.tipo === 'Retrato' && (z.hits || 1) > 1 ? ' → rachou (falta 1 acerto)' : z.tipo === 'Aparato' && v.filter(y => y >= def).length * 2 + mod(c, 'dn') < 5 ? ' → acertou, mas o Aparato aguentou (' + (v.filter(y => y >= def).length * 2 + mod(c, 'dn')) + ' de dano; precisa de 5)' : ' → desfeito') : ' → errou');
     const rach = ok && z.tipo === 'Retrato' && (z.hits || 1) > 1;
     const apDn = z.tipo === 'Aparato' && ok ? v.filter(y => y >= def).length * 2 + mod(c, 'dn') : 0, apFica = z.tipo === 'Aparato' && ok && apDn < 5;
@@ -6828,7 +6830,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (sm.pos && !sm.elim) { const p = dist(sm.pos, id) === 1 ? null : perto(sm, id); if (p) { moverPeca(sm, p); msg.push(CH[sm.k].nome + ' foi junto para ' + p); } }
     sm.multT = 'k' + (S.tk || 0);
     S.times[timeDe(t)].forEach(x => { if (x.elim || !x.pos || caps.includes(x) || !cam.some(z => dist(z, x.pos) <= 1)) return;
-      const n = Math.max(1, aptE(sm, 1) + mod(sm, 'dd') + dadosCen(sm, 1)), v = rolarD10(n), def = clamp(defesas(x)[1] + adef(sm), 2, 10), ok = Math.max(...v) >= def;
+      const n = Math.max(1, aptE(sm, 1) + mod(sm, 'dd') + dadosCen(sm, 1)), v = rolarD10(n), def = clamp(defesas(x)[1] + adef(sm), 2, 10), ok = Math.max(...v) >= def; regAuto({ q: sm, t: 'Multidão', apt: 1, d: v, al: [{ t: x, def, ok }], sim: '5 de dano e Capturado', nao: 'escapou' });
       if (!ok) { msg.push(CH[x.k].nome + ' escapou da Multidão [' + v.join(',') + ' vs ' + def + ']'); return; }
       const q = sofrerDano(x, 5, { ataque: true, atk: sm });
       if (!x.elim && ef0) aplicarEf(x, { nome: 'Capturado pela Multidão', autor: CH[sm.k].nome, faz: ef0.faz, acaba: ef0.acaba, exp: ef0.exp, mods: { imo: true }, multidao: r });
@@ -7028,7 +7030,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     (S.est || []).filter(z => z.tipo === 'Torreta' && z.autor === cr && z.cell).forEach(z => {
       const alv = S.times[1 - j].filter(x => !x.elim && x.pos && !temEf(x, 'intocavel') && dist(z.cell, x.pos) <= 3).sort((a, b) => dist(z.cell, a.pos) - dist(z.cell, b.pos) || a.pv - b.pv)[0];
       if (!alv) return;
-      const n = Math.max(1, aptE(c, 2) + mod(c, 'dd') + dadosCen(c, 2)), v = rolarD10(n), def = clamp(defesas(alv)[2] + adef(c), 2, 10), ok = Math.max(...v) >= def;
+      const n = Math.max(1, aptE(c, 2) + mod(c, 'dd') + dadosCen(c, 2)), v = rolarD10(n), def = clamp(defesas(alv)[2] + adef(c), 2, 10), ok = Math.max(...v) >= def; regAuto({ q: c, t: 'Torreta (' + z.cell + ')', apt: 2, d: v, al: [{ t: alv, def, ok }], sim: (2 + contraAlvo(c, alv, 'dn')) + ' de dano', nao: 'errou' });
       let t2 = '🔫 Torreta (' + z.cell + ') em ' + CH[alv.k].nome + ' [' + v.join(',') + ' vs ' + def + ']: ';
       if (ok) { const q = sofrerDano(alv, 2 + contraAlvo(c, alv, 'dn'), { ataque: true, atk: c }); t2 += '−' + q.real + ' PV'; } else t2 += 'errou';
       msgs.push(t2); evento(t2);
@@ -7479,7 +7481,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           const out = fz && (S.est || []).find(z => z.tipo === 'Fenda' && z.par === fz.par && z !== fz);
           if (out) { const dst = vizinhas(out.cell).filter(id => livre(id) && !bloqueada(id)).sort((a, b) => dist(a, cellId) - dist(b, cellId))[0]; if (dst) { moverPeca(c, dst); extra += ' 🌀 Atravessou a Fenda e apareceu em ' + dst + '.'; } } }
         S.times[1 - jj].forEach(x => { if (c.elim || x.elim || x.k !== 'betterfly' || !x.pos || !c.pos || pOff(x, 'Antenas em Alerta') || x.antR === S.rodada || dist(x.pos, c.pos) !== 1 || (de && dist(x.pos, de) <= 1)) return; x.antR = S.rodada;
-          const n = Math.max(1, aptE(x, 1) + mod(x, 'dd') + dadosCen(x, 1)), v = rolarD10(n), df = clamp(defesas(c)[1] + adef(x), 2, 10), ok = Math.max(...v) >= df; if (ok) marcarBF(x, c); extra += ' 🦋 Antenas em Alerta [' + v.join(',') + ' vs ' + df + ']: ' + (ok ? CH[c.k].nome + ' ficou Marcado' : 'escapou') + '.'; });
+          const n = Math.max(1, aptE(x, 1) + mod(x, 'dd') + dadosCen(x, 1)), v = rolarD10(n), df = clamp(defesas(c)[1] + adef(x), 2, 10), ok = Math.max(...v) >= df; regAuto({ q: x, t: 'Antenas em Alerta', apt: 1, d: v, al: [{ t: c, def: df, ok }], sim: 'Marcado', nao: 'escapou' }); if (ok) marcarBF(x, c); extra += ' 🦋 Antenas em Alerta [' + v.join(',') + ' vs ' + df + ']: ' + (ok ? CH[c.k].nome + ' ficou Marcado' : 'escapou') + '.'; });
         { const pr = parDe(c, 'casal'); if (pr && !pr.elim && pr.pos && c.pos && dist(pr.pos, c.pos) > 1) { const dst = vizinhas(c.pos).filter(id => livre(id) && !bloqueada(id)).sort((p1, p2) => dist(p1, pr.pos) - dist(p2, pr.pos))[0]; if (dst) { moverPeca(pr, dst); extra += ' 💞 ' + CH[pr.k].nome + ' foi junto para ' + dst + '.'; } } }
         S.times[1 - jj].forEach(x => { if (!c.elim && !x.elim && x.pos && temEf(x, 'combustao') && dist(x.pos, cellId) <= 1 && !(de && dist(x.pos, de) <= 1)) { const q = sofrerDano(c, 6, {}); extra += ' Combustão: −' + q.real + ' PV.'; } });
       }, () => '👣 ' + CH[c.k].nome + (de ? ' moveu de ' + de + ' para ' + cellId : ' entrou em ' + cellId) + '.' + extra); if (extra) toast(extra.trim(), 2200); }
@@ -7802,6 +7804,29 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     (rr.linhas || []).forEach(l => { if (l.alvo[0] === aj) return; ok = true; l.ef.push({ k: 'acao', v: -1, on: true, txt: 'Incontestável: −1 ação no próximo turno' }); l.ef.push(supFx('Incontestável: perde os bônus na Defesa', (t, msg) => tirarBonusDef(t, msg))); });
     if (ok) rr.notas = rr.notas.concat('Incontestável: tirou 10, os alvos perdem os bônus na Defesa e 1 ação'); };
   let reacMenos = 0, reacApos = null;
+  let filaAuto = [], autoVis = [];
+  function regAuto(o){
+    if (SECO) return;
+    const al = o.al || [], nm = a => a.nome || CH[a.t.k].nome;
+    S.dh = (S.dh || []).concat([{ r: S.rodada, q: CH[o.q.k].nome, k: o.q.k, t: o.t, d: o.d.slice(), def: al.length === 1 ? al[0].def : null, dm: al.length > 1 ? Math.min(...al.map(a => a.def)) : null, al: al.map(a => nm(a) + ' (Def ' + a.def + ')' + (a.ok ? ' ✓' : ' ✗')).join(', '), n: 'automático' }]).slice(-80);
+    if (o.pop === false) return;
+    filaAuto.push({ qn: CH[o.q.k].nome, k: o.q.k, t: o.t, apt: o.apt, d: o.d.slice(), al: al.map(a => ({ n: nm(a), ic: a.t ? CH[a.t.k].icon : (a.ic || '🧱'), def: a.def, ok: a.ok, fx: a.ok ? (o.sim || '') : (o.nao || '') })) });
+    setTimeout(mostrarAuto, 150);
+  }
+  function mostrarAuto(){
+    if (!filaAuto.length) return;
+    const bx = $('#mAuto'); if (!bx) return;
+    if (bx.hidden) autoVis = [];
+    autoVis = autoVis.concat(filaAuto.splice(0)).slice(-12);
+    $('#mAutoCaixa').innerHTML = '<div class="modal-h"><h3>🎲 ' + (autoVis.length > 1 ? 'TESTES AUTOMÁTICOS' : 'TESTE AUTOMÁTICO') + '</h3><button class="modal-x" data-fecha>✕</button></div><div class="dd-corpo">' +
+      autoVis.map(o => { const df = o.al.length ? Math.min(...o.al.map(a => a.def)) : null;
+        return '<div class="dh-it"><div class="dh-h">' + (EMB[o.k] ? '<img src="' + EMB[o.k] + '" alt="">' : '') + '<b>' + esc(o.qn) + '</b><em>' + esc(o.t) + '</em></div>' +
+          '<p class="rs-sub">teste de ' + APT[o.apt] + ' com ' + o.d.length + (o.d.length > 1 ? ' dados' : ' dado') + '</p>' +
+          '<div class="dd-dados">' + o.d.map((x, n) => '<i style="animation-delay:' + n * 70 + 'ms" class="' + (df !== null && x >= df ? 'hit' : 'miss') + '">' + x + '</i>').join('') + '</div>' +
+          o.al.map(a => '<div class="rs-alvo ' + (a.ok ? 'ok' : 'no') + '"><div class="rs-h"><span>' + a.ic + '</span><b>' + esc(a.n) + '</b><em>Defesa ' + a.def + ' · ' + (a.ok ? 'ACERTOU' : 'ERROU') + (a.fx ? ' → ' + a.fx : '') + '</em></div></div>').join('') + '</div>'; }).join('') +
+      '<div class="rd-rodape" style="padding:10px 0 0"><button class="btn-amarelo" data-fecha>OK</button></div></div>';
+    if (bx.hidden) abrir('mAuto');
+  }
   function rolarD10(n){ if (reacMenos) { n = Math.max(1, n - reacMenos); reacMenos = 0; } return Array.from({ length: Math.max(1, n) }, () => d(10)); }
   // ── reações da Promessa (antes da rolagem) ──
   function reacCtx(r){
@@ -7838,7 +7863,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (k === 'voto') { mudar(() => { P.votoR = S.rodada; }, () => '🛡️ Voto de Proteção: Promessa toma o lugar do aliado.'); return r.refazer(pr.slice()); }
     if (k === 'defl' || k === 'deflA') { let df = null;
       mudar(() => { P.deflR = S.rodada; P.ab = clamp((P.ab || 0) - 2, -4, 2); P.abPago = (P.abPago || 0) + 2; if (k === 'deflA') S.med[pr[0]] -= 1;
-        const v = rolarD10(Math.max(1, aptE(P, 0) + mod(P, 'dd'))), def = clamp(defesas(c)[0], 2, 10), hits = v.filter(x => x >= def).length; df = { v, def, hits };
+        const v = rolarD10(Math.max(1, aptE(P, 0) + mod(P, 'dd'))), def = clamp(defesas(c)[0], 2, 10), hits = v.filter(x => x >= def).length; df = { v, def, hits }; regAuto({ q: P, t: 'Defletir', apt: 0, d: v, al: [{ t: c, def, ok: hits > 0 }], pop: false });
         if (k === 'deflA' && hits) setRec(P, 'Guarda', Math.min(5, rec(P, 'Guarda') + 2)); },
         () => '🛡️ Promessa usou Defletir' + (k === 'deflA' ? ' ⚡' : '') + ' (' + df.v.join(', ') + ' contra Defesa ' + df.def + '): ' + (df.hits >= 2 ? 'o ataque volta para ' + CH[c.k].nome : df.hits ? 'o ataque não a atinge' : 'falhou') + (k === 'deflA' && df.hits ? ', +2 Guardas' : '') + ' · −2 ações no próximo turno dela.');
       r.reac.defl = Object.assign(df, { pr: pr.slice(), atk: refDe(c).split(',').map(Number) }); return mostrarResultado(r); }
@@ -8105,7 +8130,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (S.rodada < e.mis.r0 + e.mis.onda - 1) return;
     const R = e.mis.onda, j = timeDe(c), msg = [];
     S.times[1 - j].forEach(t => { if (t.elim || !t.pos || !c.pos || temEf(t, 'banido') || dP(c.pos, t) > R) return;
-      const n = Math.max(1, aptE(c, 3) + mod(c, 'dd') + dadosCen(c, 3)), v = rolarD10(n), def = clamp(defesas(t)[3] + adef(c), 2, 10), ok = Math.max(...v) >= def;
+      const n = Math.max(1, aptE(c, 3) + mod(c, 'dd') + dadosCen(c, 3)), v = rolarD10(n), def = clamp(defesas(t)[3] + adef(c), 2, 10), ok = Math.max(...v) >= def; regAuto({ q: c, t: 'Misericórdia Divina (Raio ' + R + ')', apt: 3, d: v, al: [{ t, def, ok }], sim: '4 de dano e −1 casa', nao: '2 de dano' });
       const q = sofrerDano(t, ok ? 4 : 2, { ataque: true }); msg.push(CH[t.k].nome + ' [' + v.join(',') + ' vs ' + def + '] −' + q.real + ' PV');
       if (ok && !t.elim && !(t.efs || []).some(x => x.nome === 'Misericórdia Divina')) aplicarEf(t, { nome: 'Misericórdia Divina', autor: CH[c.k].nome, faz: '−1 casa de deslocamento', acaba: 'no início do próximo turno de ' + CH[c.k].nome, exp: { t: 'ini', ref: refDe(c) }, mods: { ds: -1 } }); });
     log('🕊️ Misericórdia Divina, onda no Raio ' + R + ': ' + (msg.join(', ') || 'nenhum inimigo') + '.');
