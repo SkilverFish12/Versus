@@ -4778,12 +4778,27 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   if (!S || !S.fase) S = novo();
   let hist = [];
   const salvar = () => { if (!SECO) store.set(CHAVE, S); };
+  // fim da Multidão (Fechar Nele!): nenhum capturado sobrando ou Semelhante caiu
+  function multidaoChecar(){
+    if (SECO || !S.times) return;
+    S.times.forEach((tm, tj) => tm.forEach(c => { if (!c.naMult || capturados(c).length) return;
+      c.naMult = false; const n = c.multCop || 0; c.multCop = 0; if (c.elim) return;
+      const ult = (c.multUlt || []).map(porRef).filter(x => x && !x.elim && x.pos), so = [...new Set(ult.flatMap(x => vizinhas(x.pos)).filter(v => livre(v) && !bloqueada(v)))];
+      evento('👥 A Multidão terminou: ' + CH[c.k].nome + ' escolhe onde aparece' + (n ? ' e onde reaparece' + (n > 1 ? 'm as ' + n + ' Cópias' : ' a Cópia') : ''));
+      setTimeout(() => {
+        if (so.length) filaPos.unshift({ t: 'teleporte', alvo: refDe(c).split(',').map(Number), de: null, alc: 99, so, tit: '👥 Fim da Multidão: toque na casa ao lado de um capturado onde ' + CH[c.k].nome + ' aparece' });
+        if (n) filaPos.push({ t: 'auto', fn: () => setTimeout(() => { iniciarModo({ t: 'estrutura', tipo: 'Cópia', dono: tj, resta: n }); toast('👥 Toque em ' + n + (n > 1 ? ' casas vazias (ao lado de um capturado) para as Cópias' : ' casa vazia (ao lado de um capturado) para a Cópia'), 3200); }, 60), log: '👥 Cópias de volta' });
+        if (!modo) proximoPos();
+      }, 0);
+    }));
+  }
   function mudar(fn, msg){
     hist.push(JSON.stringify(S));
     if (hist.length > 80) hist.shift();
     fn();
     fendaVarre();
     transVarre();
+    multidaoChecar();
     sonhoSync();
     if (msg) log(typeof msg === 'function' ? msg() : msg);
     salvar(); render();
@@ -8186,7 +8201,12 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       case 'Fechar Nele!':
         linhasR.forEach(l => { if (!ini(l) || !l.ok) return;
           fx(l, 'Capturado pela Multidão por 2 rodadas: Imóvel, só pode mirar ' + nm + ', sofre 4 de dano no início de cada turno de ' + nm, t => aplicarEf(t, { nome: 'Capturado pela Multidão', autor: nm, faz: 'Imóvel e Cercado; só pode mirar ' + nm + '; 4 de dano no início de cada turno de ' + nm, acaba: txtRod(2), exp: rod(2), mods: { imo: true }, multidao: cref })); });
-        extras.push(supFx('A Multidão ocupa o Raio 1 em volta de cada capturado (aparece no tabuleiro). No turno de ' + nm + ', o botão MOVER A MULTIDÃO anda até 3 casas e testa quem ficar no caminho', () => {}));
+        if (linhasR.some(l => ini(l) && l.ok)) extras.push(supFx(nm + ' e as Cópias viram a Multidão: as Cópias saem do tabuleiro e ' + nm + ' fica dentro do Raio 1 do capturado. No turno dele, MOVER A MULTIDÃO anda até 3 casas', msg => {
+          const cs = capturados(c); if (!cs.length) return; const meu = (S.est || []).filter(z => z.tipo === 'Cópia' && z.dono === aj);
+          c.multCop = (c.multCop || 0) + meu.length; S.est = (S.est || []).filter(z => !meu.includes(z)); c.naMult = true; c.multUlt = cs.map(refDe);
+          const t0 = cs[0]; if (c.pos && t0.pos && dist(c.pos, t0.pos) > 1) { const p = vizinhas(t0.pos).filter(v => livre(v) && !bloqueada(v)).sort((x, y) => dist(x, c.pos) - dist(y, c.pos))[0]; if (p) moverPeca(c, p); }
+          msg.push('a Multidão se formou' + (meu.length ? ' (' + meu.length + (meu.length > 1 ? ' Cópias saíram' : ' Cópia saiu') + ' do tabuleiro)' : '')); }));
+        else extras.push(supFx('Errou: a Multidão se desfaz', () => {}));
         break;
       case 'Cada Um no Seu Quadrado!':
         linhasR.splice(0);
