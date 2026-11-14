@@ -5394,15 +5394,16 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       tps.forEach(tp => {
         if (c.elim) return;
         if (tp === 'Mandíbula') { const q = sofrerDano(c, 1, { ataque: true, atk: es }); aplicarEf(c, { nome: 'Armadilha: Mandíbula', autor: nE, faz: 'Imóvel', acaba: 'no fim do próximo turno de ' + CH[c.k].nome, exp: { t: 'fim', ref: refDe(c), pula: ehAtivo(c) ? 1 : 0 }, mods: { imo: true } }); fx.push('Mandíbula −' + q.real + ' PV e Imóvel'); parou = true; }
-        if (tp === 'Laço') { const q = sofrerDano(c, 1, { ataque: true, atk: es }); aplicarEf(c, { nome: 'Armadilha: Laço', autor: nE, faz: '−1 na Defesa', acaba: 'no início do próximo turno de ' + nE, exp: { t: 'ini', ref: refDe(es) }, mods: { df: -1 } }); fx.push('Laço −' + q.real + ' PV e −1 na Defesa'); armTeleG = { t: 'teleporte', alvo: refDe(c).split(',').map(Number), de: id, alc: 2, tit: '➰ Laço: puxe ' + CH[c.k].nome + ' até 2 casas para onde quiser (ou cancele)' }; parou = true; }
+        if (tp === 'Laço') { const q = sofrerDano(c, 1, { ataque: true, atk: es }); aplicarEf(c, { nome: 'Armadilha: Laço', autor: nE, faz: '−1 na Defesa', acaba: 'no início do próximo turno de ' + nE, exp: { t: 'ini', ref: refDe(es) }, mods: { df: -1 } }); fx.push('Laço −' + q.real + ' PV e −1 na Defesa'); if (!SECO) armTeleG = { t: 'teleporte', alvo: refDe(c).split(',').map(Number), de: id, alc: 2, tit: '➰ Laço: puxe ' + CH[c.k].nome + ' até 2 casas para onde quiser (ou cancele)' }; parou = true; }
         if (tp === 'Espinhos Envenenados') { if (c.k === 'ignifrost') fx.push('Espinhos: Ignifrost é imune a Dano Contínuo'); else { c.dcv = Math.max(c.dcv || 0, 2); c.dcn = Math.max(c.dcn || 0, 2); fx.push('Espinhos: Dano Contínuo 2 por 2 rodadas'); } }
         if (tp === 'Explosiva') { const q = sofrerDano(c, 2, { ataque: true, atk: es }); const viz = S.times[j].filter(x => x !== c && !x.elim && x.pos && dist(x.pos, id) === 1); fx.push('Explosiva −' + q.real + ' PV' + viz.map(x => { const q2 = sofrerDano(x, 2, { ataque: true, atk: es }); return ', ' + CH[x.k].nome + ' −' + q2.real; }).join('')); }
       });
-      if (parou && !c.elim && c.pos !== id && !ocupante(id)) moverPeca(c, id);
+      if (parou) c._armStop = true;
+      if (parou && !c.elim && c.pos !== id && !ocupante(id)) { semGat++; try { moverPeca(c, id); } finally { semGat--; } }
       out.push('🪤 Armadilha em ' + id + ' [' + v.join(',') + ' vs ' + def + ']: ' + fx.join('; ') + (parou ? ' (parou ali)' : ''));
       if (parou) break;
     }
-    if (armTeleG) setTimeout(() => { if (!armTeleG) return; filaPos = [armTeleG]; armTeleG = null; proximoPos(); }, 0);
+    if (armTeleG) setTimeout(() => { if (!armTeleG) return; filaPos.unshift(armTeleG); armTeleG = null; if (!modo) proximoPos(); }, 0);
     return out;
   }
   function tintaTeste(c, cells){
@@ -5677,7 +5678,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   });
   // ── auras das estruturas (Galho, Campo, Aparatos) ──
   const AURAS = {
-    'Brotamento': r => ({ raio: 1, ali: { df: 1 }, txt: 'Aliados de Vale no Raio 1 do Galho recebem +1 na Defesa.' + (r.aprim ? ' Aprimorado: +2 na Defesa contra o primeiro ataque que cada um sofrer (o +1 extra é ajustado à mão).' : '') }),
+    'Brotamento': r => ({ raio: 1, ali: { df: 1 }, brotAp: !!(r && r.aprim), usados: [], txt: 'Aliados de Vale no Raio 1 do Galho recebem +1 na Defesa.' + (r && r.aprim ? ' Aprimorado: +2 na Defesa contra o primeiro ataque que cada um sofrer.' : '') }),
     'Contendo o Mal': r => ({ raio: 2, ini: r && r.aprim ? { ds: -1, dr: 2 } : { ds: -1 }, txt: 'Inimigos dentro do campo (Raio 2) sofrem −1 casa de deslocamento' + (r && r.aprim ? ' e +2 de dano de qualquer ataque' : '') + '. Nenhum deslocamento atravessa a borda do campo.' }),
     'Campo Magnético': (r, ops) => { const med = ops.includes('Medicinal'), pot = ops.includes('Potencial'), den = ops.includes('Denso'), dis = ops.includes('Dispersivo'), rr = r.aprim ? 2 : 1;
       return { raio: rr, ali: pot ? { dn: 2 } : {}, ini: den ? { ds: -2 } : dis ? { dd: -1 } : {}, cura: med ? 4 : 0, txt: [med ? 'Medicinal: aliados no Raio ' + rr + ' do Aparato recuperam 4 PV no início de cada turno deles.' : '', pot ? 'Potencial: aliados no Raio ' + rr + ' do Aparato causam +2 de dano em ataques.' : '', den ? 'Denso: inimigos no Raio ' + rr + ' do Aparato sofrem −2 casas de deslocamento.' : '', dis ? 'Dispersivo: inimigos no Raio ' + rr + ' do Aparato sofrem −1 dado nos testes.' : ''].filter(Boolean).join(' ') }; },
@@ -5719,7 +5720,11 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     return out;
   }
   const defAstBase = c => clamp(5 + aptE(c, RES[3]) + (c.df || 0), 2, 10);
-  function auraMod(c, k){ return aurasEm(c).reduce((v, [, a, ali]) => { const g = ali ? a.ali : (a.meio && a.rmax !== undefined && defAstBase(c) > a.rmax) ? a.meio : a.ini; return v + ((g && g[k]) || 0); }, 0); }
+  const imuP = c => !!(c && (c.efs || []).some(e => e.imuPen));
+  const ehPenV = (k, v) => (k === 'dr' || k === 'cr') ? v > 0 : v < 0;
+  const semPenV = (c, k, v) => imuP(c) && ehPenV(k, v) ? 0 : v;
+  function auraMod(c, k){ return semPenV(c, k, auraMod0(c, k)); }
+  function auraMod0(c, k){ return aurasEm(c).reduce((v, [, a, ali]) => { const g = ali ? (a.brotAp && !(a.usados || []).includes(refDe(c)) && k === 'df' ? { df: 2 } : a.ali) : (a.meio && a.rmax !== undefined && defAstBase(c) > a.rmax) ? a.meio : a.ini; return v + ((g && g[k]) || 0); }, 0); }
   const textoAura = (a, ali) => { const g = (ali ? a.ali : a.ini) || {}; const t = modsTxt(g); return [t, ali && a.cura ? '+' + a.cura + ' PV no início do turno' : ''].filter(Boolean).join(', '); };
   // ── histórico e anotações ──
   function rDiario(){
@@ -5923,8 +5928,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
             const n = Math.max(1, aptE(x, 3) + mod(x, 'dd') + dadosCen(x, 3)), v = rolarD10(n), def = clamp(defesas(c)[3] + adef(x), 2, 10), ok = Math.max(...v) >= def;
             let t2 = '⚖️ Presença de Tribunal [' + v.join(',') + ' vs ' + def + ']: ';
             if (!ok) t2 += 'escapou';
-            else if (typeof confirm === 'function' && confirm('⚖️ Presença de Tribunal: a Juíza passou no teste de Astúcia contra ' + CH[c.k].nome + ' (' + v.join(', ') + ' contra Defesa ' + def + ').\n\nOK: Multa (1 de dano).\nCancelar: Restrição (−1 casa de deslocamento neste turno).')) { const q = sofrerDano(c, 1, {}); t2 += 'Multa, −' + q.real + ' PV'; }
-            else { aplicarEf(c, { nome: 'Restrição', autor: 'Juíza', faz: '−1 casa de deslocamento', acaba: 'no fim deste turno', exp: { t: 'fim', ref: j + ',' + i, pula: 0 }, mods: { ds: -1 } }); t2 += 'Restrição, −1 casa'; }
+            else { c.tribunal = { tk: S.tk, j: refDe(x) }; t2 += 'passou! A Juíza escolhe Multa ou Restrição nos botões do painel'; }
             msg += ' ' + t2 + '.'; aviso = (aviso ? aviso + ' · ' : '') + t2; });
           S.times.forEach((tm, tj) => tm.forEach(x => { if (x === c || x.elim || !x.pos || !c.pos || dP(x.pos, c) > 1) return; const e = (x.efs || []).find(z => z.radi); if (!e) return;
             const ali = tj === j, t2 = '☢️ Radiação Corporal: ' + (ali ? '+2 casas' + (e.radi.ap ? ' e +1 ação' : '') : '−1 casa' + (e.radi.ap ? ' e −1 ação' : ''));
@@ -6176,7 +6180,9 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   const refDe = c => { for (const j of [0, 1]) { const i = S.times[j].indexOf(c); if (i >= 0) return j + ',' + i; } return null; };
   const caronas = v => { const r = refDe(v); return [0, 1].flatMap(j => S.times[j].filter(x => !x.elim && x.carona === r)); };
-  function moverPeca(c, id){ c.pos = id; caronas(c).forEach(x => { x.pos = id; }); aparatoSegue(c, id); }
+  let semGat = 0;
+  function moverPeca(c, id){ c.pos = id; caronas(c).forEach(x => { x.pos = id; }); aparatoSegue(c, id);
+    if (!semGat && c && c.k && !c.elim && S.fase === 'partida' && (S.est || []).some(z => z.cell === id && (z.tipo === 'Armadilha' || z.tipo === 'Tinta'))) { semGat++; try { armTeste(c, [id]).concat(tintaTeste(c, [id])).forEach(t => evento(t)); } finally { semGat--; } } }
   const temSobeAi = c => CH[c.k].habs.some(h => !h.c && h.n === 'Sobe Aí');
   function bloqueada(id){ return (S.cen === 'nave' && CELL[id].anel <= 1) || (S.cen === 'bosque' && ARVORES.includes(id)) || (S.cen === 'mansao' && MESAS.includes(id)) || (S.cen === 'ferrovelho' && sucataEm(id)); }
   function marcas(c){
@@ -6492,7 +6498,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (t.carona) t.carona = null;
     if (t.k === 'agentecaos') n = Math.min(n, 1);
     const di = opt && opt.di !== undefined ? opt.di : dirPara(origem, t.pos);
-    const fila = [t];
+    const fila = [t]; t._armStop = false;
     for (let k = 0; k < n; k++) {
       const frente = fila[fila.length - 1];
       let prox = viz(frente.pos, di);
@@ -6515,6 +6521,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       }
       if (obstaculo(prox)) { out.push('parou num obstáculo'); if (opt && opt.bloqueio) dano(t, opt.bloqueio, out); if (S.cen === 'ferrovelho' && sucataEm(prox)) { out.push('bateu na Sucata'); dano(t, 2, out); } break; }
       for (let m = fila.length - 1; m >= 0; m--) moverPeca(fila[m], viz(fila[m].pos, di));
+      if (fila.some(x => x._armStop)) { fila.forEach(x => { x._armStop = false; }); out.push('parou na Armadilha'); break; }
       if (S.cen === 'atelie' && fila.some(x => FIOS.includes(x.pos))) { out.push('parou num Fio'); break; }
     }
     if (opt && opt.bloqueio && out.some(x => /colidiu/.test(x))) dano(t, opt.bloqueio, out);
@@ -6531,7 +6538,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     for (let k = 0; k < n && dist(t.pos, ponto) > 1; k++) {
       const op = vizinhas(t.pos).filter(livre).sort((a, b) => dist(a, ponto) - dist(b, ponto) || Math.hypot(CELL[a].x - CELL[ponto].x, CELL[a].y - CELL[ponto].y) - Math.hypot(CELL[b].x - CELL[ponto].x, CELL[b].y - CELL[ponto].y));
       if (!op.length || dist(op[0], ponto) >= dist(t.pos, ponto)) break;
-      moverPeca(t, op[0]);
+      t._armStop = false; moverPeca(t, op[0]);
+      if (t._armStop) { t._armStop = false; break; }
       if (S.cen === 'atelie' && FIOS.includes(t.pos)) break;
     }
     return [CH[t.k].nome + ' foi para ' + t.pos];
@@ -6795,6 +6803,22 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     };
     mostrarResultado(r);
   }
+  const capturados = sm => { const r = refDe(sm); return S.times[1 - timeDe(sm)].filter(x => !x.elim && x.pos && (x.efs || []).some(e => e.multidao === r)); };
+  function multidaoAnda(t, de, id, sm, msg){
+    const r = refDe(sm), caps = capturados(sm), ef0 = (t.efs || []).find(e => e.multidao === r);
+    const cam = [de].concat(caminho(de, id) || []).concat([id]);
+    moverPeca(t, id); msg.push('a Multidão levou ' + CH[t.k].nome + ' para ' + id);
+    const perto = (x, alvo) => { const op = vizinhas(alvo).filter(v => livre(v) && !bloqueada(v)).sort((p, q) => dist(p, x.pos) - dist(q, x.pos)); return op[0]; };
+    caps.filter(x => x !== t).forEach(x => { const p = perto(x, id); if (p) { moverPeca(x, p); msg.push(CH[x.k].nome + ' foi junto para ' + p); } });
+    if (sm.pos && !sm.elim) { const p = dist(sm.pos, id) === 1 ? null : perto(sm, id); if (p) { moverPeca(sm, p); msg.push(CH[sm.k].nome + ' foi junto para ' + p); } }
+    sm.multT = 'k' + (S.tk || 0);
+    S.times[timeDe(t)].forEach(x => { if (x.elim || !x.pos || caps.includes(x) || !cam.some(z => dist(z, x.pos) <= 1)) return;
+      const n = Math.max(1, aptE(sm, 1) + mod(sm, 'dd') + dadosCen(sm, 1)), v = rolarD10(n), def = clamp(defesas(x)[1] + adef(sm), 2, 10), ok = Math.max(...v) >= def;
+      if (!ok) { msg.push(CH[x.k].nome + ' escapou da Multidão [' + v.join(',') + ' vs ' + def + ']'); return; }
+      const q = sofrerDano(x, 5, { ataque: true, atk: sm });
+      if (!x.elim && ef0) aplicarEf(x, { nome: 'Capturado pela Multidão', autor: CH[sm.k].nome, faz: ef0.faz, acaba: ef0.acaba, exp: ef0.exp, mods: { imo: true }, multidao: r });
+      msg.push(CH[x.k].nome + ' foi capturado [' + v.join(',') + ' vs ' + def + '], −' + q.real + ' PV'); });
+  }
   function botoesPassivas(c, btn){
     let h = '';
     if (c.k === 'andarilho' && malaDe(c) && c.pos && dist(malaDe(c).cell, c.pos) <= 1) h += btn('data-pegamala="1"', '🧳', 'PEGAR A MALA', 'sem ação · ele está ao lado dela', pOff(c, 'Mala Despachada') ? 'Bloqueio Mental' : '');
@@ -6803,6 +6827,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       h += btn('data-bomba="' + tj + ',' + ti + '"', '🌋', 'DETONAR BOMBA' + (meu ? '' : ' (' + CH[x.k].nome + ')'), (meu ? '1 ação' : 'fora do turno · gasta 1 ação do próximo turno de ' + CH[x.k].nome) + ' · teste de VIS contra cada inimigo afetado · ' + bs.length + (bs.length > 1 ? ' Bombas' : ' Bomba'), pOff(x, 'Bomba de Magma') ? 'Bloqueio Mental' : meu && restam(c) < 1 ? 'sem ações' : !meu && x.ab <= -2 ? CH[x.k].nome + ' já gastou 2 ações do próximo turno' : ''); }));
     S.times.forEach(tm => tm.forEach(x => { if (!x.elim && x.pos && marcaDe(x)) h += btn('data-marca="' + refDe(x) + '"', '⏪', 'VOLTAR À MARCA (' + nomeC(x) + ')', 'sem ação · até fora do turno dela · antes dos dados do ataque rolarem', ''); }));
     S.times.forEach(tm => tm.forEach(x => { if (!x.elim && x.pos && retratoDe(x)) h += btn('data-retrato="' + refDe(x) + '"', '🖼️', 'TROCAR COM O RETRATO (' + nomeC(x) + ')', 'sem ação · 1 vez · Retrato em ' + retratoDe(x).cell + (x === c ? '' : ' · vale fora do turno, antes de rolarem os dados de um ataque contra ele'), ''); }));
+    if (c.k === 'semelhante' && capturados(c).length) h += btn('data-pasv="multidao"', '👥', 'MOVER A MULTIDÃO', 'Fechar Nele! · até 3 casas · leva os capturados e ' + CH[c.k].nome + ' · teste de DES em quem ficar no Raio 1 do caminho', c.multT === 'k' + (S.tk || 0) ? 'já andou neste turno' : '');
     if (c.k === 'semelhante') { const nl = copiasLivres(c).length; h += btn('data-pasv="copias"', '👥', 'CÓPIAS ATACAM', 'passiva · sem ação · Todos Sou Eu · ' + nl + (nl === 1 ? ' Cópia livre' : ' Cópias livres'), !nl ? 'nenhuma Cópia livre' : !copiaAlvos(c).length ? 'nenhum inimigo adjacente a uma Cópia' : ''); }
     S.times.forEach((tm, nj) => tm.forEach((nx, ni) => { if (nx.k !== 'neo' || nx.elim || nx === c || pOff(nx, 'Atração Forçada')) return;
       const presos = pecas((pj, pi, x) => x.pos && (S.est || []).some(z => z.tipo === 'Aparato' && z.em === refDe(x))), outros = (S.est || []).filter(z => z.tipo === 'Aparato' && z.dono === nj && z.cell).length;
@@ -6810,6 +6835,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       h += btn('data-atrfora="' + nj + ',' + ni + '"', '🧲', 'ATRAÇÃO FORÇADA (' + CH[nx.k].nome + ')', 'fora do turno · início do turno de ' + CH[c.k].nome + ' · gasta 1 ação do próximo turno de ' + CH[nx.k].nome, nx.atrR === S.rodada ? 'já usada nesta rodada' : nx.ab <= -2 ? CH[nx.k].nome + ' já gastou 2 ações do próximo turno' : (c.gastas || c.moveuT || (c.usadas || []).length) ? 'só no início do turno' : ''); }));
     guardasFora().forEach(([j, i]) => { const x = S.times[j][i], g = GUARDA_FORA[x.k]; h += btn('data-guardafora="' + j + ',' + i + '"', g[3], g[0].toUpperCase() + ' (' + CH[x.k].nome + ')', 'fora do turno · antes do ataque rolar · gasta 1 ação do próximo turno de ' + CH[x.k].nome, x.ab <= -2 ? CH[x.k].nome + ' já gastou 2 ações do próximo turno' : x.guardaR === S.rodada ? 'já usada nesta rodada' : ''); });
     if (S.revOfer && S.revOfer.tk === S.tk) { const P = porRef(S.revOfer.p), A = porRef(S.revOfer.a); if (P && A && !P.elim && !A.elim && rec(P, 'Guarda') >= 2) h += btn('data-pasv="revide"', '↩️', 'REVIDE (PROMESSA)', 'gasta 2 Guardas · Ataque Básico em ' + CH[A.k].nome + ' sem gastar ação', ''); }
+    if (c.tribunal && c.tribunal.tk === S.tk) { h += btn('data-pasv="multa"', '⚖️', 'MULTA (JUÍZA)', 'Presença de Tribunal · ' + CH[c.k].nome + ' sofre 1 de dano', ''); h += btn('data-pasv="restricao"', '⚖️', 'RESTRIÇÃO (JUÍZA)', 'Presença de Tribunal · ' + CH[c.k].nome + ' sofre −1 casa de deslocamento neste turno', ''); }
     const iv = invictoContra();
     if (iv) { const x = S.times[iv[0]][iv[1]]; h += btn('data-pasv="invicto"', '🥊', 'SEM ABERTURAS', 'Invicto ataca ' + CH[c.k].nome + ' (entrou ou saiu do Raio 1 dele) · gasta 1 ação do próximo turno de Invicto', x.ab <= -2 ? 'Invicto já gastou 2 ações do próximo turno' : ''); }
     const usou = n => (c.usadas || []).includes(n);
@@ -7199,6 +7225,9 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b.dataset.atrfora) { const q = b.dataset.atrfora.split(',').map(Number); return iniciarModo({ t: 'atrFora', quem: q, tit: '🧲 Atração Forçada: toque em quem está com um Aparato' }); }
     if (b.dataset.guardafora) { const q = b.dataset.guardafora.split(',').map(Number), x = S.times[q[0]][q[1]], g = GUARDA_FORA[x.k]; return iniciarModo({ t: 'guardaFora', quem: q, alc: g[2], tipo: g[1], tit: g[3] + ' ' + g[0] + ': toque no aliado de ' + CH[x.k].nome + ' (até ' + g[2] + ' casas)' }); }
     if (b.dataset.pasv === 'revide' && S.revOfer) { const o = S.revOfer, P = porRef(o.p); mudar(() => { setRec(P, 'Guarda', rec(P, 'Guarda') - 2); if (P.revR === S.rodada) P.revN = (P.revN || 0) + 1; else { P.revR = S.rodada; P.revN = 1; } S.revOfer = null; }, () => '↩️ Promessa gasta 2 Guardas para o Revide.'); return ataqueBasico(o.a.split(',').map(Number), { atk: o.p.split(',').map(Number), custo: 0, tit: 'REVIDE' }); }
+    if ((b.dataset.pasv === 'multa' || b.dataset.pasv === 'restricao') && c.tribunal) { const mu = b.dataset.pasv === 'multa', rf = S.ativo.join(','); let r0 = 0;
+      return mudar(() => { c.tribunal = null; if (mu) r0 = sofrerDano(c, 1, {}).real; else aplicarEf(c, { nome: 'Restrição', autor: 'Juíza', faz: '−1 casa de deslocamento', acaba: 'no fim deste turno', exp: { t: 'fim', ref: rf, pula: 0 }, mods: { ds: -1 } }); }, () => '⚖️ Presença de Tribunal: ' + (mu ? 'Multa, ' + CH[c.k].nome + ' −' + r0 + ' PV' : 'Restrição, ' + CH[c.k].nome + ' −1 casa neste turno') + '.'); }
+    if (b.dataset.pasv === 'multidao') { const cs = capturados(c); if (!cs.length || c.multT === 'k' + (S.tk || 0)) return; const t0 = cs[0]; return iniciarModo({ t: 'teleporte', alvo: refDe(t0).split(',').map(Number), de: t0.pos, alc: 3, multi: refDe(c), tit: '👥 Multidão: toque na casa (até 3) para onde ela leva ' + CH[t0.k].nome + (cs.length > 1 ? ' (os outros capturados vão junto)' : '') }); }
     if (b.dataset.pasv === 'invicto') { const iv = invictoContra(); return ataqueBasico(S.ativo.slice(), { atk: iv, custo: 0, pagaProx: true, tit: 'SEM ABERTURAS' }); }
     if (b.dataset.pasv === 'tocaia') { const L = c.pos ? tocaiaAlvos(c) : pecas((j, i, x) => j !== S.ativo[0]); modo = { t: 'hab', h: H_TOCAIA, sup: false, aprim: false, alvosInfo: { tipo: 'todos', alvos: L }, sel: L }; return resolverHab(); }
     if (b.dataset.pasv === 'domMover') return iniciarModo({ t: 'mover', gratis: 'Domínio ⚡', desl: 2 });
@@ -7337,6 +7366,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       modo = null; const msg = [];
       mudar(() => {
         if (ancorado(t) && st.alvo[0] !== S.ativo[0]) { msg.push(CH[t.k].nome + ' está Ancorado e não se move'); return; }
+        if (st.t === 'teleporte' && st.multi) { multidaoAnda(t, st.de, id, porRef(st.multi), msg); return; }
         if (st.t === 'teleporte') { moverPeca(t, id); msg.push(CH[t.k].nome + ' foi para ' + id); if (st.acao) perdeAb(t, msg); return; }
         const di = st.t === 'empDir' ? DIR6.findIndex((_, k) => viz(t.pos, k) === id) : (() => { for (let k = 0; k < 6; k++) { let p = t.pos; for (let n = 0; n < st.alc; n++) { p = viz(p, k); if (!p) break; if (p === id) return k; } } return -1; })();
         if (di < 0) return;
@@ -7417,7 +7447,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'mover') {
       if (!cellId || !d0.casas.has(cellId)) return true;
       const de = c.pos, gr = modo.gratis; modo = null;
-      { let extra = ''; mudar(() => { const jj = timeDe(c), camM = de && c.k !== 'eclipse' ? caminhoMover(c, de, cellId) : null, dd = de ? (camM ? camM.length : dist(de, cellId)) : 0; if (c.carona) { c.carona = null; extra += ' Desceu do veículo.'; } moverPeca(c, cellId); c.moveuT = true; c.andou = (c.andou || 0) + dd; if (gr) { if (!['Pista', 'Par de Dança'].includes(gr)) c.usadas = (c.usadas || []).concat(gr); } else { const dob = de && domAp(1 - jj) && domEm(1 - jj, de); c.gastas = Math.min(c.acts, c.gastas + (dob ? 2 : 1)); if (dob) extra += ' Domínio do Superior: o Mover custou 2 ações.'; }
+      { let extra = ''; mudar(() => { const jj = timeDe(c), camM = de && c.k !== 'eclipse' ? caminhoMover(c, de, cellId) : null, dd = de ? (camM ? camM.length : dist(de, cellId)) : 0; if (c.carona) { c.carona = null; extra += ' Desceu do veículo.'; } semGat++; try { moverPeca(c, cellId); } finally { semGat--; } c.moveuT = true; c.andou = (c.andou || 0) + dd; if (gr) { if (!['Pista', 'Par de Dança'].includes(gr)) c.usadas = (c.usadas || []).concat(gr); } else { const dob = de && domAp(1 - jj) && domEm(1 - jj, de); c.gastas = Math.min(c.acts, c.gastas + (dob ? 2 : 1)); if (dob) extra += ' Domínio do Superior: o Mover custou 2 ações.'; }
         if (S.bosque && S.bosque.time !== jj && S.rodada <= S.bosque.ate && dd > 1) { const q = sofrerDano(c, 2, {}); extra += ' Bosque Efêmero: −' + q.real + ' PV.'; }
         const cam = de ? (camM || caminho(de, cellId)) : [];
         if (temEf(c, 'rastro') && de) { S.est = S.est || []; [de].concat(cam.slice(0, -1)).forEach(id => { if (!ocupante(id) && !obstaculo(id) && !S.est.some(z => z.cell === id && z.tipo === 'Casa Infernal')) S.est.push({ id: Date.now() + '' + d(999) + id, tipo: 'Casa Infernal', cell: id, dono: jj, rastro: true, acaba: 'no início do próximo turno de Kazan' }); }); }
@@ -7523,7 +7553,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   const TRAVA = { ds: [-2, 4], dd: [-4, 4], df: [-6, 6], dn: [-9, 9] };
   function mod(c, k){
     let v = c[k] || 0; if (TRAVA[k]) v = clamp(v, TRAVA[k][0], TRAVA[k][1]);
-    if (k === 'ds' && c.pos && S.times) S.times.forEach((tm, tj) => tm.forEach(x => { if (x.k !== 'eclipse' || x.elim || tj === timeDe(c)) return; if (entreDois(x).includes(c.pos)) v -= (x.efs || []).some(e => e.nome === 'Meia-Noite: Sombra Esticada') ? 2 : 1; }));
+    if (k === 'ds' && c.pos && S.times && !imuP(c)) S.times.forEach((tm, tj) => tm.forEach(x => { if (x.k !== 'eclipse' || x.elim || tj === timeDe(c)) return; if (entreDois(x).includes(c.pos)) v -= (x.efs || []).some(e => e.nome === 'Meia-Noite: Sombra Esticada') ? 2 : 1; }));
     if ((k === 'dn' || k === 'df') && c.pos) { const z = tintaEm(c); if (z && !(c.efs || []).some(e => e.tfresca === z.cor)) { if (k === 'dn' && z.cor === 'vermelho') v += 1; if (k === 'df' && z.cor === 'azul') v += 1; } }
     [c.estado, c.aspecto].forEach(e => { if (e && e.mods && e.mods[k]) v += e.mods[k]; });
     if (c.k === 'ritmista') { const s = estR(c); if (k === 'ds' && s >= 1) v += 1; if (k === 'dd' && s >= 2) v += 1; if (k === 'dn' && s >= 3) v += 2; if (k === 'ds' && c.apiceAte && S.rodada <= c.apiceAte) v += 2; }
@@ -7538,7 +7568,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (k === 'ds' && temTat(c, 'Asas')) v += 1;
     if (k === 'ds' && temTat(c, 'Asas Avessas')) v -= 1;
     if (k === 'dd' && temTat(c, 'Olho Roxo') && !c.olhoRoxo) v -= 1;
-    if (k === 'ds' && c.pos) { const dm = dominioEm(c.pos); if (dm) v += dm.dono === timeDe(c) ? 1 : -1; }
+    if (k === 'ds' && c.pos) { const dm = dominioEm(c.pos); if (dm) v += dm.dono === timeDe(c) ? 1 : (imuP(c) ? 0 : -1); }
     v += auraMod(c, k) + cenMod(c, k) + contraMod(c, k);
     if (k === 'ds' && v < 0 && estrada(c)) v = 0;
     if (k === 'df' && v > 0 && temEf(c, 'semBonusDef')) v = 0;
@@ -7546,9 +7576,11 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   // efeitos que só valem contra um personagem: Defesa/deslocamento no turno dele; dados/dano quando o portador ataca ele
   const ativoRef = () => S.ativo ? S.ativo.join(',') : null;
-  function contraMod(c, k){ if (k !== 'df' && k !== 'ds') return 0; const a = ativoRef(); if (!a) return 0; return (c.efs || []).reduce((v, e) => v + (e.contra && e.cmods && e.contra === a ? (e.cmods[k] || 0) : 0), 0); }
+  function contraMod(c, k){ return semPenV(c, k, contraMod0(c, k)); }
+  function contraMod0(c, k){ if (k !== 'df' && k !== 'ds') return 0; const a = ativoRef(); if (!a) return 0; return (c.efs || []).reduce((v, e) => v + (e.contra && e.cmods && e.contra === a ? (e.cmods[k] || 0) : 0), 0); }
   function contraAlvo(c, t, k){ const r = refDe(t); return (c.efs || []).reduce((v, e) => v + (e.contra && e.cmods && e.contra === r ? (e.cmods[k] || 0) : 0), 0); }
-  function cenMod(c, k){
+  function cenMod(c, k){ return semPenV(c, k, cenMod0(c, k)); }
+  function cenMod0(c, k){
     let v = 0;
     if (!S.cen || !S.ce) return 0;
     if (CEN[S.cen].helper === 'mutacao' && S.ce.mut != null && MUTA[S.ce.mut][1] === k) v += MUTA[S.ce.mut][2];
@@ -8154,7 +8186,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       case 'Fechar Nele!':
         linhasR.forEach(l => { if (!ini(l) || !l.ok) return;
           fx(l, 'Capturado pela Multidão por 2 rodadas: Imóvel, só pode mirar ' + nm + ', sofre 4 de dano no início de cada turno de ' + nm, t => aplicarEf(t, { nome: 'Capturado pela Multidão', autor: nm, faz: 'Imóvel e Cercado; só pode mirar ' + nm + '; 4 de dano no início de cada turno de ' + nm, acaba: txtRod(2), exp: rod(2), mods: { imo: true }, multidao: cref })); });
-        extras.push(supFx('A Multidão ocupa o Raio 1 em volta de cada capturado (aparece no tabuleiro). Mover a Multidão e capturar quem ficar no caminho continua à mão', () => {}));
+        extras.push(supFx('A Multidão ocupa o Raio 1 em volta de cada capturado (aparece no tabuleiro). No turno de ' + nm + ', o botão MOVER A MULTIDÃO anda até 3 casas e testa quem ficar no caminho', () => {}));
         break;
       case 'Cada Um no Seu Quadrado!':
         linhasR.splice(0);
@@ -8887,6 +8919,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
           { const rz = risadaDe(c, t); if (rz) risadaUsa(c, rz); }
           if (t.k === 'genio' && l.ok === false && t.armad && t.armad[refDe(c)]) { delete t.armad[refDe(c)]; msg.push('Armadura Adaptativa: ' + CH[c.k].nome + ' errou e o bônus do ' + CH[t.k].nome + ' contra ele sumiu'); evento('🦾 Armadura Adaptativa: ' + CH[c.k].nome + ' errou, o bônus contra ele sumiu'); }
           if (!t.elim && (t.efs || []).some(e => e.naoTol)) tirarEfs(t, e => e.naoTol);
+          aurasEm(t).forEach(([, au, ali]) => { if (ali && au.brotAp) { au.usados = au.usados || []; if (!au.usados.includes(refDe(t))) { au.usados.push(refDe(t)); msg.push('Galho: o +2 de ' + CH[t.k].nome + ' já valeu, agora é +1'); } } });
           if (!t.elim) { const px = (t.efs || []).filter(e => e.proxAtk || (e.nome === 'Lendo Intenções' && e.contra === refDe(c))).filter(e => !(e.proxN > 1 && (e.proxN--, true))); if (px.length) { tirarEfs(t, e => px.includes(e)); msg.push(px.map(e => e.nome).join(', ') + ' em ' + CH[t.k].nome + ' acabou (já valeu neste ataque)'); } }
         }
         if (r.ataque && !t.elim && refDe(t)[0] !== aj && l.ok !== undefined) {
