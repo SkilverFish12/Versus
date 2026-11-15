@@ -1844,6 +1844,14 @@
   .hx.sombra polygon{fill:#c9c2e0; stroke:#2b2540; stroke-width:2.5; stroke-dasharray:3 3}
   .hx.aura.a0 polygon{stroke:#e8323c} .hx.aura.a1 polygon{stroke:#1e88e5}
   .hx.aura.asel.a0 polygon{fill:#ffd9dc} .hx.aura.asel.a1 polygon{fill:#d5ebfc}
+  .hx.aura.au-pavor polygon{stroke:#7b2fbf; stroke-width:3; stroke-dasharray:5 3} .lg.au-pavor{background:#7b2fbf33; border:3px dashed #7b2fbf}
+.hx.aura.au-tribunal polygon{stroke:#c9a400; stroke-width:3; stroke-dasharray:5 3} .lg.au-tribunal{background:#c9a40033; border:3px dashed #c9a400}
+.hx.aura.au-calor polygon{stroke:#ff6a00; stroke-width:3; stroke-dasharray:5 3} .lg.au-calor{background:#ff6a0033; border:3px dashed #ff6a00}
+.hx.aura.au-corte polygon{stroke:#8a1030; stroke-width:3; stroke-dasharray:5 3} .lg.au-corte{background:#8a103033; border:3px dashed #8a1030}
+.hx.aura.au-fio polygon{stroke:#00a0a0; stroke-width:3; stroke-dasharray:5 3} .lg.au-fio{background:#00a0a033; border:3px dashed #00a0a0}
+.hx.aura.au-invicto polygon{stroke:#e0662a; stroke-width:3; stroke-dasharray:5 3} .lg.au-invicto{background:#e0662a33; border:3px dashed #e0662a}
+.hx.aura.au-roda polygon{stroke:#2e9e3e; stroke-width:3; stroke-dasharray:5 3} .lg.au-roda{background:#2e9e3e33; border:3px dashed #2e9e3e}
+.hx.aura.au-copas polygon{stroke:#e0407a; stroke-width:3; stroke-dasharray:5 3} .lg.au-copas{background:#e0407a33; border:3px dashed #e0407a}
   .tb-info small.tb-aura{color:inherit; margin-top:2px}
   .tb-info small.tb-ate{color:#ff6b6b; font-weight:700}
   .ef-item.ef-aura{background:#f2fbf2}
@@ -5815,6 +5823,18 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   // áreas mostradas no tabuleiro (estruturas e personagens com efeito em Raio)
   const AREA_TIPO = { Tempestade: 2, Pista: 2, Bomba: 1, Campo: 2 };
   const estGolpe = e => { const a = e && e.autor && porRef(e.autor); return !!(a && a.k === 'arquiteto' && e.hab && !CH.arquiteto.habs.concat([CH.arquiteto.supH]).some(h => h.n === e.hab)); };
+  // auras passivas desenhadas com cor própria: [personagem, passiva, raio, tipo]
+  const AURA_PAS = [
+    ['medonho', 'Faixas', x => rec(x, 'Raio do Pavor'), 'pavor'],
+    ['juiza', 'Presença de Tribunal', () => 2, 'tribunal'],
+    ['carvao', 'Calor Radiante', () => 1, 'calor'],
+    ['duque', 'Etiqueta da Corte', () => 1, 'corte'],
+    ['vespera', 'Fio Tenso', () => 1, 'fio'],
+    ['invicto', 'Sem Aberturas', () => 1, 'invicto'],
+    ['parlenda', 'Comunidade', () => 1, 'roda'],
+    ['manilhas', 'Mão Completa', x => robVivo(x, 'copas') && robCell(x, 'copas') ? 1 : 0, 'copas']
+  ];
+  const AURA_NOME = { pavor: 'Raio do Pavor (Medonho)', tribunal: 'Presença de Tribunal (Juíza)', calor: 'Calor Radiante (Carvão)', corte: 'Etiqueta da Corte (Duque)', fio: 'Fio Tenso (Véspera)', invicto: 'Raio do Invicto', roda: 'Comunidade (Parlenda)', copas: 'Copas (Manilhas)' };
   function areasTab(){
     const out = [];
     (S.est || []).forEach(e => { if (!CELL[e.cell]) return;
@@ -5830,6 +5850,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (e.mis) r = Math.min(3, Math.max(1, e.mis.onda || 1));
         if (e.multidao) { out.push({ cell: x.pos, raio: 1, dono: +e.multidao.split(',')[0] }); return; }
         if (r) out.push({ cell: x.pos, raio: r, dono: j }); });
+      AURA_PAS.forEach(([k, pas, rf, tipo]) => { if (x.k !== k || pOff(x, pas)) return; const r = rf(x); if (r > 0) out.push({ cell: k === 'manilhas' ? robCell(x, 'copas') : x.pos, raio: r, dono: j, tipo }); });
       if (S.times[j].some(y => !y.elim && (y.efs || []).some(e => e.guarda && e.guarda.tipo === 'santuario' && e.guarda.ref === j + ',' + i))) out.push({ cell: x.pos, raio: 2, dono: j }); }));
     return out;
   }
@@ -6416,7 +6437,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       { const tzs = (S.est || []).filter(z => z.tipo === 'Tinta' && z.cor && z.cell === c.id), tz = tzs[tzs.length - 1]; if (tz) k.push('tinta tn-' + tz.cor + ' tj' + tz.dono + (tzs.some(z => z.dono !== tz.dono) ? ' tdois' : '')); }
       { const dm = dominioEm(c.id); if (dm) k.push('dominio d' + dm.dono); }
       if (DM.casas.has(c.id)) k.push(DM.linha ? (DM.linha.has(c.id) ? 'mv' : 'mv2') : 'mv');
-      { const au = AREAS.filter(a => a.cell !== c.id && dist(a.cell, c.id) <= a.raio); if (au.length) k.push('aura a' + au[0].dono + (au.some(a => a.sel) ? ' asel' : '')); }
+      { const au = AREAS.filter(a => a.cell && a.cell !== c.id && dist(a.cell, c.id) <= a.raio); if (au.length) { const tp = au.filter(a => a.tipo).sort((x, y) => x.raio - y.raio)[0], a0 = tp || au[0]; k.push('aura a' + a0.dono + (tp ? ' au-' + tp.tipo : '') + (au.some(a => a.sel) ? ' asel' : '')); } }
       if (S.rodada === 1) { if (c.r === RB) k.push('ini j' + sul); if (c.r === -RB) k.push('ini j' + norte); }
       if (!modo && sc && sc.pos && !sc.imo && !bloqueada(c.id)) { const dd = MM ? (c.id in MM.d ? MM.d[c.id] : 99) : dist(sc.pos, c.id); if (dd > 0 && dd <= desl) k.push('alc1'); else if (dd > 0 && dd <= desl * 2) k.push('alc2'); }
       const pts = [];
@@ -6489,6 +6510,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       info = '<div class="tb-dica">Toque num personagem do banco e depois numa casa para posicionar. ' + (S.rodada === 1 ? '<b style="color:var(--j' + sul + ')">' + nomeJ(sul) + '</b> começa na borda Sul (K) e <b style="color:var(--j' + norte + ')">' + nomeJ(norte) + '</b> na borda Norte (A).' : '') + '</div>';
     } else info = '<div class="tb-dica">Toque num personagem para ver o alcance e as distâncias.</div>';
     const leg = [];
+    [...new Set(areasTab().filter(a => a.tipo).map(a => a.tipo))].forEach(t => leg.push('<i class="lg au-' + t + '"></i>' + AURA_NOME[t]));
     if (!modo && sc && sc.pos) leg.push('<i class="lg alc1"></i>1 ação de Mover', '<i class="lg alc2"></i>2 ações');
     const h = S.cen && CEN[S.cen].helper;
     if (h === 'fogo') leg.push('<i class="lg fogo"></i>fogo (4 de dano)');
