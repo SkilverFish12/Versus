@@ -6885,16 +6885,29 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
 
   // ── estruturas que podem ser atacadas (pelo texto das fichas) ──
   const ATK_EST = { 'Galho': ['vale', 3], 'Pássaro': ['assobio', 2], 'Ilusão': ['arquiteto', 3], 'Cópia': ['semelhante', -1], 'Retrato': ['aquarela', null], 'Aparato': ['neo', 3] };
+  const EST_CORPO = ['Bloco de Aço', 'Torreta', 'Muralha', 'Lápide', 'Mala', 'Pedra', 'Bomba', 'Armadilha'];
+  const estAtacavel = (z, aj) => z.cell && (ATK_EST[z.tipo] || EST_CORPO.includes(z.tipo)) && !(z.tipo === 'Aparato' && z.em) && (z.dono !== aj || z.tipo === 'Ilusão') && !(z.tipo === 'Pássaro' && cantoAtivo(z.dono)) && !(z.tipo === 'Armadilha' && z.dono === aj);
+  const donoEst = z => (z.autor && porRef(z.autor)) || (S.times[z.dono] || []).find(x => !x.elim) || null;
   const cantoAtivo = j => S.times[j].some(x => !x.elim && x.k === 'assobio' && ((x.estado && x.estado.nome === 'O Canto Final') || (x.efs || []).some(e => e.nome === 'O Canto Final')));
   function estAtacaveis(c, todas){
     const aj = S.ativo[0], alc = c.k === 'cupido' ? 3 : c.k === 'espreitador' ? 99 : 1;
-    return (S.est || []).filter(z => z.cell && ATK_EST[z.tipo] && !(z.tipo === 'Aparato' && z.em) && (z.dono !== aj || z.tipo === 'Ilusão') && !(z.tipo === 'Pássaro' && cantoAtivo(z.dono)) && (todas || !c.pos || (dist(c.pos, z.cell) >= 1 && dist(c.pos, z.cell) <= alc)));
+    return (S.est || []).filter(z => estAtacavel(z, aj) && (todas || !c.pos || (dist(c.pos, z.cell) >= 1 && dist(c.pos, z.cell) <= alc)));
   }
   function defEst(z, apt){
     if (z.tipo === 'Retrato') { const al = porRef(z.ref); return al ? clamp(defesas(al)[apt], 2, 10) : null; }
+    if (!ATK_EST[z.tipo]) { const o2 = donoEst(z); return o2 ? clamp(defesas(o2)[apt], 2, 10) : 5; }
     const [k, a] = ATK_EST[z.tipo], o = S.times[z.dono] && S.times[z.dono].find(x => x.k === k);
     if (!o || a === null) return null;
     return a < 0 ? defesas(o)[apt] : clamp(5 + aptE(o, a), 2, 10);
+  }
+  function estAcerto(z, c, apFica, apDn){
+      if (apFica) { evento('🧲 O Aparato aguentou: ' + apDn + ' de dano (precisa de 5 ou mais num só ataque)'); return; }
+      if (z.tipo === 'Retrato' && (z.hits || 1) > 1) { z.hits--; evento('🖼️ O Retrato rachou: falta 1 acerto para ele sumir'); return; }
+      S.est = S.est.filter(y => y !== z);
+      if (z.tipo === 'Retrato') { const aq = porRef(z.autor); evento('🖼️ O Retrato sumiu e espirrou tinta: inimigos adjacentes recebem 1 Mancha' + (z.cor ? '; a casa ficou pintada de ' + z.cor : ''));
+        if (z.cor && aq) { S.est = S.est.filter(y => !(y.tipo === 'Tinta' && y.cell === z.cell)); } if (z.cor && aq) S.est.push({ id: Date.now() + '' + d(999) + z.cell, tipo: 'Tinta', cell: z.cell, dono: z.dono, cor: z.cor, hab: 'Pincelada', autor: z.autor, autorNome: CH[aq.k].nome, exp: { t: 'fim', ref: z.autor, pula: ehAtivo(aq) ? 1 : 0 }, acaba: 'no fim do próximo turno de ' + CH[aq.k].nome, info: 'Tinta ' + z.cor + ': ' + CORTXT[z.cor] }); }
+      if (z.tipo === 'Retrato') S.times[1 - z.dono].forEach(x => { if (!x.elim && x.pos && dist(x.pos, z.cell) <= 1) manchar(x, 1); });
+      if (z.tipo === 'Galho') { c.fioDd = (c.fioDd || 0) + 1; novoEf(c, { nome: 'Galho destruído', autor: 'Vale', faz: '−1 dado no próximo teste', acaba: 'depois do próximo teste', exp: { t: 'man' }, mods: {}, fioEf: true }); }
   }
   function atacarEstrutura(z){
     const c = ativoC(), ch = CH[c.k], apt = atkB(c), ex = dadosExtra(c);
@@ -6909,13 +6922,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     mudar(() => {
       c.gastas++;
       if (!ok) return;
-      if (apFica) { evento('🧲 O Aparato aguentou: ' + apDn + ' de dano (precisa de 5 ou mais num só ataque)'); return; }
-      if (z.tipo === 'Retrato' && (z.hits || 1) > 1) { z.hits--; evento('🖼️ O Retrato rachou: falta 1 acerto para ele sumir'); return; }
-      S.est = S.est.filter(y => y !== z);
-      if (z.tipo === 'Retrato') { const aq = porRef(z.autor); evento('🖼️ O Retrato sumiu e espirrou tinta: inimigos adjacentes recebem 1 Mancha' + (z.cor ? '; a casa ficou pintada de ' + z.cor : ''));
-        if (z.cor && aq) { S.est = S.est.filter(y => !(y.tipo === 'Tinta' && y.cell === z.cell)); } if (z.cor && aq) S.est.push({ id: Date.now() + '' + d(999) + z.cell, tipo: 'Tinta', cell: z.cell, dono: z.dono, cor: z.cor, hab: 'Pincelada', autor: z.autor, autorNome: CH[aq.k].nome, exp: { t: 'fim', ref: z.autor, pula: ehAtivo(aq) ? 1 : 0 }, acaba: 'no fim do próximo turno de ' + CH[aq.k].nome, info: 'Tinta ' + z.cor + ': ' + CORTXT[z.cor] }); }
-      if (z.tipo === 'Retrato') S.times[1 - z.dono].forEach(x => { if (!x.elim && x.pos && dist(x.pos, z.cell) <= 1) manchar(x, 1); });
-      if (z.tipo === 'Galho') { c.fioDd = (c.fioDd || 0) + 1; novoEf(c, { nome: 'Galho destruído', autor: 'Vale', faz: '−1 dado no próximo teste', acaba: 'depois do próximo teste', exp: { t: 'man' }, mods: {}, fioEf: true }); }
+      estAcerto(z, c, apFica, apDn);
     }, txt + (ok && z.tipo === 'Galho' ? ' (−1 dado no próximo teste)' : '') + (ok && !rach && z.tipo === 'Retrato' ? ' (inimigos adjacentes ao Retrato recebem 1 Mancha)' : '') + '.');
     toast(txt, 2600);
   }
@@ -7168,10 +7175,11 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const apx = (c.efs || []).find(e => e.apaix), ok = (j, i) => ok0(j) && !(i !== undefined && bloqMira(c, S.times[j][i], h.t.includes('ATAQUE'))) && !(j !== aj && i !== undefined && temEf(S.times[j][i], 'intocavel')) && !(pz && i !== undefined && S.times[j][i] === c) && !(apx && i !== undefined && h.t.includes('PENALIDADE') && refDe(S.times[j][i]) === apx.apaix);
     const temPos = !!c.pos;
     if (ta === 'PESSOAL' || AURA_APAR.includes(h.n)) return { tipo: 'nenhum' };
-    if (ta === 'TODO') return { tipo: 'todos', alvos: pecas((j, i, x) => ok(j, i) && !(j === aj && x === c && ld !== 'aliado')) };
-    if (ta === 'RAIO') return { tipo: 'todos', alvos: pecas((j, i, x) => ok(j, i) && x !== c && (!temPos || (x.pos && dP(c.pos, x) <= n))) };
+    if (ta === 'TODO') return { tipo: 'todos', area: CELLS.map(x => x.id), alvos: pecas((j, i, x) => ok(j, i) && !(j === aj && x === c && ld !== 'aliado')) };
+    if (ta === 'RAIO') return { tipo: 'todos', area: temPos ? CELLS.filter(x => dist(c.pos, x.id) <= n && x.id !== c.pos).map(x => x.id) : [], alvos: pecas((j, i, x) => ok(j, i) && x !== c && (!temPos || (x.pos && dP(c.pos, x) <= n))) };
     const mato = (j, x) => S.cen === 'fazenda' && j !== aj && h.t.includes('ATAQUE') && temPos && x.pos && MATO.includes(x.pos[0]) && dP(c.pos, x) >= 4;
-    if (ta === 'alvo' || ta === 'ALVO') return { tipo: 'peca', alvos: pecas((j, i, x) => ok(j, i) && !mato(j, x) && !(h0.n === 'Manipulando Emoções' && x === c) && !(h.a === 'ADJACENTE' && x.k === 'cupido' && j !== aj) && (!temPos || (x.pos && dP(c.pos, x) <= (h0.n === 'Relâmpago' && j !== aj && eletrizado(x) ? Math.max(n, 5) : n)))) };
+    const estC = h0.t.includes('ATAQUE') && ld !== 'aliado' ? (S.est || []).filter(z => estAtacavel(z, aj) && !ocupante(z.cell) && (!temPos || (dist(c.pos, z.cell) >= 1 && dist(c.pos, z.cell) <= n))).map(z => z.cell) : [];
+    if (ta === 'alvo' || ta === 'ALVO') return { tipo: 'peca', estCasas: estC, alvos: pecas((j, i, x) => ok(j, i) && !mato(j, x) && !(h0.n === 'Manipulando Emoções' && x === c) && !(h.a === 'ADJACENTE' && x.k === 'cupido' && j !== aj) && (!temPos || (x.pos && dP(c.pos, x) <= (h0.n === 'Relâmpago' && j !== aj && eletrizado(x) ? Math.max(n, 5) : n)))) };
     if (ta === 'ALCANCE') { const obE = h0.t.includes('ESTRUTURA') && (() => { const tp = tipoEstrutura(h0); return ESTI[tp] && ESTI[tp][2]; })(); return { tipo: 'casa', casas: (temPos ? CELLS.filter(x => dist(c.pos, x.id) <= n && !bloqueada(x.id)) : CELLS).filter(x => !obE || (!estNa(x.id).length && livre(x.id))).map(x => x.id) }; }
     if (ta === 'LINHA') return { tipo: 'linha', casas: temPos ? linhas(c.pos, n) : [] };
     return { tipo: 'nenhum' };
@@ -7545,7 +7553,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (modo.t === 'hab') {
       const a = modo.alvosInfo;
       if (a.tipo === 'peca' && modo.seg) { out.toks.add(modo.sel[0].join(',')); segAlvos(modo).forEach(p => out.toks.add(p.join(','))); }
-      else if (a.tipo === 'peca' || a.tipo === 'todos') (a.tipo === 'todos' ? modo.sel : a.alvos).forEach(p => out.toks.add(p.join(',')));
+      else if (a.tipo === 'peca' || a.tipo === 'todos') { (a.tipo === 'todos' ? modo.sel : a.alvos).forEach(p => out.toks.add(p.join(','))); if (a.tipo === 'peca') (a.estCasas || []).forEach(id => out.casas.add(id)); }
       if (a.tipo === 'casa' && a.fendaS) { if (!modo.fA) a.casas.filter(id => c.pos && dist(id, c.pos) === 1).forEach(id => out.casas.add(id)); else { a.casas.filter(id => id !== modo.fA).forEach(id => out.casas.add(id)); out.linha = new Set([modo.fA]); } }
       else if (a.tipo === 'casa' && a.meia && modo.mnA) { a.casas.forEach(id => out.casas.add(id)); out.linha = new Set([modo.mnA]); }
       else if (a.tipo === 'casa' && a.faixa && modo.faixaA) { out.casas.add(modo.faixaA); vizinhas(modo.faixaA).forEach(id => out.casas.add(id)); if (modo.faixa) out.linha = new Set(modo.faixa); }
@@ -7734,6 +7742,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (!segAlvos(modo).some(p => p.join(',') === tok)) return true;
         if (PAR_FORA.includes(modo.h.n)) modo.par = tok; else modo.sel.push(tok.split(',').map(Number)); modo.seg = false; return resolverHab(), true;
       }
+      if (a.tipo === 'peca' && !tok && cellId && (a.estCasas || []).includes(cellId)) { const z = (S.est || []).find(y => y.cell === cellId && estAtacavel(y, S.ativo[0])); if (z) { modo.sel = []; modo.estAlvo = z.id; return resolverHab(), true; } }
       if (a.tipo === 'peca') { if (!tok || !d0.toks.has(tok)) return true; modo.sel = [tok.split(',').map(Number)];
         if (segAlvos(modo).length) { modo.seg = true; rBoard(); rPainel(); toast('⚡ Agora toque no 2º alvo (ou de novo no 1º para ficar só com ele)', 2400); return true; }
         return resolverHab(), true; }
@@ -7777,6 +7786,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         const m = /Raio (\d)/.exec(modo.h.d), ld = lado(modo.h), aj = S.ativo[0];
         const ok = j => ld === 'qualquer' || (ld === 'inimigo' ? j !== aj : j === aj);
         modo.sel = m ? pecas((j, i, x) => ok(j) && x.pos && dP(id, x) <= +m[1]) : (ocupante(id) ? [ocupante(id)] : []);
+        modo.areaE = m ? CELLS.filter(x => dist(id, x.id) <= +m[1]).map(x => x.id) : [id];
         if (modo.h.n === 'Transmutação') modo.sel = estInimigaEm(id, aj) ? [] : pecas((j, i, x) => j !== aj && x.pos && !temEf(x, 'intocavel') && dP(id, x) <= 1);
         return resolverHab(), true;
       }
@@ -7787,7 +7797,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         const ok = j => ld === 'qualquer' || (ld === 'inimigo' ? j !== aj : j === aj);
         let sel = a.casas.filter(([, dd2]) => dd2 === di).map(([x]) => ocupante(x)).filter(o => o && ok(o[0]));
         if (/o primeiro/.test(modo.h.d)) sel = sel.slice(0, 1);
-        modo.dir = di; modo.sel = sel; modo.cel = a.casas.filter(([, dd2]) => dd2 === di).slice(-1)[0][0];
+        modo.dir = di; modo.sel = sel; modo.cel = a.casas.filter(([, dd2]) => dd2 === di).slice(-1)[0][0]; modo.areaE = a.casas.filter(([, dd2]) => dd2 === di).map(([x]) => x);
         rBoard(); rPainel(); return true;
       }
     }
@@ -9350,6 +9360,18 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (c.k === 'drive' && h.n === 'Rasante' && m.cel) {
       const linha = alvosDe(h, r.aprim).casas.filter(([, di]) => di === m.dir).map(([id]) => id);
       pecas((pj, pi, x) => pj === aj && x !== c && !x.carona && x.pos && linha.some(id => dist(id, x.pos) <= 1)).forEach(p => extras.push({ k: 'carona', v: p, on: false, txt: CH[S.times[p[0]][p[1]].k].nome + ' sobe no veículo (grátis)' }));
+    }
+    if (h.t.includes('ATAQUE') && lado(h) !== 'aliado') {
+      const area = m.estAlvo ? null : (m.areaE || (m.alvosInfo && m.alvosInfo.area) || null);
+      const zs = (S.est || []).filter(z => estAtacavel(z, aj) && (m.estAlvo ? z.id === m.estAlvo : area && area.includes(z.cell) && !ocupante(z.cell)));
+      const apt = h.x >= 0 ? h.x : atkB(c), dn = (ef.dano || 0) + (ef.dano ? bonusDn : 0);
+      zs.forEach(z => { const def = defEst(z, apt), rolou = h.x < 0 || (r.dados && r.dados.length), ok = h.x < 0 || (rolou && def !== null && r.max >= def);
+        const nomeZ = (ESTI[z.tipo] ? ESTI[z.tipo][1] + ' ' : '') + z.tipo + ' em ' + z.cell + (def !== null && h.x >= 0 ? ' (Defesa ' + def + ')' : '');
+        if (!rolou) { extras.push(supFx('🎯 Mira ' + nomeZ, () => {}, false)); return; }
+        if (!ok) { extras.push(supFx('🎯 ' + nomeZ + ': errou', () => {}, false)); return; }
+        const apFica = z.tipo === 'Aparato' && dn < 5;
+        extras.push(supFx('🎯 ' + nomeZ + ': atingido' + (apFica ? ', mas o Aparato aguenta (' + dn + ' de dano; precisa de 5)' : z.tipo === 'Retrato' && (z.hits || 1) > 1 ? ' (racha, falta 1 acerto)' : ', se desfaz'), msg => { const z2 = (S.est || []).find(y => y.id === z.id); if (!z2) return; estAcerto(z2, c, apFica, dn); if (msg && msg.push) msg.push(z.tipo + ' em ' + z.cell + (apFica ? ' aguentou' : ' atingido')); }));
+      });
     }
     if (h.n === 'Armadilha de Caça' && m.cel) { const oc = ocupante(m.cel), tp1 = r.ops ? r.ops[r.opSel[0]].nome : 'Mandíbula'; if (!(oc && oc[0] !== aj)) extras.push({ k: 'est', v: ['Armadilha', m.cel], opc: tp1, on: true, txt: 'Colocar 🪤 Armadilha (' + tp1 + ') em ' + m.cel }); }
     else if (m.cel && h.t.includes('ESTRUTURA') && h.n !== 'Fenda Espacial' && h.n !== 'Pincelada' && h.n !== 'Retrato Vivo') { const tp = tipoEstrutura(h); ((h.n === 'Cortina de Fumaça' || h.n === 'Muralha Térmica') && m.faixa ? m.faixa : [m.cel]).forEach(cc => extras.push({ k: 'est', v: [tp, cc], on: true, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + cc })); }
