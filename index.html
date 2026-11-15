@@ -6485,8 +6485,9 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b && b.dataset.tbsoltar !== undefined) { selTok = null; estSel = null; rBoard(); return; }
     if (b && b.dataset.estdel) { const id = b.dataset.estdel; estSel = null; mudar(() => { S.est = S.est.filter(z => z.id !== id); }, 'Estrutura removida.'); return; }
     if (es) { estSel = estSel === es.dataset.est ? null : es.dataset.est; selTok = null; rBoard(); return; }
-    if (cl && estSel) {
-      const x = (S.est || []).find(z => z.id === estSel); const id = cl.dataset.cell;
+    if ((cl || (t && t.closest('svg'))) && estSel) {
+      const x = (S.est || []).find(z => z.id === estSel); const id = cl ? cl.dataset.cell : (() => { const [tj, ti] = t.dataset.tok.split(',').map(Number); return S.times[tj][ti].pos; })();
+      if (!id) return;
       const at = S.ativo && ativoC(), th = x && x.tipo === 'Tempestade' && at && at.k === 'tharen' && x.dono === S.ativo[0];
       if (th && dist(x.cell, id) > 2) { toast('⛈️ A Tempestade anda até 2 casas por vez', 2200); return; }
       if (th && at.gastas >= at.acts) { toast('Sem ações para mover a Tempestade', 2200); return; }
@@ -6966,6 +6967,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (c.contra) h += btn('data-pasv="contra"', '☠️', 'USAR CONTRABANDO: ' + c.contra.toUpperCase(), 'Mercadoria Proibida · sem ação · uso único · ' + CONTRA_TXT[c.contra], c.contra === 'Bomba de Fumaça' && !c.pos ? 'fora do tabuleiro' : '');
     if ((c.efs || []).some(e => e.bombaR)) h += btn('data-pasv="bombafora"', '💣', 'JOGAR A BOMBA FORA', '1 ação · Venda Casada · desarma a Bomba-Relógio', restam(c) < 1 ? 'sem ações' : '');
     S.times.forEach((tm, tj) => tm.forEach((x, ti) => { if (x.k !== 'manilhas' || x.elim || !(x.robPend > 0)) return; [x.robA || 'copas'].concat(robsDe(x).map(r => r.k)).forEach(k => { h += btn('data-mndesc="' + tj + ',' + ti + ',' + k + '"', '🃏', 'DESCARTAR ' + ROBN[k].toUpperCase() + ' (MANILHAS)', 'Mão Completa · ' + x.pv + ' PV · o robô sai do tabuleiro', ''); }); }));
+    if (c.k === 'tharen') (S.est || []).filter(z => z.tipo === 'Tempestade' && z.dono === S.ativo[0] && z.cell).slice(0, 1).forEach(z => { h += btn('data-pasv="tempest"', '⛈️', 'MOVER A TEMPESTADE', '1 ação · até 2 casas · toque no botão e depois na casa nova do centro (pode ser em cima de um personagem)', restam(c) < 1 ? 'sem ações' : ''); });
     if (c.k === 'medonho') { const R = rec(c, 'Raio do Pavor'); h += btn('data-pasv="faixa"', '🩹', 'TIRAR UMA FAIXA', 'passiva · sem ação · 1 vez por turno · Raio do Pavor ' + R + ' → ' + Math.min(3, R + 1) + ' · Faixas: ' + (3 - R), pOff(c, 'Faixas') ? 'Bloqueio Mental' : R >= 3 ? 'já está sem Faixas' : c.fxT === 'k' + (S.tk || 0) ? 'já tirou uma neste turno' : ''); }
     if (c.k === 'espreitador') { const L = tocaiaAlvos(c); h += btn('data-pasv="tocaia"', '🎯', 'TIRO DE TOCAIA', 'passiva · sem ação · VIS contra todos a 4+ casas · 4 de dano', pOff(c, 'Tiro de Tocaia') ? 'Bloqueio Mental' : usou('Tiro de Tocaia') ? 'já usado neste turno' : c.pos && !L.length ? 'nenhum inimigo a 4 casas ou mais' : ''); }
     if (c.pos && domAp(S.ativo[0]) && domEm(S.ativo[0], c.pos)) h += btn('data-pasv="domMover"', '🌌', 'MOVER GRÁTIS (DOMÍNIO)', 'sem ação · até 2 casas (Domínio aprimorado)', usou('Domínio ⚡') ? 'já usado neste turno' : c.imo ? 'Imóvel' : '');
@@ -7365,6 +7367,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (b.dataset.traje) { const k = b.dataset.traje; if (c.traje) { toast('🦺 O Traje já foi escolhido neste turno: fica até o início do próximo turno da Ceifadora', 2400); return; } return mudar(() => { c.traje = k; tirarEfs(c, e => e.traje);
       novoEf(c, Object.assign({ nome: 'Traje: ' + TRAJE[k][0], autor: CH[c.k].nome, faz: TRAJE[k][2], acaba: 'no início do próximo turno de ' + CH[c.k].nome, exp: { t: 'ini', ref: refDe(c) }, mods: {}, traje: true }, k === 'lamina' ? { basDn: 2 } : {})); }, '🦺 ' + CH[c.k].nome + ' escolheu ' + TRAJE[k][0] + '.'); }
     if (b.dataset.marca) return voltarMarca(porRef(b.dataset.marca));
+    if (b.dataset.pasv === 'tempest') { const z = (S.est || []).find(q => q.tipo === 'Tempestade' && q.dono === S.ativo[0] && q.cell); if (!z) return; estSel = z.id; selTok = null; rBoard(); rPainel(); toast('⛈️ Toque na casa a até 2 casas de ' + z.cell + ' para onde o centro da Tempestade vai', 2600); return; }
     if (b.dataset.pasv === 'copias') return iniciarModo({ t: 'copiaAtk' });
     if (b.dataset.pegamala) { const ml = malaDe(c); if (ml) mudar(() => { S.est = S.est.filter(q => q.id !== ml.id); }, () => '🧳 ' + CH[c.k].nome + ' pegou a Mala de volta.'); return; }
     if (b.dataset.chute) { const zs = malasChute(c); return iniciarModo({ t: 'chute', mala: zs[0].id }); }
