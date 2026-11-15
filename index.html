@@ -1820,6 +1820,19 @@
   @media (max-width:760px){ .pt-diario{grid-template-columns:1fr} #pdNotas{min-height:200px} }
   .apts span b.mod{color:var(--red); text-decoration:underline}
   .hx.aura polygon{stroke-dasharray:4 3; stroke-width:2}
+  .hx .hx-in{fill:none!important; stroke:#7a4fd0; stroke-width:2; stroke-dasharray:3 2; pointer-events:none}
+  .hx.m2a0 .hx-in{stroke:#e8323c} .hx.m2a1 .hx-in{stroke:#1e88e5}
+  .hx-mt{pointer-events:none} .hx-mt circle{fill:#2b1d4a; stroke:#fff; stroke-width:1.5} .hx-mt text{fill:#fff; font:700 9px sans-serif; text-anchor:middle}
+  .hx.tinta.obra polygon{stroke-dasharray:none; stroke-width:1; opacity:.9}
+  #mAcaoCaixa.sup{border:3px solid var(--yellow); box-shadow:0 0 0 4px #2b1d4a, 0 0 38px 6px rgba(255,200,40,.55); animation:supBrilho 2.4s ease-in-out infinite}
+  #mAcaoCaixa.sup .modal-h{background:linear-gradient(120deg,#2b1d4a,#6a2c91 55%,#c8871a); color:#fff}
+  #mAcaoCaixa.sup .modal-h h3{font-size:30px; letter-spacing:2px; color:#ffd34d; text-shadow:0 2px 0 #000, 0 0 14px rgba(255,211,77,.7)}
+  @keyframes supBrilho{0%,100%{box-shadow:0 0 0 4px #2b1d4a, 0 0 24px 4px rgba(255,200,40,.4)}50%{box-shadow:0 0 0 4px #2b1d4a, 0 0 46px 10px rgba(255,200,40,.75)}}
+  .ac-bt.sup{background:linear-gradient(120deg,#1d1433,#4a1f6a 60%,#7a4a10)!important; box-shadow:0 0 14px rgba(255,200,40,.45)} .ac-bt.sup b{font-size:1.15em; letter-spacing:1px; text-shadow:0 0 8px rgba(255,211,77,.6)}
+  #supBan{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:9999; background:radial-gradient(circle,rgba(43,29,74,.55),rgba(0,0,0,0) 70%); animation:supBanIn 2.2s ease forwards}
+  #supBan div{text-align:center; padding:18px 34px; background:linear-gradient(120deg,#2b1d4a,#6a2c91 55%,#c8871a); border:3px solid #ffd34d; border-radius:14px; box-shadow:0 0 50px rgba(255,200,40,.7)}
+  #supBan small{display:block; color:#fff; font:400 18px 'Bangers',cursive; letter-spacing:4px} #supBan b{display:block; font-family:'Bangers',cursive; font-weight:400; color:#ffd34d; font-size:clamp(28px,7vw,54px); letter-spacing:2px; text-shadow:0 3px 0 #000, 0 0 20px rgba(255,211,77,.8)}
+  @keyframes supBanIn{0%{opacity:0; transform:scale(.6)}15%{opacity:1; transform:scale(1.05)}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0; transform:scale(1.08)}}
   .hx.tinta.tn-vermelho polygon{fill:#ffb3b3} .hx.tinta.tn-azul polygon{fill:#b3d4ff} .hx.tinta.tn-verde polygon{fill:#bfeec0}
 .tinta.tj0 polygon{stroke:var(--j0);stroke-width:2.5;stroke-dasharray:5 3}
 .tinta.tj1 polygon{stroke:var(--j1);stroke-width:2.5;stroke-dasharray:5 3}
@@ -5194,7 +5207,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
 
   // ═════════ MODAIS ═════════
   function abrir(id){ $('#' + id).hidden = false; document.body.style.overflow = 'hidden'; }
-  function fechar(id){ $('#' + id).hidden = true; if (!$$('.modal').some(m => !m.hidden)) document.body.style.overflow = ''; }
+  function fechar(id){ $('#' + id).hidden = true; if (id === 'mAcao') { const cx = $('#mAcaoCaixa'); if (cx) cx.classList.remove('sup'); } if (!$$('.modal').some(m => !m.hidden)) document.body.style.overflow = ''; }
   function fecharModais(){ if (modo) cancelarModo(); $$('.modal').forEach(m => { if (m.id !== 'mFim' && m.id !== 'mAcao') m.hidden = true; }); if (!$$('.modal').some(m => !m.hidden)) document.body.style.overflow = ''; }
   $$('.modal').forEach(m => m.addEventListener('click', e => {
     if (e.target === m && m.id !== 'mFim' && m.id !== 'mAcao') fechar(m.id);
@@ -5866,16 +5879,16 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (e.area) r = Math.max(r, e.area);
       if (e.tipo === 'Nuvem' && e.hab === 'Nuvem Carregada') r = Math.max(r, e.aprim ? 2 : 1);
       if (!r && AREA_TIPO[e.tipo]) r = AREA_TIPO[e.tipo];
-      if (r) out.push({ cell: e.cell, raio: r, dono: e.dono, sel: e.id === estSel }); });
+      if (r) out.push({ cell: e.cell, raio: r, dono: e.dono, sel: e.id === estSel, nome: (e.hab || e.tipo) + (e.autorNome ? ' (' + e.autorNome + ')' : '') }); });
     [0, 1].forEach(j => S.times[j].forEach((x, i) => { if (x.elim || !x.pos || !CELL[x.pos]) return;
       (x.efs || []).forEach(e => {
         let r = e.area || 0;
         if (e.combustao || e.quadrado) r = 1;
         if (e.mis) r = Math.min(3, Math.max(1, e.mis.onda || 1));
-        if (e.multidao) { out.push({ cell: x.pos, raio: 1, dono: +e.multidao.split(',')[0] }); return; }
-        if (r) out.push({ cell: x.pos, raio: r, dono: j }); });
-      AURA_PAS.forEach(([k, pas, rf, tipo]) => { if (x.k !== k || pOff(x, pas)) return; const r = rf(x); if (r > 0) out.push({ cell: k === 'manilhas' ? robCell(x, 'copas') : x.pos, raio: r, dono: j, tipo }); });
-      if (S.times[j].some(y => !y.elim && (y.efs || []).some(e => e.guarda && e.guarda.tipo === 'santuario' && e.guarda.ref === j + ',' + i))) out.push({ cell: x.pos, raio: 2, dono: j }); }));
+        if (e.multidao) { out.push({ cell: x.pos, raio: 1, dono: +e.multidao.split(',')[0], nome: 'Multidão' }); return; }
+        if (r) out.push({ cell: x.pos, raio: r, dono: j, nome: e.nome + (e.autor ? ' (' + e.autor + ')' : '') }); });
+      AURA_PAS.forEach(([k, pas, rf, tipo]) => { if (x.k !== k || pOff(x, pas)) return; const r = rf(x); if (r > 0) out.push({ cell: k === 'manilhas' ? robCell(x, 'copas') : x.pos, raio: r, dono: j, tipo, nome: AURA_NOME[tipo] || pas }); });
+      if (S.times[j].some(y => !y.elim && (y.efs || []).some(e => e.guarda && e.guarda.tipo === 'santuario' && e.guarda.ref === j + ',' + i))) out.push({ cell: x.pos, raio: 2, dono: j, nome: 'Santuário' }); }));
     return out;
   }
   function aurasEm(c){
@@ -6453,21 +6466,28 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const W = HS * Math.sqrt(3) * 11 + 40, H = HS * 1.5 * 10 + HS * 2 + 20;
     let g = '';
     const DM = destaquesModo(), CER = cercoCasas(), AREAS = areasTab();
+    const OBRA = (() => { for (const j of [0, 1]) for (const x of S.times[j]) { const e = (x.efs || []).find(z => /^Obra-Prima \((vermelha|azul|verde)\)$/.test(z.nome || '')); if (e) return { cor: { vermelha: 'vermelho', azul: 'azul', verde: 'verde' }[/\((\w+)\)/.exec(e.nome)[1]], dono: j }; } return null; })();
     const SOMB = {}; S.times.forEach((t, j) => t.forEach(x => { if (x.k === 'eclipse' && !x.elim) entreDois(x).forEach(id => { SOMB[id] = j; }); }));
     for (const c of CELLS) {
       const k = marcas(c);
       if (CER[c.id] !== undefined) k.push('cerco c' + CER[c.id]);
       if (gigAnel(c.id)) k.push('gigante');
       if (SOMB[c.id] !== undefined) k.push('sombra s' + SOMB[c.id]);
-      { const tzs = (S.est || []).filter(z => z.tipo === 'Tinta' && z.cor && z.cell === c.id), tz = tzs[tzs.length - 1]; if (tz) k.push('tinta tn-' + tz.cor + ' tj' + tz.dono + (tzs.some(z => z.dono !== tz.dono) ? ' tdois' : '')); }
+      { const tzs = (S.est || []).filter(z => z.tipo === 'Tinta' && z.cor && z.cell === c.id), tz = tzs[tzs.length - 1]; if (tz) k.push('tinta tn-' + tz.cor + ' tj' + tz.dono + (tzs.some(z => z.dono !== tz.dono) ? ' tdois' : '')); else if (OBRA) k.push('tinta obra tn-' + OBRA.cor + ' tj' + OBRA.dono); }
       { const dm = dominioEm(c.id); if (dm) k.push('dominio d' + dm.dono); }
       if (DM.casas.has(c.id)) k.push(DM.linha ? (DM.linha.has(c.id) ? 'mv' : 'mv2') : 'mv');
+      let MULTI = null;
+      { const au0 = AREAS.filter(a => a.cell && a.cell !== c.id && dist(a.cell, c.id) <= a.raio), nm = [...new Set(au0.map(a => a.nome || 'Área'))];
+        { const tz2 = (S.est || []).filter(z => z.tipo === 'Tinta' && z.cor && z.cell === c.id).slice(-1)[0]; if (tz2) nm.push('Tinta ' + tz2.cor); else if (OBRA) nm.push('Obra-Prima (' + OBRA.cor + ')'); }
+        if (dominioEm(c.id)) nm.push('Domínio'); if (CER[c.id] !== undefined) nm.push('Cerco'); if (SOMB[c.id] !== undefined) nm.push('Sombra (Meia-Noite)');
+        if (nm.length >= 2) { MULTI = nm; k.push('multi'); const s2 = au0.filter(a => a.tipo).sort((x, y) => x.raio - y.raio), a2 = au0.length >= 2 ? (s2[1] || au0.find(a => a !== (s2[0] || au0[0]))) : null; if (a2) k.push('m2a' + a2.dono + (a2.tipo ? ' m2-' + a2.tipo : '')); } }
       { const au = AREAS.filter(a => a.cell && a.cell !== c.id && dist(a.cell, c.id) <= a.raio); if (au.length) { const tp = au.filter(a => a.tipo).sort((x, y) => x.raio - y.raio)[0], a0 = tp || au[0]; k.push('aura a' + a0.dono + (tp ? ' au-' + tp.tipo : '') + (au.some(a => a.sel) ? ' asel' : '')); } }
       if (S.rodada === 1) { if (c.r === RB) k.push('ini j' + sul); if (c.r === -RB) k.push('ini j' + norte); }
       if (!modo && sc && sc.pos && !sc.imo && !bloqueada(c.id)) { const dd = MM ? (c.id in MM.d ? MM.d[c.id] : 99) : dist(sc.pos, c.id); if (dd > 0 && dd <= desl) k.push('alc1'); else if (dd > 0 && dd <= desl * 2) k.push('alc2'); }
       const pts = [];
       for (let i = 0; i < 6; i++) { const a = Math.PI / 3 * i + Math.PI / 6; pts.push((c.x + HS * .97 * Math.cos(a)).toFixed(1) + ',' + (c.y + HS * .97 * Math.sin(a)).toFixed(1)); }
-      g += '<g class="hx ' + k.join(' ') + '" data-cell="' + c.id + '"><polygon points="' + pts.join(' ') + '"/>' +
+      const pin = []; for (let i = 0; i < 6; i++) { const a = Math.PI / 3 * i + Math.PI / 6; pin.push((c.x + HS * .72 * Math.cos(a)).toFixed(1) + ',' + (c.y + HS * .72 * Math.sin(a)).toFixed(1)); }
+      g += '<g class="hx ' + k.join(' ') + '" data-cell="' + c.id + '"><polygon points="' + pts.join(' ') + '"/>' + (MULTI ? '<title>' + esc(c.id + ': ' + MULTI.join(' + ')) + '</title><polygon class="hx-in" points="' + pin.join(' ') + '"/><g class="hx-mt" transform="translate(' + (c.x - HS * .5).toFixed(1) + ',' + (c.y - HS * .5).toFixed(1) + ')"><circle r="7.5"/><text y="3.5">' + MULTI.length + '</text></g>' : '') +
         (k.includes('arvore') ? '<text class="hx-ic" x="' + c.x + '" y="' + (c.y + 8) + '" style="font-size:24px">🌳</text>' : k.includes('fio') ? '<text class="hx-ic" x="' + c.x + '" y="' + (c.y + 7) + '">🧵</text>' : k.includes('ninho') ? '<text class="hx-ic" x="' + c.x + '" y="' + (c.y + 7) + '">🪺</text>' : k.includes('portal') ? '<text class="hx-ic" x="' + c.x + '" y="' + (c.y + 7) + '">🌀</text>' : k.includes('casco') && c.anel === 0 ? '<text class="hx-ic" x="' + c.x + '" y="' + (c.y + 9) + '" style="font-size:26px">🛸</text>' : k.includes('fogo') && c.id === S.ce.casa ? '<text class="hx-ic" x="' + c.x + '" y="' + (c.y + 7) + '">🔥</text>' : '') +
         '<text class="hx-id" x="' + c.x + '" y="' + (c.y + HS * .62) + '">' + c.id + '</text></g>';
     }
@@ -9441,7 +9461,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         c.carona = null; if (cel) c.pos = cel; msg.push(CH[c.k].nome + ' desceu do veículo' + (cel ? ' em ' + cel : '')); }
       if (r.pagaProx) { c.ab = clamp((c.ab || 0) - 1, -4, 2); c.abPago = (c.abPago || 0) + 1; msg.push(CH[c.k].nome + ' gastou 1 ação do próximo turno'); }
       if (r.nome) { c.usadas = c.usadas || []; c.usadas.push((r.h && r.h.base) || r.nome); if (r.h && (r.h.base === 'Mugë, “magia”' || r.h.base === 'Jogo de Mão')) c.usadas.push(r.nome); if (r.h && r.h.simul) c.usadas.push('Simulacro'); if (!r.sup && r.h && r.h.c) S.usoHab = (S.usoHab || []).slice(-40).concat([{ n: r.nome, tk: S.tk }]); }
-      if (r.sup) { S.med[aj] -= 3; c.med = true; c.sup = true; }
+      if (r.sup) { S.med[aj] -= 3; c.med = true; c.sup = true; if (!SECO) supBanner(r.nome, CH[c.k].nome); }
       else if (r.aprim && c.possPor) aprimorarMarcado = false;
       else if (r.aprim) { S.med[aj] -= 1; c.med = true; aprimorarMarcado = false; }
       if (c.k === 'kazan' && r.nome === 'Rastro Infernal' && c.kz) { r.brLinha = c.kz; setRec(c, 'Brasas', rec(c, 'Brasas') - c.kz); msg.push(c.kz + ' Brasa(s) consumida(s): ' + c.kz + ' Linha(s) 3 de Casas Infernais'); c.kz = 0; }
@@ -9682,8 +9702,9 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (!p.L.length && !p.depois.length) return '';
     return '<div class="rs-prev" id="rsPrev"><b>O QUE VAI ACONTECER AO APLICAR</b><ul>' + p.L.map(x => '<li>' + realce(x) + '</li>').join('') + p.depois.map(x => '<li class="dep">Depois: ' + x + '</li>').join('') + '</ul></div>';
   }
+  function supBanner(n, quem){ try { const o = document.getElementById('supBan'); if (o) o.remove(); const b = document.createElement('div'); b.id = 'supBan'; b.innerHTML = '<div><small>★ SUPREMA DE ' + esc(quem) + ' ★</small><b>' + esc(n.toUpperCase()) + '</b></div>'; document.body.appendChild(b); setTimeout(() => b.remove(), 2300); } catch (e) {} }
   function mostrarResultado(r){
-    res = r;
+    res = r; { const cx = $('#mAcaoCaixa'); if (cx) cx.classList.toggle('sup', !!r.sup); }
     if (reacApos && !(r.pend && !r.rolado)) { r.reacT = reacApos; reacApos = null; }
     if (r.reacT) aplicarReac(r);
     if (r.pend && !r.rolado) {
