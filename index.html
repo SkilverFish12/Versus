@@ -8513,7 +8513,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         const cel = r.m && r.m.cel; if (!cel) break;
         let feito = null;
         S.times[aj].forEach((x, i) => { if (x.elim || x === c) return;
-          extras.push({ k: 'fn', on: !feito && (feito = 'x', true), txt: '🖼️ Retrato de ' + nomeC(x) + ' em ' + cel + ' (Defesa dele: ' + defesas(x).join(' / ') + ')', fn: () => { if (feito === 'ok') return; feito = 'ok';
+          extras.push({ k: 'fn', on: !feito && (feito = 'x', true), txt: '🖼️ Retrato de ' + nomeC(x) + ' em ' + cel + ' (Defesa dele: ' + defesas(x).join(' / ') + ')', fn: () => {
             S.est = (S.est || []).filter(z => !(z.tipo === 'Retrato' && z.dono === aj));
             S.est.push({ id: Date.now() + '' + d(999) + cel, tipo: 'Retrato', cell: cel, dono: aj, ref: aj + ',' + i, hits: r.aprim ? 2 : 1, troca: false, autor: cref, autorNome: nm, info: 'Retrato de ' + nomeC(x) + ': Obstáculo com a Defesa dele' + (r.aprim ? ', some depois de 2 acertos' : '') + '. ' + nomeC(x) + ' pode trocar de lugar com ele 1 vez.' }); } }); });
         feito = null;
