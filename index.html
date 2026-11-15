@@ -5560,7 +5560,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (c.k === 'ritmista') { const e = estR(c); if (e >= 1) add('Mantendo o Ritmo', ['', 'Aquecimento: +1 casa', 'No Ritmo: +1 casa e +1 dado', 'Apogeu: +1 casa, +1 dado e +2 de dano'][e] + (c.apiceAte && S.rodada <= c.apiceAte ? ' · Ápice: +2 casas' : '')); }
     if (c.k === 'bigorna' && adjObst(c)) add('Velho Teimoso', '+1 na Defesa (ao lado de obstáculo)');
     if (c.k === 'johnny' && !S.times[tj].some(x => x !== c && !x.elim && x.pos && dist(x.pos, c.pos) <= 2)) add('Sem Testemunhas', '+1 na Defesa e +2 de dano (nenhum aliado a até 2 casas)');
-    if (c.k === 'andarilho') { const e = rec(c, 'Embalo'); add('Recompensando a Caminhada', '+1 casa' + (e >= 3 ? ' · Embalo ' + e + ': +2 de dano nos Ataques Básicos' : '') + (e >= 6 ? ', +1 na Defesa' : '') + (e >= 9 ? ' e −1 de dano de cada ataque' : '') + ' · neste turno andou ' + (c.andou || 0)); }
+    if (c.k === 'andarilho') { const e = rec(c, 'Embalo'); add('Recompensando a Caminhada', '+1 casa' + (e >= 3 ? ' · Embalo ' + e + ': +2 de dano nos Ataques Básicos' : ' · Embalo ' + e + ': sem bônus') + (e >= 6 ? ', +1 na Defesa' : '') + (e >= 9 ? ' e −1 de dano de cada ataque' : '') + ' · neste turno andou ' + (c.andou || 0) + ' → no fim do turno, Embalo ' + Math.min(9, c.andou || 0) + ((c.andou || 0) >= 3 ? ' (' + ['+2 de dano nos Ataques Básicos'].concat((c.andou || 0) >= 6 ? ['+1 na Defesa'] : [], (c.andou || 0) >= 9 ? ['−1 de dano de cada ataque'] : []).join(', ') + ')' : ' (sem bônus)')); }
     if (c.k === 'fantasma') add('Movimento Fantasma', '+1 casa');
     if (c.k === 'drive') add('Além da Estrada', '+1 casa · ele e aliados ao lado não perdem deslocamento nem ações');
     else if (estrada(c)) L.push(['Além da Estrada', 'ao lado do D.R.I.V.E.: não perde deslocamento nem ações']);
@@ -8428,7 +8428,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       Object.keys(d0).forEach(b => { if (b === c.pos) return; const db = dist(b, x.pos); if ((apv && db < d1) || (sf && d1 > 3 && db <= 3)) delete d0[b]; }); }); }
     return { d: d0, pai };
   }
-  function caminhoMover(c, de, para){ if (!de || !para) return []; const m = mapaMover(Object.assign({}, c, { pos: de }), 99), out = []; let p = para, g = 0; if (!(p in m.d)) return caminho(de, para); while (p !== de && g++ < 99) { out.unshift(p); p = m.pai[p]; } return out; }
+  function caminhoMover(c, de, para){ if (!de || !para) return []; const p0 = c.pos; let m; c.pos = de; try { m = mapaMover(c, 99); } finally { c.pos = p0; } const out = []; let p = para, g = 0; if (!(p in m.d)) return caminho(de, para); while (p !== de && g++ < 99) { out.unshift(p); p = m.pai[p]; } return out; }
   function caminho(a, b){ const out = []; let p = a, g = 0; if (!a || !b) return out; while (p !== b && g++ < 40) { const nx = vizinhas(p).sort((x, y) => dist(x, b) - dist(y, b))[0]; if (!nx) break; out.push(nx); p = nx; } return out; }
   function addTatF(t, n, autor, exp, acaba){ let e = (t.efs || []).find(x => x.tatF); if (!e) { novoEf(t, { nome: 'Fechar o Braço', autor, faz: 'Tatuagens que não borram', acaba, exp, mods: {}, tatF: [] }); e = t.efs.find(x => x.tatF); } if (!e.tatF.includes(n)) e.tatF.push(n); e.faz = e.tatF.join(', ') + ' (não borram)'; }
   // ondas da Misericórdia Divina no fim do turno do Superior
