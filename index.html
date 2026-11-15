@@ -5508,6 +5508,14 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     return t;
   }
   // Pincelada: inimigo que entra ou começa o turno numa casa de Tinta faz a Aquarela testar Visão (+1 Mancha)
+  function armAplica(c, es, tp, id, semTele){
+    const j = timeDe(c), nE = CH[es.k].nome, OUT = []; let PAR = false;
+        if (tp === 'Mandíbula') { const q = sofrerDano(c, 1, { ataque: true, atk: es }); aplicarEf(c, { nome: 'Armadilha: Mandíbula', autor: nE, faz: 'Imóvel', acaba: 'no fim do próximo turno de ' + CH[c.k].nome, exp: { t: 'fim', ref: refDe(c), pula: ehAtivo(c) ? 1 : 0 }, mods: { imo: true } }); OUT.push('Mandíbula −' + q.real + ' PV e Imóvel'); PAR = true; }
+        if (tp === 'Laço') { const q = sofrerDano(c, 1, { ataque: true, atk: es }); aplicarEf(c, { nome: 'Armadilha: Laço', autor: nE, faz: '−1 na Defesa', acaba: 'no início do próximo turno de ' + nE, exp: { t: 'ini', ref: refDe(es) }, mods: { df: -1 } }); OUT.push('Laço −' + q.real + ' PV e −1 na Defesa'); if (!SECO && !semTele) armTeleG = { t: 'teleporte', alvo: refDe(c).split(',').map(Number), de: id, alc: 2, tit: '➰ Laço: puxe ' + CH[c.k].nome + ' até 2 casas para onde quiser (ou cancele)' }; PAR = true; }
+        if (tp === 'Espinhos Envenenados') { if (c.k === 'ignifrost') OUT.push('Espinhos: Ignifrost é imune a Dano Contínuo'); else { c.dcv = Math.max(c.dcv || 0, 2); c.dcn = Math.max(c.dcn || 0, 2); OUT.push('Espinhos: Dano Contínuo 2 por 2 rodadas'); } }
+        if (tp === 'Explosiva') { const q = sofrerDano(c, 2, { ataque: true, atk: es }); const viz = S.times[j].filter(x => x !== c && !x.elim && x.pos && dist(x.pos, id) === 1); OUT.push('Explosiva −' + q.real + ' PV' + viz.map(x => { const q2 = sofrerDano(x, 2, { ataque: true, atk: es }); return ', ' + CH[x.k].nome + ' −' + q2.real; }).join('')); }
+    return { txt: OUT.join('; '), parou: PAR };
+  }
   // Armadilha de Caça: inimigo que entra na casa dispara (teste de Visão do Espreitador; errou = some sem efeito)
   let armTeleG = null;
   function armTeste(c, cam){
@@ -5519,14 +5527,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (!es || es.elim) { out.push('🪤 a Armadilha em ' + id + ' se desfez'); continue; }
       const n = Math.max(1, aptE(es, 2) + mod(es, 'dd') + dadosCen(es, 2)), v = rolarD10(n), def = clamp(defesas(c)[2] + adef(es), 2, 10), ok = Math.max(...v) >= def; regAuto({ q: es, t: 'Armadilha de Caça' + (z.opc ? ' (' + z.opc + ')' : ''), apt: 2, d: v, al: [{ t: c, def, ok }], sim: 'a armadilha dispara', nao: 'a armadilha se desfaz' });
       if (!ok) { out.push('🪤 Armadilha (' + (z.opc || '?') + ') em ' + id + ' [' + v.join(',') + ' vs ' + def + ']: errou e se desfez'); continue; }
-      const fx = []; let parou = false; const nE = CH[es.k].nome;
-      tps.forEach(tp => {
-        if (c.elim) return;
-        if (tp === 'Mandíbula') { const q = sofrerDano(c, 1, { ataque: true, atk: es }); aplicarEf(c, { nome: 'Armadilha: Mandíbula', autor: nE, faz: 'Imóvel', acaba: 'no fim do próximo turno de ' + CH[c.k].nome, exp: { t: 'fim', ref: refDe(c), pula: ehAtivo(c) ? 1 : 0 }, mods: { imo: true } }); fx.push('Mandíbula −' + q.real + ' PV e Imóvel'); parou = true; }
-        if (tp === 'Laço') { const q = sofrerDano(c, 1, { ataque: true, atk: es }); aplicarEf(c, { nome: 'Armadilha: Laço', autor: nE, faz: '−1 na Defesa', acaba: 'no início do próximo turno de ' + nE, exp: { t: 'ini', ref: refDe(es) }, mods: { df: -1 } }); fx.push('Laço −' + q.real + ' PV e −1 na Defesa'); if (!SECO) armTeleG = { t: 'teleporte', alvo: refDe(c).split(',').map(Number), de: id, alc: 2, tit: '➰ Laço: puxe ' + CH[c.k].nome + ' até 2 casas para onde quiser (ou cancele)' }; parou = true; }
-        if (tp === 'Espinhos Envenenados') { if (c.k === 'ignifrost') fx.push('Espinhos: Ignifrost é imune a Dano Contínuo'); else { c.dcv = Math.max(c.dcv || 0, 2); c.dcn = Math.max(c.dcn || 0, 2); fx.push('Espinhos: Dano Contínuo 2 por 2 rodadas'); } }
-        if (tp === 'Explosiva') { const q = sofrerDano(c, 2, { ataque: true, atk: es }); const viz = S.times[j].filter(x => x !== c && !x.elim && x.pos && dist(x.pos, id) === 1); fx.push('Explosiva −' + q.real + ' PV' + viz.map(x => { const q2 = sofrerDano(x, 2, { ataque: true, atk: es }); return ', ' + CH[x.k].nome + ' −' + q2.real; }).join('')); }
-      });
+      const fx = []; let parou = false;
+      tps.forEach(tp => { if (c.elim) return; const o = armAplica(c, es, tp, id); fx.push(o.txt); if (o.parou) parou = true; });
       if (parou) c._armStop = true;
       if (parou && !c.elim && c.pos !== id && !ocupante(id)) { semGat++; try { moverPeca(c, id); } finally { semGat--; } }
       out.push('🪤 Armadilha em ' + id + ' [' + v.join(',') + ' vs ' + def + ']: ' + fx.join('; ') + (parou ? ' (parou ali)' : ''));
@@ -6947,7 +6949,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   }
   // ── passivas com efeito que se ativa ──
   const H_TOCAIA = { n: 'Tiro de Tocaia', t: ['ATAQUE'], a: 'TODO TABULEIRO', c: 0, x: 2, d: 'No início do turno, sem gastar ação: teste de Visão contra todos os inimigos a 4 casas ou mais. Quem for atingido sofre 4 de dano (2 do tiro e +2 da Caça Covarde).', p: null, k: '🎯 Projétil', m: '' };
-  const tocaiaAlvos = c => pecas((j, i, x) => j !== S.ativo[0] && x.pos && c.pos && dP(c.pos, x) >= 4);
+  const tocaiaAlvos = c => pecas((j, i, x) => j !== S.ativo[0] && x.pos && c.pos && dP(c.pos, x) >= 4 && !temEf(x, 'intocavel') && !bloqMira(c, x, true) && !(S.cen === 'fazenda' && MATO.includes(x.pos[0])));
   const PASM = { gatoxadrez: ['Movimentação Aguçada', 2, 'até 2 casas no começo do turno'], andarilho: ['Recompensando a Caminhada', 0, 'um Mover por turno'], johnny: ['Instinto Predatório', 2, 'até 2 casas em direção a um inimigo com Dano Contínuo'], promessa: ['Voto de Proteção', 3, 'até 3 casas em direção a um aliado atacado desde o último turno dela'] };
   // Todos Sou Eu: cada Cópia dá 1 Ataque Básico grátis por turno num inimigo adjacente a ela
   const copiasLivres = c => (S.est || []).filter(z => z.tipo === 'Cópia' && z.dono === S.ativo[0] && z.cell && !(c.copAtk || []).includes(z.id));
@@ -7114,7 +7116,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (nm === 'Execução Final' && L[0] && T(L[0].alvo).elim) mv(3, nm);
     if (r.aprim && nm === 'Formas' && r.ops && r.ops[r.opSel[0]].nome === 'Ágil') mv(3, 'Formas (Ágil)');
     if (r.aprim && nm === 'Formas' && r.ops && r.ops[r.opSel[0]].nome === 'Colosso') Q.push({ t: 'auto', fn: m => S.times[1 - aj].forEach(x => { if (!x.elim && x.pos && c.pos && dP(c.pos, x) === 1) m.push(...empurrar(x, c.pos, 1, {})); }), log: 'Colosso empurrou os inimigos no Raio 1' });
-    if (nm === 'Armadilha de Caça' && r.ops && r.opSel.some(i => r.ops[i].nome === 'Laço')) ok.forEach(a => Q.push({ t: 'teleporte', alvo: a, de: T(a).pos, alc: 2, tit: '➰ Laço: puxe ' + nmC(a) + ' até 2 casas para onde quiser (ou cancele)' }));
+    if (nm === 'Armadilha de Caça' && r.aprim && c.pos) { const tps = r.ops ? r.opSel.map(i => r.ops[i].nome) : ['Mandíbula']; const tp2 = tps[1] || tps[0]; Q.push({ t: 'estrutura', tipo: 'Armadilha', dono: aj, resta: 1, de: c.pos, alc: 3, arm: { opc: tp2, autor: refDe(c), autorNome: CH[c.k].nome, aprim: true }, tit: '🪤 Medidor: toque na casa da 2ª armadilha (' + tp2 + ', até 3 casas)' }); }
+    if (nm === 'Armadilha de Caça' && r.ops && r.ops[r.opSel[0]].nome === 'Laço') ok.forEach(a => Q.push({ t: 'teleporte', alvo: a, de: T(a).pos, alc: 2, tit: '➰ Laço: puxe ' + nmC(a) + ' até 2 casas para onde quiser (ou cancele)' }));
     if (r.sup && nm === 'Singularidade') Q.push({ t: 'auto', fn: m => L.forEach(l => { const t = T(l.alvo); if (l.alvo[0] === aj || t.elim || !t.pos || !c.pos) return; const d2 = dP(c.pos, t), base = d2 <= 1 ? 8 : d2 <= 2 ? 4 : 0, v = l.ok ? base : Math.floor(base / 2); if (v) { const q = sofrerDano(t, v, { ataque: true }); m.push(CH[t.k].nome + ' −' + q.real + ' PV (Raio ' + d2 + ')'); } }), log: '🕳️ Singularidade' });
     if (r.sup && nm === 'Passagem da Morte') ok.forEach(a => Q.push({ t: 'empDir', alvo: a, n: 2, tit: '🚐 Empurre ' + nmC(a) + ' 2 casas para fora da faixa' }));
     if (nm === 'Sumir no Mato') mv(r.aprim ? 5 : 3, 'Sumir no Mato');
@@ -7513,7 +7516,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function destaquesModo(){
     const out = { casas: new Set(), toks: new Set() };
     const c = ativoC(); if (!modo) return out;
-    if (modo.t === 'estrutura') { if (modo.cop) copVagas(modo).forEach(id => out.casas.add(id)); else CELLS.forEach(x => { if (!bloqueada(x.id)) out.casas.add(x.id); }); return out; }
+    if (modo.t === 'estrutura') { if (modo.cop) copVagas(modo).forEach(id => out.casas.add(id)); else CELLS.forEach(x => { if (!bloqueada(x.id) && (!modo.de || dist(modo.de, x.id) <= (modo.alc || 99))) out.casas.add(x.id); }); return out; }
     if (!c) return out;
     if (modo.t === 'mover' && c.pos) {
       const desl = modo.desl || deslDe(c);
@@ -7567,9 +7570,10 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       if (tipo === 'Domínio' && modo.dom) { const ca = ativoC(); if ((modo.feitas || 1) === 2) { if (!ca || restam(ca) < 1) { modo = null; toast('Domínio: mais de 2 casas custa 2 ações, e não sobrou ação', 2400); rPainel(); rBoard(); return true; } domPaga = true; } modo.feitas = (modo.feitas || 1) + 1; }
       if (ESTI[tipo] && ESTI[tipo][2] && estNa(cellId).length) { toast('Obstáculo só pode surgir numa casa sem nenhuma Estrutura', 1800); return true; }
       if (modo.resta > 1) { modo.resta--; } else modo = null;
-      mudar(() => { S.est = S.est || []; const ne = { id: Date.now() + '' + d(999), tipo, cell: cellId, dono, acaba: tipo === 'Domínio' ? 'quando for desfeito' : undefined }; if (modo0.autor) { ne.autor = modo0.autor; ne.aprim = !!modo0.aprim; ne.hab = 'Bomba de Magma'; ne.autorNome = 'Kazan'; } if (domPaga) { const ca = ativoC(); if (ca) ca.gastas = Math.min(ca.acts, ca.gastas + 1); } const hp = { Galho: 'Brotamento', Campo: 'Contendo o Mal', Miasma: 'Miasma' }[tipo]; if (hp) { const a = AURAS[hp]({}, []); a.nome = hp; ne.auras = [a]; ne.hab = hp; } S.est.push(ne); if (tipo === 'Domínio') limitarDominio(dono); if (tipo === 'Pássaro') limitarPassaros(dono); }, ESTI[tipo][1] + ' ' + tipo + ' colocado em ' + cellId + '.' + (domPaga ? ' (a 3ª casa custou a 2ª ação do Domínio)' : ''));
+      mudar(() => { S.est = S.est || []; const ne = { id: Date.now() + '' + d(999), tipo, cell: cellId, dono, acaba: tipo === 'Domínio' ? 'quando for desfeito' : undefined }; if (modo0.autor) { ne.autor = modo0.autor; ne.aprim = !!modo0.aprim; ne.hab = 'Bomba de Magma'; ne.autorNome = 'Kazan'; } if (modo0.arm) { Object.assign(ne, modo0.arm); ne.hab = 'Armadilha de Caça'; ne.acaba = 'quando disparar ou for substituída'; ne.info = 'Armadilha ' + modo0.arm.opc + ': dispara quando um inimigo entra na casa (teste de Visão do Espreitador).'; } if (domPaga) { const ca = ativoC(); if (ca) ca.gastas = Math.min(ca.acts, ca.gastas + 1); } const hp = { Galho: 'Brotamento', Campo: 'Contendo o Mal', Miasma: 'Miasma' }[tipo]; if (hp) { const a = AURAS[hp]({}, []); a.nome = hp; ne.auras = [a]; ne.hab = hp; } S.est.push(ne); if (tipo === 'Domínio') limitarDominio(dono); if (tipo === 'Pássaro') limitarPassaros(dono); }, ESTI[tipo][1] + ' ' + tipo + ' colocado em ' + cellId + '.' + (domPaga ? ' (a 3ª casa custou a 2ª ação do Domínio)' : ''));
       if (tipo === 'Cópia' && modo0.cop) { mudar(() => { const mi = S.est.filter(z => z.tipo === 'Cópia' && z.dono === dono); if (mi.length > 3) S.est = S.est.filter(z => z !== mi[0]); }, '👥 Cópia criada em ' + cellId + '.'); if (!modo && filaPos.length) setTimeout(proximoPos, 50); }
       if (tipo === 'Bomba' && modo0.autor && !modo) setTimeout(() => limitarBombas(modo0.autor), 60);
+      if (modo0.arm) { const oc = ocupante(cellId); let lg = []; mudar(() => { const mi = S.est.filter(z => z.tipo === 'Armadilha' && z.autor === modo0.arm.autor); if (mi.length > 3) { S.est = S.est.filter(z => z !== mi[0]); lg.push('a armadilha mais antiga (' + mi[0].cell + ') se desfez'); } if (oc && oc[0] !== dono) { const x = S.times[oc[0]][oc[1]]; semGat++; try { lg = lg.concat(armTeste(x, [cellId])); } finally { semGat--; } } }, '🪤 2ª Armadilha (' + modo0.arm.opc + ') em ' + cellId + '.'); if (lg.length) toast(lg.join('; '), 3200); if (!modo && filaPos.length) setTimeout(proximoPos, 50); }
       rPainel(); return true;
     }
     if (!c) { modo = null; return false; }
@@ -8136,6 +8140,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (!c || !x || !c.pos || !x.pos) return false;
     const fz = (c.efs || []).find(e => e.fumC); if (fz && x !== c && dist(x.pos, fz.fumC.cell) > 1) return true;
     if (atk && timeDe(x) !== timeDe(c) && temEf(x, 'nuva') && dP(c.pos, x) > 2) return true;
+    if (atk && timeDe(x) !== timeDe(c) && temEf(x, 'sumido') && dP(c.pos, x) >= 3) return true;
     return false;
   }
   // Mercado Negro (Contrabandista): Itens e Contrabandos
@@ -8327,7 +8332,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (h.n === 'Até que a Morte nos Separe') ops = null;
     if (c.k === 'reator' && h.n === 'Blindagem Nuclear') ops = rec(c, 'Cargas') ? [{ nome: '1 Carga', txt: '+1 na Defesa', cargas: 1 }].concat(rec(c, 'Cargas') >= 2 ? [{ nome: '2 Cargas', txt: '+2 na Defesa', cargas: 2 }] : []) : [{ nome: 'Sem Cargas', txt: '+1 casa de deslocamento' }];
     if (c.k === 'reator' && h.n === 'Blindagem Nuclear' && m.aprim) {}
-    const multi = !!(ops && m.aprim && h.p && /as duas|os dois|Os dois|Aplica as duas|Aplica duas/.test(limpo(h.p)));
+    const multi = !!(ops && m.aprim && h.n === 'Armadilha de Caça') || !!(ops && m.aprim && h.p && /as duas|os dois|Os dois|Aplica as duas|Aplica duas/.test(limpo(h.p)));
     c.habAtual = h.k || '';
     const ex = h.x >= 0 ? dadosExtra(c) : { n: 0, notas: [] };
     if (h.x >= 0 && geloB(c)) { ex.n += 1; ex.notas.push('Gëlo Entogan: 2ª habilidade ou palavra do turno, +1 dado e +1 casa de alcance'); }
@@ -8344,7 +8349,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       titulo: (m.sup ? '★ ' : tipoIcone(h) + ' ') + h.n.toUpperCase() + (m.aprim ? ' ⚡' : ''),
       sub: ch.nome + ' · ' + custoH(c, h) + (custoH(c, h) > 1 ? ' ações' : ' ação') + (m.sup ? ' + 3 Medidor' : m.aprim ? ' + 1 Medidor' : '') + (h.x >= 0 ? ' · teste de ' + APT[h.x] + ' com ' + n + (n > 1 ? ' dados' : ' dado') : ' · sem teste'),
       dados: v, def: null, max: v.length ? Math.max(...v) : 0, notas: ex.notas.concat(h.m ? ['↪ ' + limpo(h.m)] : [], h.k ? [h.k + ': ' + ({ '🥊 Golpe': 'ativa reações de contato; pode ser Defletido', '🎯 Projétil': 'para em qualquer Obstáculo no caminho; pode ser Defletido', '⚡ Energia': 'não pode ser Defletida', '🧠 Mental': 'ignora Obstáculos e Fumaça; não pode ser Defletida' }[h.k] || '')] : [], v.length && cpDe(c).mal ? ['Contraprova: rerrole os dados que passaram da Defesa e use os novos'] : [], v.length && cpDe(c).bem ? ['Contraprova: pode rerrolar 1 dado que não passou'] : [], c.k === 'axioma' && v.includes(10) ? ['Incontestável: tirou 10, os inimigos testados perdem os bônus na Defesa e 1 ação'] : []), desc: h.d + (m.aprim && h.p ? '<div class="hab-med"><span class="pill t-med">APRIMORADO</span> ' + h.p + '</div>' : ''),
-      custo: custoH(c, h), nome: h.n, sup: m.sup, aprim: m.aprim, ops, multi, opSel: ops ? [0].concat(multi ? ops.map((_, i) => i).slice(1) : []) : null, m, h, usouDados: h.x >= 0,
+      custo: custoH(c, h), nome: h.n, sup: m.sup, aprim: m.aprim, ops, multi, opSel: ops ? [0].concat(multi && h.n !== 'Armadilha de Caça' ? ops.map((_, i) => i).slice(1) : []) : null, m, h, usouDados: h.x >= 0,
       ataque: h.t.includes('ATAQUE')
     };
     if (c.k === 'reator' && pagarCargas && rec(c, 'Cargas') >= 2 && h.n !== 'Blindagem Nuclear') { r.custo = 0; r.pagaCargas = true; r.notas = r.notas.concat('⚛️ paga com 2 Cargas no lugar das ações'); }
@@ -8443,6 +8448,16 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const inimR = n => pecas((j, i, x) => j !== aj && x.pos && c.pos && dP(c.pos, x) <= n);
     const hits = linhasR.filter(l => ini(l) && l.ok).length;
     switch (h.n) {
+      case 'Sumir no Mato':
+        extras.push(supFx('🌾 Escondido: não pode ser alvo de ataques feitos a 3 casas ou mais, até o início do próximo turno de ' + nm, () => novoEf(c, { nome: 'Sumir no Mato', autor: nm, faz: 'não pode ser alvo de ataques feitos a 3 casas ou mais', acaba: txtIni, exp: iniT, mods: {}, sumido: true })));
+        break;
+      case 'Armadilha de Caça': {
+        const tps = r.ops ? r.opSel.map(i => r.ops[i].nome) : ['Mandíbula'], tp1 = tps[0];
+        let naHora = false;
+        linhasR.forEach(l => { if (!ini(l)) return; naHora = true; l.ef = [];
+          if (l.ok) fx(l, '🪤 Armadilha ' + tp1 + ' dispara na hora', (t, msg) => { const o = armAplica(t, c, tp1, t.pos, true); if (msg && msg.push) msg.push('🪤 ' + o.txt); });
+          else fx(l, '🪤 errou: a armadilha se desfaz sem efeito', () => {}); });
+        break; }
       case 'Relâmpago': {
         const t0 = linhasR[0] && T(linhasR[0].alvo), dEst = 4 + bonusDn;
         linhasR.forEach(l => { if (!ini(l)) return; l.ef = l.ef.filter(e => e.k === 'dano');
@@ -9321,7 +9336,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     });
     if (c.k === 'oliva' && h.x >= 0) linhasR.forEach(l => { if (l.alvo[0] === aj) return; const dm = /Defesa (\d+)/.exec(l.txt || ''); if (dm && r.dados.filter(x => x >= +dm[1]).length >= 2) l.ef.push(supFx('O X Marca o Lugar: −1 dado contra Azeitona e −1 na Defesa contra ela', t => marcarX(c, t))); });
     if (G2.includes(h.base || h.n)) { const g2 = h.base || h.n; if (c.ofGratis === g2) extras.push(supFx('2ª peça (sem custo)', () => { c.ofGratis = false; })); else if (r.aprim) extras.push(supFx('Medidor: faça a 2ª (toque de novo em ' + (g2 === 'Oficina de Campo' ? 'Barricada, Torreta ou Escudo de Aço' : g2) + ', sem custo)', () => { c.ofGratis = g2; })); }
-    if (m.sup || ['Sobrecarga', 'Domínio do Vento', 'Forma Líquida', 'Investida Alada', 'Arrasto Telecinético', 'Elo de Sangue', 'Toque Sanguessuga', 'Absolvição', 'Custódia', 'Amor Cego', 'Amor à Primeira Vista', 'Sessão Rápida', 'Tinta Gêmea', 'Relâmpago em Linha', 'Os Olhos da Morte', 'Corrente', 'Transmutação', 'Escudo de Aço', 'Barricada', 'Torreta', 'Impacto Calculado', 'Vácuo Pessoal', 'Ancorado', 'Punho Incandescente', 'Onda Congelante', 'Muralha Térmica', 'Compressão Atômica', 'Aparato de Neodímio', 'Polo Magnético', 'Atração Forçada', 'Ascensão', 'Domínio Gravitacional', 'Borrão', 'Ignição', 'Marca da Brasa', 'Tratamento de Emergência', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto', 'Retrato Vivo', 'Bote', 'Nanobots', 'Penitência', 'Garra Longa', 'Execução Silenciosa', 'Extração Vital', 'Parte da Assimilação', 'Par de Dança', 'Bloqueio Mental', 'Pensamento Intrusivo', 'Pista de Dança', 'Passo de Combate', 'Dreno de Energia', 'Velocidade Impossível', 'Corte Geométrico', 'Amarração', 'Arpéu de Pulso', 'Rede Elétrica', 'Nãna Neném', 'Véu de Ilusões', 'Acelerando Movimento', 'Reverter o Tempo', 'Marca Temporal'].concat(NOV6).includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
+    if (m.sup || ['Armadilha de Caça', 'Sumir no Mato', 'Sobrecarga', 'Domínio do Vento', 'Forma Líquida', 'Investida Alada', 'Arrasto Telecinético', 'Elo de Sangue', 'Toque Sanguessuga', 'Absolvição', 'Custódia', 'Amor Cego', 'Amor à Primeira Vista', 'Sessão Rápida', 'Tinta Gêmea', 'Relâmpago em Linha', 'Os Olhos da Morte', 'Corrente', 'Transmutação', 'Escudo de Aço', 'Barricada', 'Torreta', 'Impacto Calculado', 'Vácuo Pessoal', 'Ancorado', 'Punho Incandescente', 'Onda Congelante', 'Muralha Térmica', 'Compressão Atômica', 'Aparato de Neodímio', 'Polo Magnético', 'Atração Forçada', 'Ascensão', 'Domínio Gravitacional', 'Borrão', 'Ignição', 'Marca da Brasa', 'Tratamento de Emergência', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto', 'Retrato Vivo', 'Bote', 'Nanobots', 'Penitência', 'Garra Longa', 'Execução Silenciosa', 'Extração Vital', 'Parte da Assimilação', 'Par de Dança', 'Bloqueio Mental', 'Pensamento Intrusivo', 'Pista de Dança', 'Passo de Combate', 'Dreno de Energia', 'Velocidade Impossível', 'Corte Geométrico', 'Amarração', 'Arpéu de Pulso', 'Rede Elétrica', 'Nãna Neném', 'Véu de Ilusões', 'Acelerando Movimento', 'Reverter o Tempo', 'Marca Temporal'].concat(NOV6).includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
     const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (ef.aprox && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome });
     { const mTxt = limpo(h.m || '');
@@ -9336,7 +9351,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
       const linha = alvosDe(h, r.aprim).casas.filter(([, di]) => di === m.dir).map(([id]) => id);
       pecas((pj, pi, x) => pj === aj && x !== c && !x.carona && x.pos && linha.some(id => dist(id, x.pos) <= 1)).forEach(p => extras.push({ k: 'carona', v: p, on: false, txt: CH[S.times[p[0]][p[1]].k].nome + ' sobe no veículo (grátis)' }));
     }
-    if (m.cel && h.t.includes('ESTRUTURA') && h.n !== 'Fenda Espacial' && h.n !== 'Pincelada' && h.n !== 'Retrato Vivo') { const tp = tipoEstrutura(h); ((h.n === 'Cortina de Fumaça' || h.n === 'Muralha Térmica') && m.faixa ? m.faixa : [m.cel]).forEach(cc => extras.push({ k: 'est', v: [tp, cc], on: true, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + cc })); }
+    if (h.n === 'Armadilha de Caça' && m.cel) { const oc = ocupante(m.cel), tp1 = r.ops ? r.ops[r.opSel[0]].nome : 'Mandíbula'; if (!(oc && oc[0] !== aj)) extras.push({ k: 'est', v: ['Armadilha', m.cel], opc: tp1, on: true, txt: 'Colocar 🪤 Armadilha (' + tp1 + ') em ' + m.cel }); }
+    else if (m.cel && h.t.includes('ESTRUTURA') && h.n !== 'Fenda Espacial' && h.n !== 'Pincelada' && h.n !== 'Retrato Vivo') { const tp = tipoEstrutura(h); ((h.n === 'Cortina de Fumaça' || h.n === 'Muralha Térmica') && m.faixa ? m.faixa : [m.cel]).forEach(cc => extras.push({ k: 'est', v: [tp, cc], on: true, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + cc })); }
     if (m.cel && !ef.ocupar && h.t.includes('MOBILIDADE') && h.n !== 'Fenda Espacial' && !(h.n === 'Salto no Espaço' && m.aprim) && /aparece|desloca\b|despenca|avança|desliza|dispara/i.test(h.d) && !ocupante(m.cel)) extras.push({ k: 'mover', v: m.cel, on: true, txt: 'Mover ' + ch.nome + ' para ' + m.cel });
     if (!m.cel && h.t.includes('ESTRUTURA') && c.pos && h.a === 'PESSOAL' && h.n !== 'Rastro Infernal' && h.n !== 'Marca Temporal') { const tp = tipoEstrutura(h); extras.push({ k: 'est', v: [tp, c.pos], on: false, txt: 'Colocar ' + ESTI[tp][1] + ' ' + tp + ' em ' + c.pos }); }
     if (AURA_APAR.includes(h.n)) {
@@ -9536,7 +9552,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
         if (ex.k === 'est') {
           S.est = S.est || [];
           const du = duracaoEf(limpo(r.desc || ''), c, c), opN = r.ops ? r.opSel.map(i => r.ops[i].nome) : [];
-          const ne = { id: Date.now() + '' + d(999), tipo: ex.v[0], cell: ex.v[1], dono: aj, hab: r.nome || '', aprim: !!r.aprim, autor: refDe(c), autorNome: CH[c.k].nome, opc: opN.join(' + '), acaba: SEMFIM.includes(ex.v[0]) ? 'quando for removida' : du.txt, exp: (du.exp.t === 'man' || SEMFIM.includes(ex.v[0])) ? null : du.exp,
+          const ne = { id: Date.now() + '' + d(999), tipo: ex.v[0], cell: ex.v[1], dono: aj, hab: r.nome || '', aprim: !!r.aprim, autor: refDe(c), autorNome: CH[c.k].nome, opc: ex.opc || opN.join(' + '), acaba: SEMFIM.includes(ex.v[0]) ? 'quando for removida' : du.txt, exp: (du.exp.t === 'man' || SEMFIM.includes(ex.v[0])) ? null : du.exp,
             info: limpo(r.desc || '').split(/(?<=\.)\s/).slice(0, 3).join(' ') };
           if (AURAS[r.nome]) { const a = AURAS[r.nome](r, opN); a.nome = r.nome; ne.auras = [a]; }
           if (ne.tipo === 'Muralha') { if (ocupante(ne.cell)) { msg.push('a Muralha não surgiu em ' + ne.cell + ' (casa ocupada)'); return; } const lote = (r._lote = r._lote || (Date.now() + '' + d(999))); S.est = S.est.filter(z => !(z.tipo === 'Muralha' && z.autor === ne.autor && z.lote !== lote)); ne.lote = lote; }
@@ -9620,7 +9636,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     if (reacApos && !(r.pend && !r.rolado)) { r.reacT = reacApos; reacApos = null; }
     if (r.reacT) aplicarReac(r);
     if (r.pend && !r.rolado) {
-      const opsP = r.ops ? '<div class="rs-ops"><b>' + (r.multi ? 'ESCOLHA OS EFEITOS ANTES DE ROLAR (aprimorado: pode marcar os dois)' : 'ESCOLHA O EFEITO ANTES DE ROLAR') + '</b>' + r.ops.map((o, i) => '<button data-op="' + i + '" class="' + (r.opSel.includes(i) ? 'on' : '') + '"><strong>' + o.nome + '</strong><small>' + o.txt + '</small></button>').join('') + '</div>' : '';
+      const opsP = r.ops ? '<div class="rs-ops"><b>' + (r.multi ? (r.nome === 'Armadilha de Caça' ? 'ESCOLHA AS 2 ARMADILHAS (1 marcada = duas iguais)' : 'ESCOLHA OS EFEITOS ANTES DE ROLAR (aprimorado: pode marcar os dois)') : 'ESCOLHA O EFEITO ANTES DE ROLAR') + '</b>' + r.ops.map((o, i) => '<button data-op="' + i + '" class="' + (r.opSel.includes(i) ? 'on' : '') + '"><strong>' + o.nome + '</strong><small>' + o.txt + '</small></button>').join('') + '</div>' : '';
       $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>' + r.titulo + '</h3><button class="modal-x" data-fecha title="Fechar sem usar">✕</button></div><div class="dd-corpo"><p class="rs-sub">' + r.sub + '</p>' +
         (r.notas.length ? '<p class="rs-nota">' + r.notas.join(' · ') + '</p>' : '') + opsP + reacHtml(r) +
         (r.desc ? '<details class="rs-desc"><summary>O que a ficha diz</summary><p>' + r.desc + '</p></details>' : '') +
@@ -9632,7 +9648,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const defL = r.def !== null && r.def !== undefined ? r.def : (() => { const ds = (r.linhas || []).map(l => +((/Defesa (\d+)/.exec(l.txt || '') || [])[1] || 0)).filter(Boolean); return ds.length ? Math.min(...ds) : null; })();
     const dadosH = r.dados.length ? '<div class="dd-dados">' + r.dados.map((x, n) => '<i style="animation-delay:' + n * 70 + 'ms" class="' + (defL !== null ? (x >= defL ? 'hit' : 'miss') : (x === r.max ? 'hit' : 'miss')) + '">' + x + '</i>').join('') + '</div>' : '';
     const trav = !!(r.pend && r.rolado);
-    const opsH = r.ops ? '<div class="rs-ops' + (trav ? ' trav' : '') + '"><b>' + (trav ? 'EFEITO ESCOLHIDO' : r.multi ? 'EFEITOS (aprimorado: pode marcar os dois)' : 'ESCOLHA O EFEITO') + '</b>' + r.ops.map((o, i) => trav && !r.opSel.includes(i) ? '' : '<button ' + (trav ? 'disabled ' : '') + 'data-op="' + i + '" class="' + (r.opSel.includes(i) ? 'on' : '') + '"><strong>' + o.nome + '</strong><small>' + o.txt + '</small></button>').join('') + '</div>' : '';
+    const opsH = r.ops ? '<div class="rs-ops' + (trav ? ' trav' : '') + '"><b>' + (trav ? 'EFEITO ESCOLHIDO' : r.multi ? (r.nome === 'Armadilha de Caça' ? 'ARMADILHAS (1ª na casa tocada, 2ª depois)' : 'EFEITOS (aprimorado: pode marcar os dois)') : 'ESCOLHA O EFEITO') + '</b>' + r.ops.map((o, i) => trav && !r.opSel.includes(i) ? '' : '<button ' + (trav ? 'disabled ' : '') + 'data-op="' + i + '" class="' + (r.opSel.includes(i) ? 'on' : '') + '"><strong>' + o.nome + '</strong><small>' + o.txt + '</small></button>').join('') + '</div>' : '';
     let lin = r.linhas.map((l, li) => {
       const t = S.times[l.alvo[0]][l.alvo[1]];
       return '<div class="rs-alvo ' + (l.ok ? 'ok' : 'no') + '"><div class="rs-h"><span>' + CH[t.k].icon + '</span><b>' + CH[t.k].nome + '</b><em>' + l.txt + '</em></div>' +
@@ -9662,9 +9678,9 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const ob = e.target.closest('[data-op]');
     if (ob) {
       if (res.pend && res.rolado) return;
-      if (res.pend && !res.rolado) { const i = +ob.dataset.op; if (res.multi) { res.opSel = res.opSel.includes(i) ? res.opSel.filter(x => x !== i) : res.opSel.concat(i); if (!res.opSel.length) res.opSel = [i]; } else res.opSel = [i]; mostrarResultado(res); return; }
+      if (res.pend && !res.rolado) { const i = +ob.dataset.op; if (res.multi) { res.opSel = res.opSel.includes(i) ? res.opSel.filter(x => x !== i) : res.opSel.concat(i); if (!res.opSel.length) res.opSel = [i]; if (res.nome === 'Armadilha de Caça') res.opSel = res.opSel.slice(-2); } else res.opSel = [i]; mostrarResultado(res); return; }
       const i = +ob.dataset.op;
-      if (res.multi) { res.opSel = res.opSel.includes(i) ? res.opSel.filter(x => x !== i) : res.opSel.concat(i); if (!res.opSel.length) res.opSel = [i]; }
+      if (res.multi) { res.opSel = res.opSel.includes(i) ? res.opSel.filter(x => x !== i) : res.opSel.concat(i); if (!res.opSel.length) res.opSel = [i]; if (res.nome === 'Armadilha de Caça') res.opSel = res.opSel.slice(-2); }
       else res.opSel = [i];
       montar(res); mostrarResultado(res); return;
     }
