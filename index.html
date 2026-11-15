@@ -5628,7 +5628,7 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
   function novoEf(alvo, e){
     alvo.efs = alvo.efs || [];
     if (alvo.efs.some(z => z.imuPen) && !e.imuPen) { const m = e.mods || {}; if ((m.apt && m.apt.some(v => v < 0)) || (ehPen(e) && !['df', 'dd', 'dn', 'ds', 'imo', 'dr', 'cr'].some(k => m[k]))) { evento('🕊️ ' + CH[alvo.k].nome + ' está imune a Penalidades (Inocência)'); return; } }
-    if (e.nome && !(e.mods && e.mods.est) && !e.possE) { const ig = alvo.efs.filter(x => x.nome === e.nome && (x.autor || '') === (e.autor || '') && (x.faz || '') === (e.faz || '') && !x.possE);
+    if (e.nome && !(e.mods && e.mods.est) && !e.possE) { const ig = alvo.efs.filter(x => x.nome === e.nome && (x.autor || '') === (e.autor || '') && !x.possE);
       if (ig.length) { ig.forEach(x => desfazerMods(alvo, x)); alvo.efs = alvo.efs.filter(x => !ig.includes(x)); if (e.mods && e.mods.imo) alvo.imo = true; } }
     alvo.efs.push(Object.assign({ id: Date.now() + '' + d(9999), r: S.rodada }, e));
   }
@@ -5882,7 +5882,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
     const out = [];
     if (!c || !c.pos || !S.est) return out;
     const tj = timeDe(c);
-    S.est.forEach(e => (e.auras || []).forEach(a => { if (CELL[e.cell] && dist(e.cell, c.pos) <= a.raio) out.push([e, a, e.dono === tj]); }));
+    const vis = {};
+    S.est.forEach(e => (e.auras || []).forEach(a => { if (CELL[e.cell] && dist(e.cell, c.pos) <= a.raio) { const kk = (a.nome || e.tipo) + '|' + (e.autor || e.dono) + '|' + (a.txt || ''); if (kk in vis) out[vis[kk]] = [e, a, e.dono === tj]; else { vis[kk] = out.length; out.push([e, a, e.dono === tj]); } } }));
     return out;
   }
   const defAstBase = c => clamp(5 + aptE(c, RES[3]) + (c.df || 0), 2, 10);
@@ -9612,6 +9613,8 @@ i.emb{display:inline-block; width:22px; height:22px; border-radius:50%; backgrou
               if (oc[0] !== aj && (!l0 || !l0.ok)) { msg.push('o Aparato não prendeu em ' + CH[xo.k].nome + ' (errou)'); return; }
               ne.em = oc.join(','); ne.acaba = 'quando for arrancado ou quebrado'; msg.push('🧲 Aparato preso em ' + CH[xo.k].nome); } }
           if (r.h && r.h.base === 'Oficina de Campo') { ne.exp = { t: 'fim', ref: refDe(c), pula: 2 }; ne.acaba = 'no fim do 2º turno seguinte de ' + CH[c.k].nome; if (ne.tipo === 'Torreta') ne.info = 'No fim de cada turno de ' + CH[c.k].nome + ', teste de Visão contra o inimigo mais próximo a até 3 casas: 2 de dano.'; if (ne.tipo === 'Bloco de Aço') ne.info = 'Obstáculo: bloqueia passagem e Projéteis.'; }
+          if (['Campo', 'Miasma', 'Nuvem', 'Tempestade'].includes(ne.tipo)) { const vel = S.est.filter(z => z.tipo === ne.tipo && z.autor === ne.autor && z.hab === ne.hab); if (vel.length) { S.est = S.est.filter(z => !vel.includes(z)); msg.push(ne.hab + ': o anterior em ' + vel.map(z => z.cell).join(', ') + ' foi desfeito'); } }
+          if (ne.tipo === 'Galho' && ne.hab === 'Brotamento') { const mi = S.est.filter(z => z.tipo === 'Galho' && z.autor === ne.autor && z.hab === 'Brotamento'); if (mi.length >= 2) { S.est = S.est.filter(z => z !== mi[0]); msg.push('o Galho mais antigo (' + mi[0].cell + ') secou'); } }
           if (ne.tipo === 'Mala') { if (ocupante(ne.cell) || obstaculo(ne.cell)) { msg.push('a Mala precisa de uma casa vazia'); return; } S.est = S.est.filter(z => !(z.tipo === 'Mala' && z.autor === ne.autor)); }
           S.est.push(ne);
           if (ne.tipo === 'Domínio') { const sai = limitarDominio(ne.dono); if (sai.length) msg.push('Domínio desfeito em ' + sai.join(', ')); }
