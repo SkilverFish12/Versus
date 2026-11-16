@@ -6206,6 +6206,7 @@ body.mn-calmo .cp-po{display:none}
     if (h0.n === 'Passagem da Morte') return { tipo: 'casa', casas: CELLS.map(x => x.id), faixa: true };
     if (h0.n === 'Meia-Noite') return { tipo: 'casa', casas: CELLS.filter(x => !bloqueada(x.id) && !obstaculo(x.id) && (!ocupante(x.id) || S.times[ocupante(x.id)[0]][ocupante(x.id)[1]] === c)).map(x => x.id), meia: true };
     if (h0.n === 'Muralha Térmica') return { tipo: 'casa', casas: CELLS.filter(x => (!c.pos || dist(c.pos, x.id) <= 4) && livre(x.id) && !bloqueada(x.id) && !estNa(x.id).length).map(x => x.id), faixa: true, fumN: 2, murR: ap ? 2 : 1 };
+    if (h0.n === 'Revólver Sônico' && ap) return { tipo: 'casa', casas: CELLS.filter(x => (!c.pos || dist(c.pos, x.id) <= 5) && !bloqueada(x.id)).map(x => x.id), raioS: 1 };
     if (h0.n === 'Cortina de Fumaça') return { tipo: 'casa', casas: CELLS.filter(x => (!c.pos || dist(c.pos, x.id) <= 3) && !bloqueada(x.id)).map(x => x.id), faixa: true, fumN: ap ? 5 : 3 };
     if (h0.n === 'Algo Irreal') return { tipo: 'casa', casas: CELLS.filter(x => (!c.pos || dist(c.pos, x.id) <= 3) && livre(x.id) && !bloqueada(x.id)).map(x => x.id), iluS: true };
     if (h0.n === 'Mala Despachada') return { tipo: 'casa', casas: c.pos ? CELLS.filter(x => dist(c.pos, x.id) === 1 && livre(x.id) && !bloqueada(x.id) && !estNa(x.id).length).map(x => x.id) : [] };
@@ -6502,6 +6503,7 @@ body.mn-calmo .cp-po{display:none}
     if (a.tipo === 'peca') return 'toque no alvo' + (m.aprim && DOIS_ALVOS[m.h.n] ? ' (o Aprimorar deixa escolher um 2º)' : '');
     if (a.tipo === 'bico') return m.bico && m.bico.ops ? '🐦 Pássaro em ' + m.bico.fila[m.bico.i] + ' (' + (m.bico.i + 1) + '/' + m.bico.fila.length + '): ' + (m.aprim ? 'escolha o alvo dele' : 'empate, escolha qual inimigo mais próximo ele ataca') : 'Pássaros escolhendo alvos';
     if (a.tipo === 'casa' && m.h.n === 'Transmutação') return 'toque no Obstáculo ou na Estrutura inimiga ao lado de ' + CH[ativoC().k].nome;
+    if (a.tipo === 'casa' && a.raioS) return '⚡ toque numa casa a até 5 casas: acerta todos os inimigos no Raio 1 dela';
     if (a.tipo === 'casa') return 'toque numa casa a até ' + alcN(m.aprim ? alcAprim(m.h) : m.h) + ' casas';
     if (a.tipo === 'linha') return m.dir === undefined ? 'toque numa casa amarela para escolher a direção' : (m.sel || []).length + ' alvo(s) na linha · toque em outra direção ou use';
     if (a.tipo === 'todos') return (m.sel || []).length + ' alvo(s) na área';
@@ -6819,6 +6821,12 @@ body.mn-calmo .cp-po{display:none}
       if (a.tipo === 'peca') { if (!tok || !d0.toks.has(tok)) return true; modo.sel = [tok.split(',').map(Number)];
         if (segAlvos(modo).length) { modo.seg = true; rBoard(); rPainel(); toast('⚡ Agora toque no 2º alvo (ou de novo no 1º para ficar só com ele)', 2400); return true; }
         return resolverHab(), true; }
+      if (a.tipo === 'casa' && a.raioS) {
+        const id = cellId || (tok && S.times[+tok[0]][+tok[2]].pos); if (!id || !d0.casas.has(id)) return true;
+        const L = pecas((j, i, x) => j !== S.ativo[0] && !x.elim && x.pos && !temEf(x, 'intocavel') && dist(id, x.pos) <= a.raioS);
+        if (!L.length) { toast('Nenhum inimigo no Raio ' + a.raioS + ' de ' + id, 1800); return true; }
+        modo.cel = id; modo.sel = L; return resolverHab(), true;
+      }
       if (a.tipo === 'casa' && a.iluS) {
         const id = cellId; if (!id || !d0.casas.has(id)) return true;
         modo.cel = id; modo.alvosInfo = { tipo: 'peca', alvos: pecas((j, i, x) => j !== S.ativo[0] && !x.elim && x.pos && !temEf(x, 'intocavel')) };
