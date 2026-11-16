@@ -2376,6 +2376,39 @@ body:not(.em-combate) .atl-box{display:none}
 .atl-box li span{margin-left:4px; opacity:.92}
 .atl-fixo{display:flex; align-items:center; gap:6px; padding:0 10px 10px; font-size:12.5px; opacity:.85; cursor:pointer}
 @media (hover:none), (max-width:700px){ body.em-combate .atl-fab{display:none} .atl-box{display:none !important} }
+
+/* ── quadros do jogo (perguntas) ── */
+.perg-caixa{border-top:8px solid var(--yellow, #ffe000)}
+.perg-corpo{padding:14px 16px 16px}
+.perg-corpo p{margin:0 0 10px; font-size:15px; line-height:1.4}
+.perg-corpo .perg-sub{font-size:13px; opacity:.75}
+.perg-bts{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+.perg-bts button{flex:1; min-width:130px}
+/* ── etapas das ações ── */
+.etp{position:fixed; left:16px; top:120px; z-index:420; width:min(380px, calc(100vw - 32px)); pointer-events:none; display:flex; flex-direction:column; gap:6px}
+.etp-lista{display:flex; flex-direction:column; gap:6px}
+.etp-c{background:rgba(8,8,8,.93); color:#fff; border:3px solid #000; border-left:8px solid var(--ac, #ffe000); box-shadow:4px 4px 0 rgba(0,0,0,.6); padding:7px 11px; font-size:14px; line-height:1.3; transform:translateX(-120%); opacity:0; transition:transform .32s cubic-bezier(.2,1.3,.4,1), opacity .25s}
+.etp-c.on{transform:none; opacity:1}
+.etp-c.sai{transform:translateX(-30px); opacity:0}
+.etp-c.dano{border-left-color:#e8000d}
+.etp-c.dano b.n{color:#ff6b6b}
+.etp-c.cura{border-left-color:#2a9d5a}
+.etp-c.cura b.n{color:#7be0a0}
+.etp-c.erro{border-left-color:#777; color:#ccc}
+.etp-c.acerto{border-left-color:#ffe000}
+.etp-c.pas{border-left-style:dashed}
+.etp-tit{background:linear-gradient(100deg, var(--ac, #e8000d) 0, #000 85%); border:3px solid #000; border-left:0; box-shadow:5px 5px 0 #000; padding:6px 16px 8px 14px; transform:translateX(-120%) skewX(-8deg); opacity:0; transition:transform .36s cubic-bezier(.2,1.4,.4,1), opacity .2s; clip-path:polygon(0 0, 100% 0, 94% 100%, 0 100%)}
+.etp-tit.on{transform:skewX(-8deg); opacity:1}
+.etp-tit.sai{transform:translateX(-40px) skewX(-8deg); opacity:0}
+.etp-tit small{display:block; font-size:12px; letter-spacing:.08em; color:#fff; opacity:.9}
+.etp-tit b{display:block; font:400 30px/1 Bangers, cursive; letter-spacing:1.5px; color:#ffe000; text-shadow:2px 2px 0 #000}
+.etp-tit i{display:inline-block; margin:4px 6px 0 0; font:700 11px/1 system-ui, sans-serif; font-style:normal; background:#ffe000; color:#000; padding:3px 6px; border-radius:3px}
+.etp-tit i.sup{background:#fff; color:#b8860b}
+.etp-pular{pointer-events:auto; align-self:flex-start; background:#000; color:#ffe000; border:2px solid #ffe000; font:400 14px/1 Bangers, cursive; letter-spacing:1.5px; padding:6px 10px; cursor:pointer; display:flex; gap:6px; align-items:center}
+.etp-pular kbd{background:#ffe000; color:#000; font:700 11px/1 system-ui, sans-serif; padding:2px 5px; border-radius:3px}
+.etp-pular[hidden]{display:none}
+body:not(.em-combate) .etp{display:none}
+@media (max-width:700px){ .etp{top:64px} .etp-tit b{font-size:24px} .etp-pular kbd{display:none} }
 </style>
 <style id="capa-css">
 .cp-cena{position:absolute; inset:0; z-index:1; overflow:hidden; opacity:0; visibility:hidden; transition:opacity .5s, visibility 0s .5s}
@@ -4972,6 +5005,7 @@ body.mn-calmo .cp-po{display:none}
     <button class="btn-ghost" id="mnLog">📝 HISTÓRICO DA PARTIDA</button>
     <button class="btn-ghost" id="mnReiniciar">🔁 RECOMEÇAR COM OS MESMOS TIMES</button>
     <button class="btn-ghost" id="mnNova">🆕 NOVO COMBATE</button>
+    <button class="btn-ghost" id="mnEtapas">🎞️ ETAPAS DAS AÇÕES: LIGADAS</button>
     <button class="btn-ghost" id="mnCopiar">🧰 COPIAR PARTIDA (PARA SUPORTE)</button>
   </div>
   <div class="log" id="mnLogBox" hidden></div>
@@ -5031,7 +5065,7 @@ body.mn-calmo .cp-po{display:none}
 </div></div>
 <div class="modal" id="mFim" hidden><div class="modal-caixa fim" id="mFimCaixa"></div></div>
 
-<button class="dado-fab" id="dadoFab" aria-label="Rolar dados" title="Rolar dados">🎲</button><button class="atl-fab" id="atlFab" aria-expanded="false" title="Ver atalhos do teclado (H)">⌨️ ATALHOS <kbd>H</kbd></button><div class="atl-box" id="atlBox" hidden><div class="atl-h"><b>ATALHOS DO TECLADO</b><button id="atlX" aria-label="Fechar atalhos">✕</button></div><ul>
+<div class="modal" id="mPerg" hidden><div class="modal-caixa estreita perg-caixa" id="mPergCaixa"></div></div><div class="etp" id="etapas" aria-live="polite"><div class="etp-lista"></div><button class="etp-pular" id="etpPular" hidden>PULAR ⏭ <kbd>P</kbd></button></div><button class="dado-fab" id="dadoFab" aria-label="Rolar dados" title="Rolar dados">🎲</button><button class="atl-fab" id="atlFab" aria-expanded="false" title="Ver atalhos do teclado (H)">⌨️ ATALHOS <kbd>H</kbd></button><div class="atl-box" id="atlBox" hidden><div class="atl-h"><b>ATALHOS DO TECLADO</b><button id="atlX" aria-label="Fechar atalhos">✕</button></div><ul>
 <li><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><span>Escolhe quem joga e começa o turno</span></li>
 <li><kbd>Setas</kbd><kbd>WASD</kbd><span>Movem o cursor</span></li>
 <li><kbd>Enter</kbd><kbd>Espaço</kbd><span>Escolhe o que está no cursor</span></li>
@@ -5040,6 +5074,7 @@ body.mn-calmo .cp-po{display:none}
 <li><kbd>Q</kbd><span>Volta o cursor para o quadro de ações</span></li>
 <li><kbd>F</kbd><span>Ficha completa de quem está no cursor ou em turno</span></li>
 <li><kbd>I</kbd><span>Resumo do personagem no cursor</span></li>
+<li><kbd>P</kbd><span>Pula as etapas da ação na tela</span></li>
 <li><kbd>H</kbd><span>Mostra ou esconde este quadro</span></li>
 </ul><label class="atl-fixo"><input type="checkbox" id="atlFixo"> Deixar sempre aberto</label></div>
 <div class="toast" id="toast" hidden></div>
@@ -5257,6 +5292,7 @@ body.mn-calmo .cp-po{display:none}
       opcoes: () => ({ cam: '› OPÇÕES', itens: [
         { ic: '🖥️', t: 'TELA CHEIA', c: '#2a9d5a', d: 'Ocupa a tela inteira, sem a barra do navegador.', v: () => telaCheia() ? 'SIM' : 'NÃO', mud: () => { if (telaCheia()) document.exitFullscreen && document.exitFullscreen(); else { const e = document.documentElement; (e.requestFullscreen || e.webkitRequestFullscreen || (() => avisar('Este aparelho não deixa'))).call(e); } setTimeout(desenhar, 250); } },
         { ic: '✨', t: 'ANIMAÇÕES', c: '#2a9d5a', d: 'Reduzidas deixam o fundo quase parado e tiram as transições.', v: () => OP.calmo ? 'REDUZIDAS' : 'COMPLETAS', mud: () => { OP.calmo = !OP.calmo; salvarOp(); aplicarOp(); } },
+        { ic: '🎞️', t: 'ETAPAS DAS AÇÕES', c: '#2a9d5a', d: 'Mostra o nome da habilidade e cada passo do que aconteceu: Amostras, acerto, dano com as reduções, empurrões e passivas. Dá para pular com o botão PULAR ou a tecla P.', v: () => ETP && ETP.on() ? 'LIGADAS' : 'DESLIGADAS', mud: () => { if (ETP) ETP.set(!ETP.on()); } },
         { ic: '🎬', t: 'TELA DE TÍTULO', c: '#2a9d5a', d: 'Mostrar o “pressione para começar” ao abrir o jogo, ou ir direto ao menu.', v: () => OP.pular ? 'PULAR' : 'MOSTRAR', mud: () => { OP.pular = !OP.pular; salvarOp(); } },
         { ic: '🎵', t: 'MÚSICA', c: '#555', trav: true, d: 'Trilha sonora: em breve.' },
         { ic: '🔊', t: 'EFEITOS SONOROS', c: '#555', trav: true, d: 'Sons de menu e de combate: em breve.' },
@@ -5418,6 +5454,7 @@ body.mn-calmo .cp-po{display:none}
   function evento(t){ if (SECO) { if (t) SECO.push(t); return; } if (!t || EVQ.some(e => e.includes(t))) return; EVQ = EVQ.filter(e => !t.includes(e)); EVQ.push(t); if (!evT) evT = setTimeout(flushEv, 160); }
   function flushEv(){
     evT = null; const L = [...new Set(EVQ)]; EVQ = []; if (!L.length) return;
+    if (ETP && ETP.on()) { L.forEach(x => ETP.passo(x, 'pas')); return; }
     const e = $('#toast'), prev = e && !e.hidden ? e.innerHTML + '<br>' : '';
     toast(prev + L.map(x => '⚡ ' + x).join('<br>'), Math.min(9000, 3200 + 1300 * L.length));
   }
@@ -5694,7 +5731,7 @@ body.mn-calmo .cp-po{display:none}
   // ═════════ MODAIS ═════════
   function abrir(id){ $('#' + id).hidden = false; document.body.style.overflow = 'hidden'; }
   function fechar(id){ $('#' + id).hidden = true; if (id === 'mAcao') { const cx = $('#mAcaoCaixa'); if (cx) cx.classList.remove('sup'); } if (!$$('.modal').some(m => !m.hidden)) document.body.style.overflow = ''; }
-  function fecharModais(){ if (modo) cancelarModo(); $$('.modal').forEach(m => { if (m.id !== 'mFim' && m.id !== 'mAcao') m.hidden = true; }); if (!$$('.modal').some(m => !m.hidden)) document.body.style.overflow = ''; }
+  function fecharModais(){ if (pergFim) { pergFim(false); return; } if (modo) cancelarModo(); $$('.modal').forEach(m => { if (m.id !== 'mFim' && m.id !== 'mAcao') m.hidden = true; }); if (!$$('.modal').some(m => !m.hidden)) document.body.style.overflow = ''; }
   $$('.modal').forEach(m => m.addEventListener('click', e => {
     if (e.target === m && m.id !== 'mFim' && m.id !== 'mAcao') fechar(m.id);
     if (e.target.closest('[data-fecha]')) fechar(m.id);
@@ -6146,9 +6183,12 @@ body.mn-calmo .cp-po{display:none}
     if (m.monstro) {
       x.monstro = false;
       if (!x.elim && x.pv === 0) {
-        const ok = typeof confirm === 'function' && confirm('O Monstro de Sangue causou pelo menos 10 de dano com Ataques Básicos?\n\nOK: Magnus volta com 15 PV.\nCancelar: Magnus é eliminado.');
-        if (ok) { x.pv = Math.min(15, x.max); log('🩸 Magnus voltou com 15 PV.'); }
-        else { const [a, b2] = refDe(x).split(',').map(Number); eliminar(a, b2); }
+        perguntar({ ic: '🩸', tit: 'O MONSTRO DE SANGUE ACABOU', sim: '🩸 SIM, VOLTA COM 15 PV', nao: 'NÃO, É ELIMINADO', sub: true, txt: ['O Monstro de Sangue causou pelo menos <b>10 de dano</b> com Ataques Básicos?', 'Sim: ' + esc(CH[x.k].nome) + ' volta com 15 PV. Não: é eliminado.'] }).then(ok => {
+          if (x.elim || x.pv > 0) return;
+          if (ok) { x.pv = Math.min(15, x.max); log('🩸 Magnus voltou com 15 PV.'); if (ETP && ETP.on()) ETP.passo('🩸 ' + CH[x.k].nome + ' volta do Monstro de Sangue com +15 PV', 'cura'); }
+          else { const [a, b2] = refDe(x).split(',').map(Number); eliminar(a, b2); }
+          salvar(); render();
+        });
       }
     }
   }
@@ -6559,6 +6599,7 @@ body.mn-calmo .cp-po{display:none}
     else if (ds.initurno) {
       const [j, i, c] = pega(ds.initurno);
       let msg = '▶ Turno de ' + CH[c.k].nome + '.';
+      if (fantasmaAsp(c)) evento('👻 Aspecto Fantasmagórico: ' + CH[c.k].nome + ' fica Invisível no turno dele (os alvos têm −1 na Defesa)');
       let aviso = '';
       mudar(() => {
         if (c.dcn > 0 && c.dcv > 0) {
@@ -6799,8 +6840,8 @@ body.mn-calmo .cp-po{display:none}
     S = Object.assign(novo(S.nomes), keep);
     iniciarPartida();
   }
-  $('#mnReiniciar').addEventListener('click', () => { if (confirm('Recomeçar a partida do zero com os mesmos times?')) { fechar('mMenu'); recomecar(); } });
-  $('#mnNova').addEventListener('click', () => { if (confirm('Abandonar esta partida e montar um combate novo?')) { fechar('mMenu'); S = novo(S.nomes); hist = []; salvar(); render(); } });
+  $('#mnReiniciar').addEventListener('click', () => { fechar('mMenu'); perguntar({ ic: '🔁', tit: 'RECOMEÇAR', sim: 'RECOMEÇAR', nao: 'VOLTAR', txt: ['Recomeçar a partida do zero com os mesmos times?'] }).then(ok => { if (ok) recomecar(); }); });
+  $('#mnNova').addEventListener('click', () => { fechar('mMenu'); perguntar({ ic: '🆕', tit: 'NOVO COMBATE', sim: 'ABANDONAR E MONTAR OUTRO', nao: 'VOLTAR', txt: ['Abandonar esta partida e montar um combate novo?'] }).then(ok => { if (ok) { S = novo(S.nomes); hist = []; salvar(); render(); } }); });
   function mostrarFim(){
     if (!S.fim) return;
     const v = S.fim.venc;
@@ -7170,6 +7211,7 @@ body.mn-calmo .cp-po{display:none}
   }
   function fimDeTurno(c){
     let aviso = '';
+    if (c && fantasmaAsp(c)) evento('👻 Aspecto Fantasmagórico: ' + CH[c.k].nome + ' fica Intangível até o próximo turno dele (+1 na Defesa)');
     mudar(() => {
       S.times.forEach(tm => tm.forEach(x => { if (x.k === 'manilhas' && x.robVolta) { if (!x.elim && (x.robA || 'copas') !== x.robVolta) robSwap(x, x.robVolta); x.robVolta = null; } }));
       if (c.k === 'magnus' || c.k === 'arquiteto') c.sofDesde = 0; if (c.k === 'arquiteto') c.simTk = S.tk;
@@ -7185,7 +7227,7 @@ body.mn-calmo .cp-po{display:none}
           evento('🦠 Miasma: ' + CH[c.k].nome + ' ficou Contagiado' + (ja ? ' e Imóvel' : '')); log('🦠 Miasma: ' + CH[c.k].nome + ' terminou o turno na nuvem e ficou Contagiado' + (ja ? ' e Imóvel' : '') + '.'); } }
       c.parado = !c.moveuT;
       if (c.k === 'andarilho' && !c.elim && c.pos && (c.andou || 0) >= 3 && !pOff(c, 'Descanso à Beira da Estrada')) { const cv = c.andou >= 6 ? 4 : 3, cur = []; S.times[timeDe(c)].forEach(x => { if (x === c || x.elim || !x.pos || dP(c.pos, x) > 1 || x.pv >= x.max || temEf(x, 'semAjuda')) return; const v2 = Math.max(0, Math.min(x.max - x.pv, cv - (x.cr || 0))); if (v2) { x.pv += v2; cur.push(CH[x.k].nome + ' +' + v2); } }); if (cur.length) { log('🏕️ Descanso à Beira da Estrada: ' + cur.join(', ') + ' PV.'); evento('🏕️ Descanso à Beira da Estrada: ' + cur.join(', ') + ' PV'); } }
-      if (c.k === 'andarilho' && !c.elim && !pOff(c, 'Recompensando a Caminhada')) { const ant = rec(c, 'Embalo'), nv = c.embSup ? 9 : Math.min(9, c.andou || 0); setRec(c, 'Embalo', nv); c.embSup = false; log('🎒 Andarilho andou ' + (c.andou || 0) + (c.andou === 1 ? ' casa' : ' casas') + ': Embalo ' + nv + (nv < 3 ? ' (sem bônus)' : nv >= 9 ? ' (+2 de dano, +1 Defesa, −1 de dano sofrido)' : nv >= 6 ? ' (+2 de dano, +1 Defesa)' : ' (+2 de dano nos Ataques Básicos)') + '.'); if (nv !== ant) evento('🎒 Embalo do Andarilho: ' + nv + (nv < 3 ? ', sem bônus' : '')); }
+      if (c.k === 'andarilho' && !c.elim && !pOff(c, 'Recompensando a Caminhada')) { const ant = rec(c, 'Embalo'), nv = c.embSup ? 9 : Math.min(9, c.andou || 0); setRec(c, 'Embalo', nv); c.embSup = false; log('🎒 Andarilho andou ' + (c.andou || 0) + (c.andou === 1 ? ' casa' : ' casas') + ': Embalo ' + nv + (nv < 3 ? ' (sem bônus)' : nv >= 9 ? ' (+2 de dano, +1 Defesa, −1 de dano sofrido)' : nv >= 6 ? ' (+2 de dano, +1 Defesa)' : ' (+2 de dano nos Ataques Básicos)') + '.'); evento('🎒 Embalo do Andarilho: ' + nv + (nv < 3 ? ', sem bônus' : ' → +2 de dano nos Ataques Básicos' + (nv >= 6 ? ', +1 na Defesa' : '') + (nv >= 9 ? ', −1 de dano de cada ataque' : '')) + (nv !== ant ? ' (era ' + ant + ')' : '')); }
       if (c.k === 'cavalo') { c.cicloD = false; c.pvFim = c.pv; }
       if (c.k === 'fundadora') c.pvFim = c.pv;
       if (c.colheita > 0) { const g = Math.min(6, rec(c, 'PV guardados') + c.colheita); setRec(c, 'PV guardados', g); log('🌾 A Colheita: ' + g + ' PV guardados para depois.'); } c.colheita = 0;
@@ -7443,11 +7485,11 @@ body.mn-calmo .cp-po{display:none}
       if (z.tipo === 'Retrato') S.times[1 - z.dono].forEach(x => { if (!x.elim && x.pos && dist(x.pos, z.cell) <= 1) manchar(x, 1); });
       if (z.tipo === 'Galho') { c.fioDd = (c.fioDd || 0) + 1; novoEf(c, { nome: 'Galho destruído', autor: 'Vale', faz: '−1 dado no próximo teste', acaba: 'depois do próximo teste', exp: { t: 'man' }, mods: {}, fioEf: true }); }
   }
-  function atacarEstrutura(z){
+  function atacarEstrutura(z, pre){
     const c = ativoC(), ch = CH[c.k], apt = atkB(c), ex = dadosExtra(c);
-    const n = aptE(c, apt) + dadosCen(c, apt) + mod(c, 'dd') + ex.n, v = rolarD10(n), mx = Math.max(...v);
+    const n = aptE(c, apt) + dadosCen(c, apt) + mod(c, 'dd') + ex.n, v = pre ? pre.v : rolarD10(n), mx = Math.max(...v);
     let def = defEst(z, apt), ok;
-    if (def === null) ok = typeof confirm === 'function' && confirm('Ataque Básico no ' + z.tipo + ' em ' + z.cell + '\nDados: ' + v.join(', ') + '\n\nO ' + z.tipo + ' tem a Defesa do aliado copiado. Algum dado passou dela?\nOK: atingiu (o ' + z.tipo + ' some). Cancelar: errou.');
+    if (def === null) { if (!pre) return perguntar({ ic: '🎯', tit: 'ATAQUE NO ' + z.tipo.toUpperCase(), sim: '🎯 ATINGIU', nao: 'ERROU', sub: true, txt: ['Dados: <b>' + v.join(', ') + '</b>', 'O ' + z.tipo + ' em ' + z.cell + ' tem a Defesa do aliado copiado. Algum dado passou dela?'] }).then(ok2 => atacarEstrutura(z, { v, ok: ok2 })); ok = pre.ok; }
     else ok = mx >= def;
     regAuto({ q: c, t: 'Ataque Básico em ' + z.tipo, apt, d: v, al: [{ nome: z.tipo + ' (' + z.cell + ')', def: def === null ? Math.min(...v) : def, ok }], sim: 'atingiu', nao: '', pop: def !== null });
     const txt = '🎯 ' + ch.nome + ' atacou ' + (z.tipo === 'Ilusão' || z.tipo === 'Cópia' ? 'a ' : 'o ') + z.tipo + ' em ' + z.cell + ': ' + v.join(', ') + (def !== null ? ' contra Defesa ' + def : '') + (ok ? (z.tipo === 'Retrato' && (z.hits || 1) > 1 ? ' → rachou (falta 1 acerto)' : z.tipo === 'Aparato' && v.filter(y => y >= def).length * 2 + mod(c, 'dn') < 5 ? ' → acertou, mas o Aparato aguentou (' + (v.filter(y => y >= def).length * 2 + mod(c, 'dn')) + ' de dano; precisa de 5)' : ' → desfeito') : ' → errou');
@@ -8880,12 +8922,16 @@ body.mn-calmo .cp-po{display:none}
   function amostraDef(m, c){
     const aj = S.ativo[0], fo = S.times[1 - aj].find(x => x.k === 'forasteiro' && !x.elim && x.pos && rec(x, 'Amostras') > 0 && !pOff(x, 'Coletando Amostras')); if (!fo) return;
     const cand = (m.sel || []).filter(a => a[0] !== aj).map(a => S.times[a[0]][a[1]]).filter(t => t.pos && dist(t.pos, fo.pos) <= 2).sort((p, q) => (q === fo) - (p === fo));
-    if (!cand.length || typeof confirm !== 'function') return;
+    if (!cand.length) return null;
     const t = cand[0];
-    if (!confirm('🛸 Coletando Amostras: Forasteiro tem ' + rec(fo, 'Amostras') + ' Amostra(s).\n\nGastar 1 para dar +1 na Defesa de ' + CH[t.k].nome + ' contra ' + m.h.n + '?')) return;
-    setRec(fo, 'Amostras', rec(fo, 'Amostras') - 1);
-    aplicarEf(t, { nome: 'Amostra do Forasteiro', autor: CH[fo.k].nome, faz: '+1 na Defesa contra esta habilidade', acaba: 'depois do próximo ataque que sofrer', exp: { t: 'man' }, mods: { df: 1 }, proxAtk: true });
-    log('🛸 Forasteiro gastou 1 Amostra: ' + CH[t.k].nome + ' +1 na Defesa contra ' + m.h.n + '.');
+    return perguntar({ ic: '🛸', tit: 'COLETANDO AMOSTRAS', sim: '🛸 GASTAR 1 AMOSTRA', nao: 'NÃO GASTAR', sub: true, txt: ['O ' + esc(CH[fo.k].nome) + ' pode gastar 1 Amostra para dar <b>+1 na Defesa</b> de ' + esc(CH[t.k].nome) + ' contra <b>' + esc(m.h.n) + '</b>.', 'Amostras agora: ' + rec(fo, 'Amostras') + ' de 3.'] }).then(ok => {
+      if (!ok) return;
+      setRec(fo, 'Amostras', rec(fo, 'Amostras') - 1);
+      aplicarEf(t, { nome: 'Amostra do Forasteiro', autor: CH[fo.k].nome, faz: '+1 na Defesa contra esta habilidade', acaba: 'depois do próximo ataque que sofrer', exp: { t: 'man' }, mods: { df: 1 }, proxAtk: true });
+      log('🛸 Forasteiro gastou 1 Amostra: ' + CH[t.k].nome + ' +1 na Defesa contra ' + m.h.n + '.');
+      if (ETP && ETP.on()) ETP.passo('🛸 ' + CH[fo.k].nome + ' gastou 1 Amostra: ' + CH[t.k].nome + ' +1 na Defesa contra ' + m.h.n, 'pas'); else toast('🛸 ' + CH[t.k].nome + ' +1 na Defesa (Amostra)', 2000);
+      salvar(); render();
+    });
   }
   function resolverHab(){
     const m = modo; modo = null;
@@ -8896,6 +8942,7 @@ body.mn-calmo .cp-po{display:none}
     if (c.k === 'reator' && h.n === 'Blindagem Nuclear' && m.aprim) {}
     const multi = !!(ops && m.aprim && h.n === 'Armadilha de Caça') || !!(ops && m.aprim && h.p && /as duas|os dois|Os dois|Aplica as duas|Aplica duas/.test(limpo(h.p)));
     c.habAtual = h.k || '';
+    if (ETP && ETP.on()) ETP.titulo(h.n, ch.nome, ch.ac, [m.sup ? '★ SUPREMA' : '', m.aprim && !m.sup ? '⚡ MEDIDOR' : ''].filter(Boolean), (m.sel || []).map(a => { const t = S.times[a[0]] && S.times[a[0]][a[1]]; return t && t !== c ? CH[t.k].nome : ''; }).filter(Boolean));
     const ex = h.x >= 0 ? dadosExtra(c) : { n: 0, notas: [] };
     if (h.x >= 0 && geloB(c)) { ex.n += 1; ex.notas.push('Gëlo Entogan: 2ª habilidade ou palavra do turno, +1 dado e +1 casa de alcance'); }
     if (h.n === 'Mão Leve' && (c.andou || 0) >= 3) { ex.n += 1; ex.notas.push('Mão Leve: andou ' + c.andou + ' casas neste turno, +1 dado'); }
@@ -8916,7 +8963,8 @@ body.mn-calmo .cp-po{display:none}
     };
     if (c.k === 'reator' && pagarCargas && rec(c, 'Cargas') >= 2 && h.n !== 'Blindagem Nuclear') { r.custo = 0; r.pagaCargas = true; r.notas = r.notas.concat('⚛️ paga com 2 Cargas no lugar das ações'); }
     r.refazer = na => { modo = Object.assign({}, m, { sel: [na] }); resolverHab(); };
-    if (h.x >= 0) r.pend = rr => { amostraDef(m, c);
+    if (h.x >= 0) r.amostraQ = () => amostraDef(m, c);
+    if (h.x >= 0) r.pend = rr => {
       rr.dados = rolarD10(n); { const ds = (m.sel || []).filter(a => a[0] !== S.ativo[0]).map(a => clamp(defesas(S.times[a[0]][a[1]])[h.x] + adef(c), 2, 10)); if (ds.length && (cpDe(c).mal || cpDe(c).bem)) { const nt = []; rr.dados = cpAplicar(c, rr.dados, Math.min(...ds), nt); rr.notas = rr.notas.concat(nt); } } rr.max = Math.max(...rr.dados); if (temTat(c, 'Olho Roxo')) c.olhoRoxo = true; montar(rr); ajustesParlenda(rr, c, h); if (h.n === 'Cabeça Cheia') rr.linhas.forEach(l => { if (l.ok && l.alvo[0] !== S.ativo[0]) { const tr = l.alvo.join(','), tn = CH[S.times[l.alvo[0]][l.alvo[1]].k].nome; l.ef.push(supFx('Não recebe bônus na Defesa até o fim do próximo turno de ' + tn, (t, msg) => novoEf(t, { nome: 'Cabeça Cheia', autor: 'Axioma', faz: 'não recebe bônus na Defesa', acaba: 'no fim do próximo turno de ' + tn, exp: { t: 'fim', ref: tr, pula: 0 }, mods: {}, semBonusDef: true }))); } }); incontLinhas(c, rr, S.ativo[0]); };
     else { montar(r); ajustesParlenda(r, c, h); }
     mostrarResultado(r);
@@ -10255,7 +10303,7 @@ body.mn-calmo .cp-po{display:none}
   $('#mAcao').addEventListener('click', e => {
     { const rb = e.target.closest('[data-reac]'); if (rb) { cliqueReac(rb.dataset.reac); return; } }
     { const sb = e.target.closest('[data-simul]'); if (sb) { const h0 = simLista[+sb.dataset.simul]; fechar('mAcao'); if (h0) iniciarSimul(h0); return; } }
-    if (e.target.id === 'rsRolar') { const r0 = res; if (r0.pend && !r0.rolado) { r0.rolado = true; prepReac(r0); ilusaoTeste(r0); dominioTeste(r0); r0.pend(r0); if (res === r0) mostrarResultado(r0); } return; }
+    if (e.target.id === 'rsRolar') { const r0 = res; if (r0.pend && !r0.rolado && !r0.esperaAmostra) { const vai = () => { r0.esperaAmostra = false; if (r0.rolado) return; r0.rolado = true; prepReac(r0); ilusaoTeste(r0); dominioTeste(r0); r0.pend(r0); if (res === r0) mostrarResultado(r0); }; const q = r0.amostraQ && !r0.amostraFeita ? (r0.amostraFeita = true, r0.amostraQ()) : null; if (q) { r0.esperaAmostra = true; q.then(vai); } else vai(); } return; }
     const ob = e.target.closest('[data-op]');
     if (ob) {
       if (res.pend && res.rolado) return;
@@ -10270,8 +10318,8 @@ body.mn-calmo .cp-po{display:none}
     const r = res, c = r.atkRef ? S.times[r.atkRef[0]][r.atkRef[1]] : ativoC(), [aj] = r.atkRef || S.ativo;
     const msg = [];
     comRng(r, () => mudar(() => corpoAplicar(r, c, aj, msg), () => (r.nome ? (r.sup ? '★ ' : '✨ ') + CH[c.k].nome + ' usou ' + r.nome : '👊 ' + CH[c.k].nome + ' fez um Ataque Básico') + (msg.length ? ': ' + msg.join(', ') : '') + '.'));
-    msg.filter(x => RX_EV.test(x)).forEach(evento);
-    if (r.sup) toast('★ ' + r.nome.toUpperCase() + ' ★', 2200);
+    if (ETP && ETP.on()) ETP.resultado(r, c, aj, msg);
+    else { msg.filter(x => RX_EV.test(x)).forEach(evento); if (r.sup) toast('★ ' + r.nome.toUpperCase() + ' ★', 2200); }
     if (r.nome === 'Marca Titânica' && r.ops && r.opSel.some(i => r.ops[i].nome === 'Céus') && r.linhas[0] && r.linhas[0].ok) { const al = r.linhas[0].alvo, t = S.times[al[0]][al[1]]; if (!t.elim && t.pos) setTimeout(() => { iniciarModo({ t: 'ceus', alvo: al }); toast('☁️ Céus: toque na casa ao lado de ' + CH[t.k].nome + ' para a direção do empurrão', 3000); }, 60); }
     if (c.possQuer) setTimeout(() => iniciarPossessao(c), 60);
     if (r.brLinha && !c.elim && c.pos) setTimeout(() => { iniciarModo({ t: 'brasaLinha', n: r.brLinha }); toast('🔥 Brasa: toque numa casa ao lado de Kazan para a Linha 3', 3000); }, 70);
@@ -10507,6 +10555,60 @@ body.mn-calmo .cp-po{display:none}
   })();
 
   // ═════════ TECLADO EM TODO O JOGO ═════════
+  // ═════════ QUADROS DO JOGO E ETAPAS DAS AÇÕES ═════════
+  let pergFim = null;
+  function perguntar(o){
+    return new Promise(res => {
+      if (pergFim) pergFim(false);
+      const cx = $('#mPergCaixa');
+      cx.innerHTML = '<div class="modal-h"><h3>' + (o.ic ? o.ic + ' ' : '') + o.tit + '</h3></div><div class="perg-corpo">' + o.txt.map((t, i) => '<p' + (i && o.sub ? ' class="perg-sub"' : '') + '>' + t + '</p>').join('') +
+        '<div class="perg-bts"><button class="btn-amarelo" data-perg="1">' + (o.sim || 'SIM') + '</button><button class="btn-ghost" data-perg="0">' + (o.nao || 'NÃO') + '</button></div></div>';
+      pergFim = v => { pergFim = null; fechar('mPerg'); res(!!v); };
+      abrir('mPerg');
+    });
+  }
+  $('#mPerg').addEventListener('click', e => { const b = e.target.closest('[data-perg]'); if (b && pergFim) pergFim(b.dataset.perg === '1'); });
+  var ETP = (function(){
+    const lista = $('#etapas .etp-lista'), pular = $('#etpPular');
+    let fila = [], rodando = false, tFila = null, tSai = null, ultTit = null;
+    const on = () => { const v = store.get('versus-etapas'); return v !== false && v !== 0 && v !== '0'; };
+    const calmo = () => document.body.classList.contains('mn-calmo');
+    function set(v){ store.set('versus-etapas', v ? 1 : 0); const b = $('#mnEtapas'); if (b) b.textContent = '🎞️ ETAPAS DAS AÇÕES: ' + (v ? 'LIGADAS' : 'DESLIGADAS'); if (!v) limpar(); }
+    function limpar(){ fila = []; rodando = false; clearTimeout(tFila); clearTimeout(tSai); lista.innerHTML = ''; pular.hidden = true; }
+    function sair(){ const cs = [...lista.children]; cs.forEach(c => c.classList.add('sai')); tSai = setTimeout(limpar, 320); }
+    function proximo(){
+      clearTimeout(tSai);
+      const it = fila.shift();
+      if (!it) { rodando = false; tSai = setTimeout(sair, 2400 + Math.min(4, lista.children.length) * 350); return; }
+      rodando = true; pular.hidden = false;
+      while (lista.children.length >= 7) { const v = [...lista.children].find(x => !x.classList.contains('etp-tit')); if (!v) break; v.remove(); }
+      const d = document.createElement('div'); d.className = it.cls; if (it.ac) d.style.setProperty('--ac', it.ac); d.innerHTML = it.html;
+      lista.appendChild(d); void d.offsetWidth; setTimeout(() => d.classList.add('on'), 20);
+      tFila = setTimeout(proximo, calmo() ? 120 : it.cls.includes('etp-tit') ? 950 : 800);
+    }
+    function por(it){ if (!on() || SECO) return; if (!it.cls.includes('etp-tit') && ultTit && !lista.children.length && !fila.length && Date.now() - ultTit.t < 120000) fila.push(ultTit.it); if (fila.some(x => x.html === it.html) || [...lista.children].some(x => x.innerHTML === it.html)) return; fila.push(it); if (!rodando) proximo(); }
+    const realce = t => String(t).replace(/([−+-]\d+ PV|\d+ de dano|[−+]\d+ na Defesa|[−+]\d+ dados?|[−+]\d+ casas?)/g, '<b class="n">$1</b>');
+    function passo(t, tipo){
+      const cls = tipo || (/−\d+ PV|de dano/.test(t) ? 'dano' : /\+\d+ PV/.test(t) ? 'cura' : '');
+      por({ cls: 'etp-c ' + cls, html: realce(t) });
+    }
+    function titulo(nome, quem, ac, tags, alvos){
+      const it = { cls: 'etp-tit', ac, html: '<small>' + esc(quem) + ' usa' + (alvos && alvos.length ? ' em ' + alvos.map(esc).join(', ') : '') + '</small><b>' + esc(nome) + '</b>' + (tags || []).map(t => '<i' + (/SUPREMA/.test(t) ? ' class="sup"' : '') + '>' + t + '</i>').join('') };
+      ultTit = { it, t: Date.now() }; por(it);
+    }
+    function resultado(r, c, aj, msg){
+      if (!on()) return;
+      const nome = r.nome ? r.nome : r.cupCura ? 'Amor Ambíguo' : 'Ataque Básico';
+      titulo(nome, CH[c.k].nome, CH[c.k].ac, r.nome ? [r.sup ? '★ SUPREMA' : '', r.aprim && !r.sup ? '⚡ MEDIDOR' : ''].filter(Boolean) : [], (r.linhas || []).map(l => { const t = S.times[l.alvo[0]] && S.times[l.alvo[0]][l.alvo[1]]; return t && t !== c ? CH[t.k].nome : ''; }).filter(Boolean));
+      if ((r.ataque || (r.basico && !r.cupCura)) && r.usouDados) (r.linhas || []).forEach(l => { if (l.ok === undefined || l.alvo[0] === aj) return; const t = S.times[l.alvo[0]][l.alvo[1]]; if (!t) return; passo((l.ok ? '🎯 Acertou ' : '💨 Errou ') + CH[t.k].nome, l.ok ? 'acerto' : 'erro'); });
+      msg.filter(x => !/acabou \(já valeu/.test(x)).forEach(x => passo(x));
+      ultTit = null;
+    }
+    pular.addEventListener('click', limpar);
+    document.addEventListener('keydown', e => { if ((e.key === 'p' || e.key === 'P') && !e.ctrlKey && !e.metaKey && !e.altKey && (rodando || lista.children.length)) { const a = document.activeElement; if (a && a.matches && a.matches('input:not([type=checkbox]), textarea')) return; e.preventDefault(); limpar(); } }, true);
+    return { on, set, passo, titulo, resultado, limpar };
+  })();
+  { const b = $('#mnEtapas'); if (b) { b.textContent = '🎞️ ETAPAS DAS AÇÕES: ' + (ETP.on() ? 'LIGADAS' : 'DESLIGADAS'); b.addEventListener('click', () => ETP.set(!ETP.on())); } }
   // ── quadro de atalhos (botão ⌨️ e tecla H) ──
   (function(){
     const fab = $('#atlFab'), box = $('#atlBox'), fixo = $('#atlFixo'); if (!fab || !box) return;
@@ -10622,7 +10724,7 @@ body.mn-calmo .cp-po{display:none}
         if (eraCasa && !modo) { const b = ach('.banco-tk') || (!S.ativo ? (ach('[data-tbturno]') || ach('[data-initurno]')) : (ach('[data-ac="basico"]') || ach('[data-ac]'))); if (b) { marcar(b); return; } }
         if (eraCasa && modo) { const b = ach('.tb-info button.btn-amarelo, .tb-info button'); if (b) { marcar(b); return; } }
         if (eraIni) { const b = ach('[data-ac="mover"]') || ach('[data-ac]'); if (b) { marcar(b); return; } }
-        if (eraFim) { const b = ach('[data-initurno]') || ach('[data-tbturno]'); if (b) { marcar(b); return; } }
+        if (eraFim) { const b = ach('#ptAcao [data-quem]:not([disabled])') || ach('#ptAcao [data-quem]') || ach('[data-tbturno]') || ach('g.tk'); if (b) { marcar(b); return; } }
         reencontrar();
       }, 90);
       setTimeout(reencontrar, 450);
