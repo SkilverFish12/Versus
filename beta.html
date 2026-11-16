@@ -5353,7 +5353,7 @@ body.mn-calmo .cp-po{display:none}
   const ARVORES = ['C3', 'C6', 'F3', 'F9', 'I3', 'I6'], FIOS = ['D4', 'D6', 'F4', 'F8', 'H4', 'H6'], NINHOS = ['B2', 'B6', 'F2', 'F10', 'J2', 'J6'];
   const MUTA = [['Sobrecarga', 'dd', 1, '+1 dado em todos os testes'], ['Blindagem', 'df', 1, '+1 na Defesa'], ['Propulsão', 'ds', 1, '+1 casa de deslocamento'], ['Curto-circuito', 'dd', -1, '−1 dado em todos os testes'], ['Corrosão', 'df', -1, '−1 na Defesa'], ['Instabilidade', 'dn', 2, '+2 de dano nos ataques']];
   const APTN = ['Físico', 'Destreza', 'Visão', 'Astúcia'];
-  let selTok = null;
+  let selTok = null, selAtk = '';
   let mostrarTab = store.get('versus-tabuleiro') !== false;
   const ROBN = { copas: 'Copas', espadilha: 'Espadilha', pica: 'Pica-Fumo', zap: 'Zap' }, ROBK = { 'Copas': 'copas', 'Espadilha': 'espadilha', 'Pica-Fumo': 'pica', 'Zap': 'zap' };
   function robsDe(c){ if (!c || c.k !== 'manilhas') return []; if (!c.robs) { c.robs = ['espadilha', 'pica', 'zap'].map(k => ({ k, cell: null })); c.robA = c.robA || 'copas'; } return c.robs; }
@@ -5467,6 +5467,7 @@ body.mn-calmo .cp-po{display:none}
     $('#ptTabBtn').textContent = mostrarTab ? '▾ ESCONDER TABULEIRO' : '▸ MOSTRAR TABULEIRO';
     box.hidden = !mostrarTab;
     if (!mostrarTab) return;
+    { const k = S.fase === 'partida' && S.ativo ? S.ativo.join(',') + '@' + S.rodada : ''; if (k !== selAtk) { selAtk = k; if (k) { selTok = S.ativo.slice(); if (typeof estSel !== 'undefined') estSel = null; } } }
     if (selTok && (S.times[selTok[0]][selTok[1]].elim)) selTok = null;
     const sc = selTok ? S.times[selTok[0]][selTok[1]] : null;
     const desl = sc ? deslDe(sc) : 0, MM = sc && sc.pos && !sc.imo && sc.k !== 'eclipse' ? mapaMover(sc, desl * 2) : null;
