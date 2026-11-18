@@ -2056,6 +2056,28 @@ body.mn-calmo .fx-vs2,body.mn-calmo .fx-sup{display:none}
 .dr-palco .bans span{position:relative;width:44px;height:44px;border-radius:50%;background:#222 center/cover;background-blend-mode:luminosity;border:2px solid #000;font-size:22px;display:grid;place-items:center}
 .dr-palco .bans span::after{content:"✕";position:absolute;inset:0;display:grid;place-items:center;color:#ff3040;font-size:36px;text-shadow:2px 2px 0 #000}
 body.mn-calmo .dr-palco .pk,body.mn-calmo .dr-palco .pk img{transition:none;animation:none}
+
+#f-draft .dr-palco{position:sticky;top:4px;z-index:30;margin-left:auto;margin-right:auto}
+.dr-cols.pag{display:flex;align-items:stretch;gap:10px;grid-template-columns:none}
+.dr-cols.pag .dr-col{flex:1;min-width:0}
+.dr-cols.pag .dr-col .subs{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 18px;padding:4px 6px 8px}
+.dr-cols.pag .dr-sub{flex:0 1 310px;border-top:0 !important;padding:4px 2px}
+.dr-cols.pag .dr-sub h5{text-align:center}
+.dr-cols.pag .dr-col h3{display:flex;align-items:center;justify-content:center;gap:14px}
+.dr-cols.pag .dr-col h3 .pg{font-size:13px;letter-spacing:2px;opacity:.85}
+.dr-seta{flex:0 0 46px;border:3px solid #000;background:var(--yellow);color:#000;font-size:26px;cursor:pointer;box-shadow:3px 3px 0 #000;display:flex;align-items:center;justify-content:center;padding:0}
+.dr-seta:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #000}
+.dr-abas{display:flex;justify-content:center;gap:6px;margin:0 0 8px}
+.dr-abas button{font-family:'Bangers',cursive;letter-spacing:2px;font-size:15px;padding:4px 12px;border:3px solid #000;background:#222;color:#fff;cursor:pointer;box-shadow:3px 3px 0 #000}
+.dr-abas button.on{background:var(--c);color:#fff;box-shadow:0 0 0 2px var(--yellow),3px 3px 0 #000}
+.dr-abas button.ok::after{content:' ✓';color:var(--yellow)}
+.dr-abas button{font-size:14px !important;padding:3px 10px !important;min-height:0 !important;height:auto !important;width:auto !important;display:inline-block !important;flex:0 0 auto !important}
+.dr-cols.pag .dr-sub{flex:0 1 318px}
+.dr-cols.pag .dr-grid > .tile{flex-basis:calc(25% - 4px)}
+.dr-cols.pag .tile .tc{width:60px;height:60px}
+.dr-cols.pag .tile{padding:4px 2px 5px}
+.dr-cols.pag .tile .tn{font-size:13px}
+@media (max-width:640px){.dr-seta{flex-basis:28px;font-size:18px}.dr-cols.pag{gap:4px}.dr-abas{display:none}.dr-cols.pag .dr-grid > .tile{flex-basis:calc(33.333% - 4px)}.dr-cols.pag .tile .tc{width:60px;height:60px}}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Amatic+SC&family=Audiowide&family=Black+Ops+One&family=Bungee&family=Butcherman&family=Caveat+Brush&family=Cherry+Swash&family=Cinzel:wght@400;700&family=Cinzel+Decorative&family=Creepster&family=Eater&family=Exo+2:wght@400;700&family=Fascinate&family=Fredericka+the+Great&family=Grenze+Gotisch&family=Limelight&family=Lobster&family=Lora:wght@400;700&family=Marcellus+SC&family=MedievalSharp&family=Metal+Mania&family=Michroma&family=Monoton&family=New+Rocker&family=Nosifer&family=Orbitron&family=Oswald:wght@400;700&family=Pacifico&family=Pirata+One&family=Playfair+Display:ital,wght@0,400;0,700;1,900&family=Racing+Sans+One&family=Righteous&family=Rubik+Beastly&family=Rubik+Bubbles&family=Rubik+Burned&family=Rubik+Glitch&family=Rubik+Moonrocks&family=Rubik+Wet+Paint&family=Russo+One&family=Rye&family=Saira+Stencil+One&family=Sancreek&family=Special+Elite&family=Teko:wght@400;700&family=Tilt+Warp&family=Uncial+Antiqua&family=UnifrakturMaguntia&family=Zen+Dots&display=swap" rel="stylesheet"><style>
 /* ═══ FICHA COM IMAGEM + PÁGINA DE HISTÓRIA ═══ */
@@ -5035,9 +5057,9 @@ body.mn-calmo .cp-po{display:none}
       <div class="dr-ordem" id="drOrdem"></div>
     </div>
     <div class="dr-palco" id="drPalco"></div>
+    <div class="dr-cols" id="drCols"></div>
     <div class="dr-times" id="drTimes"></div>
     <div class="dr-sug" id="drSug"></div>
-    <div class="dr-cols" id="drCols"></div>
     <div class="dr-nav"><button class="btn-ghost" id="drDesfazer">↶ DESFAZER ESCOLHA</button><button class="btn-ghost" id="drAleatorio">❓ ALEATÓRIO</button><button class="btn-ghost" id="drPularBan">⏭ PULAR BANIMENTO</button><button class="btn-amarelo" id="drConfirmar" disabled>⚡ COMEÇAR PARTIDA ⚡</button></div>
   </section>
 
@@ -5713,9 +5735,12 @@ body.mn-calmo .cp-po{display:none}
         const c = CH[p.key];
         return '<div class="dr-slot cheio" style="--ac:' + c.ac + '"><span>' + icoH(c.key) + '</span><b>' + c.nome + '</b></div>';
       }).join('') + '</div></div>').join('');
-    $('#drCols').innerHTML = CLASSES.map(([cl, plural, ico, cor]) => {
+    { const nP = S.picks.length + '|' + bans().length + '|' + j; if (drPagN !== nP) { drPagN = nP; const jj = ban ? null : j; if (jj !== null && temClasse(jj, CLASSES[drPag][0])) { const f = CLASSES.findIndex(([c]) => !temClasse(jj, c)); if (f >= 0) drPag = f; } } }
+    const abas = '<div class="dr-abas">' + CLASSES.map(([cl, plural, ico, cor], i) => '<button type="button" data-pag="' + i + '" style="--c:' + cor + '" class="' + (i === drPag ? 'on' : '') + (!ban && j !== null && temClasse(j, cl) ? ' ok' : '') + '">' + ico + ' ' + plural + '</button>').join('') + '</div>';
+    $('#drCols').classList.add('pag');
+    $('#drCols').innerHTML = '<button type="button" class="dr-seta" data-pag="' + ((drPag + 2) % 3) + '" aria-label="Classe anterior">◀</button>' + [CLASSES[drPag]].map(([cl, plural, ico, cor]) => {
       const trav = !ban && j !== null && temClasse(j, cl);
-      return '<div class="dr-col' + (trav ? ' travada' : '') + '" style="--c:' + cor + '"><h3>' + ico + ' ' + plural + '</h3>' + (SUBS[cl] || []).map(sb => '<div class="dr-sub"><h5>' + sb + '</h5><div class="dr-grid">' +
+      return '<div class="dr-col' + (trav ? ' travada' : '') + '" style="--c:' + cor + '"><h3>' + ico + ' ' + plural + '<span class="pg">' + (drPag + 1) + '/3</span></h3>' + abas + '<div class="subs">' + (SUBS[cl] || []).map(sb => '<div class="dr-sub"><h5>' + sb + '</h5><div class="dr-grid">' +
         DATA.chars.filter(c => c.classe === cl && c.sub === sb).map(c => {
           const o = dono(c.key), bn = banido(c.key), pode = ban ? !bn : podeEscolher(c.key);
           return '<div class="tile' + (pode ? '' : ' off') + (o !== null ? ' pego' : '') + (bn ? ' banido' : '') + '" data-k="' + c.key + '" style="--ac:' + c.ac + '" role="button" tabindex="0">' +
@@ -5723,8 +5748,8 @@ body.mn-calmo .cp-po{display:none}
             '<button class="tinfo" data-info="' + c.key + '" aria-label="Ver ' + c.nome + '">i</button>' +
             (o !== null ? '<span class="tdono j' + o + '">' + nomeJ(o).slice(0, 10) + '</span>' : '') +
             '<span class="tc">' + (EMB[c.key] ? '<img src="' + EMB[c.key] + '" alt="">' : '<span class="ti">' + c.icon + '</span>') + '</span><span class="tn">' + c.nome + '</span><span class="tpv">' + c.pv + ' PV</span></div>';
-        }).join('') + '</div></div>').join('') + '</div>';
-    }).join('');
+        }).join('') + '</div></div>').join('') + '</div></div>';
+    }).join('') + '<button type="button" class="dr-seta" data-pag="' + ((drPag + 1) % 3) + '" aria-label="Próxima classe">▶</button>';
     rSugestoes(j, ban);
     palcoDraft();
     $('#drCols').classList.toggle('banindo', ban);
@@ -5740,7 +5765,9 @@ body.mn-calmo .cp-po{display:none}
     S.picks.push({ j, key: k }); salvar(); render();
     toast('<span style="color:' + corJ(j) + '">' + nomeJ(j) + '</span> escolheu ' + CH[k].icon + ' ' + CH[k].nome, 1500);
   }
+  var drPag = 0, drPagN = '';
   $('#drCols').addEventListener('click', e => {
+    const pg = e.target.closest('[data-pag]'); if (pg) { drPag = +pg.dataset.pag; rDraft(); return; }
     const i = e.target.closest('[data-info]');
     if (i) { e.stopPropagation(); abrirInfo(i.dataset.info); return; }
     const t = e.target.closest('.tile');
@@ -5755,8 +5782,9 @@ body.mn-calmo .cp-po{display:none}
   function palcoDraft(){
     const box = $('#drPalco'); if (!box) return;
     if (!box.firstChild) box.innerHTML = '<div class="pal"><div class="q q0"></div><div class="q q1"></div><div class="ra"></div><div class="ld ld0"></div><div class="ld ld1"></div><div class="cab c0"></div><div class="cab c1"></div><div class="bans b0"></div><div class="bans b1"></div></div>';
-    const pal = box.firstChild, w = box.clientWidth || 1280, sc = Math.min(1, w / 1280);
-    pal.style.transform = 'scale(' + sc + ')'; box.style.height = Math.round(400 * sc) + 'px';
+    box.style.width = ''; const pal = box.firstChild, w = box.clientWidth || 1280, sc = Math.min(1, w / 1280, Math.max(.22, innerHeight * .34 / 400));
+    pal.style.transform = 'scale(' + sc + ')'; box.style.height = Math.round(400 * sc) + 'px'; box.style.width = Math.round(1280 * sc) + 6 + 'px';
+    { let hb = 0; const el = document.elementFromPoint(innerWidth / 2, 2); for (let x = el; x && x !== document.body; x = x.parentElement) { const ps = getComputedStyle(x).position; if (ps === 'fixed' || ps === 'sticky') { if (x !== box) hb = x.getBoundingClientRect().bottom; break; } } box.style.top = Math.max(0, Math.round(hb)) + 4 + 'px'; if (!box.dataset.rolou && box.offsetParent) { box.dataset.rolou = 1; setTimeout(() => scrollTo({ top: box.getBoundingClientRect().top + scrollY - hb - 8, behavior: 'smooth' }), 80); } }
     const fim = S.picks.length >= 6;
     [0, 1].forEach(j => {
       pal.querySelector('.c' + j).innerHTML = '<b>JOGADOR ' + (j + 1) + '</b>' + nomeJ(j).toUpperCase();
