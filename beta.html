@@ -1986,7 +1986,7 @@
 @media (max-width:700px){ .dr-sub .dr-grid > .tile{flex-basis:calc(25% - 4px)} }
 @media (max-width:380px){ .dr-sub .dr-grid > .tile{flex-basis:calc(33.333% - 4px)} }
 .mn-robs{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:6px 0 2px}.mn-rob{font-family:"Bangers",cursive;letter-spacing:1px;font-size:12px;color:#fff;background:#000;border:2px solid var(--ac);padding:2px 7px 2px 3px;border-radius:14px;display:inline-flex;align-items:center}.mn-rob i.emb{width:26px;height:26px;margin:0 4px 0 0}
-.fx-vs2{position:fixed;inset:0;z-index:9000;background:#000;cursor:pointer;overflow:hidden;animation:fxVsSai .45s ease-in 3.3s forwards}
+.fx-vs2{position:fixed;inset:0;z-index:9000;background:#000;cursor:pointer;overflow:hidden}
 .fx-vs2 .pal{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:0 0;overflow:hidden;font-family:Bangers,Impact,sans-serif}
 .fx-vs2 .lado2{position:absolute;inset:0}
 .fx-vs2 .q0{background:linear-gradient(115deg,#000 -20%,var(--j0) 70%);clip-path:polygon(0 0,580px 0,706px 100%,0 100%);transform:translateX(-100%);animation:vs2E .45s cubic-bezier(.2,.9,.3,1) forwards}
@@ -2030,6 +2030,32 @@
 @keyframes supBate{to{opacity:1;transform:none}}
 @keyframes fxSupSai{to{opacity:0;visibility:hidden}}
 body.mn-calmo .fx-vs2,body.mn-calmo .fx-sup{display:none}
+
+.dr-palco{position:relative;width:100%;overflow:hidden;margin-bottom:12px;border:3px solid #000;box-shadow:4px 4px 0 #000;background:#000}
+.dr-palco .pal{position:absolute;left:0;top:0;width:1280px;height:400px;transform-origin:0 0;font-family:Bangers,Impact,sans-serif}
+.dr-palco .q{position:absolute;inset:0}
+.dr-palco .q0{background:linear-gradient(115deg,#000 -30%,var(--j0) 75%);clip-path:polygon(0 0,580px 0,706px 100%,0 100%)}
+.dr-palco .q1{background:linear-gradient(245deg,#000 -30%,var(--j1) 75%);clip-path:polygon(574px 0,100% 0,100% 100%,700px 100%)}
+.dr-palco .q::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 2px,transparent 2px 26px)}
+.dr-palco .ra{position:absolute;left:640px;top:-10%;width:10px;height:120%;background:linear-gradient(#fff,#ffe36a);transform:translateX(-50%) rotate(-10deg);box-shadow:0 0 24px #ffd400;z-index:3}
+.dr-palco .ld{position:absolute;top:0;bottom:0;width:640px}
+.dr-palco .ld0{left:0}.dr-palco .ld1{right:0}
+.dr-palco .pk{position:absolute;left:0;bottom:-20px;width:430px;transform-origin:0 100%;transition:transform .55s cubic-bezier(.2,.9,.3,1.1),opacity .3s;filter:drop-shadow(0 0 2px #000) drop-shadow(6px 8px 0 rgba(0,0,0,.45))}
+.dr-palco .pk img{width:100%;display:block}
+.dr-palco .ld1 .pk img{transform:scaleX(-1)}
+.dr-palco .pk.prev{opacity:.45;filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 14px #fff)}
+.dr-palco .ld0 .pk.entra img{animation:drEntL .5s cubic-bezier(.15,.9,.25,1.15)}
+.dr-palco .ld1 .pk.entra img{animation:drEntR .5s cubic-bezier(.15,.9,.25,1.15)}
+@keyframes drEntL{from{translate:-500px 0;opacity:0}}
+@keyframes drEntR{from{translate:500px 0;opacity:0}}
+.dr-palco .cab{position:absolute;top:14px;font-size:28px;letter-spacing:2px;color:#fff;text-shadow:3px 3px 0 #000;z-index:9}
+.dr-palco .c0{left:24px}.dr-palco .c1{right:24px;text-align:right}
+.dr-palco .cab b{display:block;font-size:17px;color:#ffd84a;letter-spacing:3px}
+.dr-palco .bans{position:absolute;top:84px;display:flex;gap:6px;z-index:9}
+.dr-palco .b0{left:24px}.dr-palco .b1{right:24px}
+.dr-palco .bans span{position:relative;width:44px;height:44px;border-radius:50%;background:#222 center/cover;background-blend-mode:luminosity;border:2px solid #000;font-size:22px;display:grid;place-items:center}
+.dr-palco .bans span::after{content:"✕";position:absolute;inset:0;display:grid;place-items:center;color:#ff3040;font-size:36px;text-shadow:2px 2px 0 #000}
+body.mn-calmo .dr-palco .pk,body.mn-calmo .dr-palco .pk img{transition:none;animation:none}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Amatic+SC&family=Audiowide&family=Black+Ops+One&family=Bungee&family=Butcherman&family=Caveat+Brush&family=Cherry+Swash&family=Cinzel:wght@400;700&family=Cinzel+Decorative&family=Creepster&family=Eater&family=Exo+2:wght@400;700&family=Fascinate&family=Fredericka+the+Great&family=Grenze+Gotisch&family=Limelight&family=Lobster&family=Lora:wght@400;700&family=Marcellus+SC&family=MedievalSharp&family=Metal+Mania&family=Michroma&family=Monoton&family=New+Rocker&family=Nosifer&family=Orbitron&family=Oswald:wght@400;700&family=Pacifico&family=Pirata+One&family=Playfair+Display:ital,wght@0,400;0,700;1,900&family=Racing+Sans+One&family=Righteous&family=Rubik+Beastly&family=Rubik+Bubbles&family=Rubik+Burned&family=Rubik+Glitch&family=Rubik+Moonrocks&family=Rubik+Wet+Paint&family=Russo+One&family=Rye&family=Saira+Stencil+One&family=Sancreek&family=Special+Elite&family=Teko:wght@400;700&family=Tilt+Warp&family=Uncial+Antiqua&family=UnifrakturMaguntia&family=Zen+Dots&display=swap" rel="stylesheet"><style>
 /* ═══ FICHA COM IMAGEM + PÁGINA DE HISTÓRIA ═══ */
@@ -2327,7 +2353,7 @@ body.mn-calmo .folha.on .chapter-cover, body.mn-calmo .folha.on .chapter-cover *
 .fx-escuro{position:absolute; inset:0; background:rgba(0,0,0,.45); animation:fxEscuro 1.3s forwards}
 @keyframes fxEscuro{0%,100%{opacity:0}20%,80%{opacity:1}}
 /* tela VS */
-.fx-vs{position:fixed; inset:0; z-index:9000; display:grid; grid-template-columns:1fr 1fr; cursor:pointer; overflow:hidden; background:#000; animation:fxVsSai .45s ease-in 3.1s forwards}
+.fx-vs{position:fixed; inset:0; z-index:9000; display:grid; grid-template-columns:1fr 1fr; cursor:pointer; overflow:hidden; background:#000}
 .fx-vs .lado{position:relative; display:flex; flex-direction:column; justify-content:center; gap:14px; padding:4vh 4vw; background:linear-gradient(135deg, var(--tc) 0%, #000 120%); }
 .fx-vs .l0{clip-path:polygon(0 0,100% 0,88% 100%,0 100%); animation:fxVsL .5s cubic-bezier(.2,1.2,.4,1) both; align-items:flex-start}
 .fx-vs .l1{clip-path:polygon(12% 0,100% 0,100% 100%,0 100%); margin-left:-10%; animation:fxVsR .5s cubic-bezier(.2,1.2,.4,1) both; align-items:flex-end}
@@ -3487,6 +3513,7 @@ body.mn-calmo .cp-po{display:none}
       <div class="dr-vez" id="drVez"></div>
       <div class="dr-ordem" id="drOrdem"></div>
     </div>
+    <div class="dr-palco" id="drPalco"></div>
     <div class="dr-times" id="drTimes"></div>
     <div class="dr-sug" id="drSug"></div>
     <div class="dr-cols" id="drCols"></div>
@@ -4179,6 +4206,7 @@ body.mn-calmo .cp-po{display:none}
         }).join('') + '</div></div>').join('') + '</div>';
     }).join('');
     rSugestoes(j, ban);
+    palcoDraft();
     $('#drCols').classList.toggle('banindo', ban);
     $('#drConfirmar').disabled = n < 6;
     $('#drDesfazer').disabled = n === 0 && !bans().length;
@@ -4198,8 +4226,40 @@ body.mn-calmo .cp-po{display:none}
     const t = e.target.closest('.tile');
     if (!t) return;
     if (emBan()) { if (!banido(t.dataset.k)) banir(t.dataset.k); else abrirInfo(t.dataset.k); return; }
-    if (podeEscolher(t.dataset.k)) escolher(t.dataset.k); else abrirInfo(t.dataset.k);
+    if (podeEscolher(t.dataset.k)) { if (e.pointerType === 'touch' || (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) { if (!drPrev || drPrev.k !== t.dataset.k) { drPrev = { j: vezDraft(), k: t.dataset.k }; palcoDraft(); toast('Toque de novo em ' + CH[t.dataset.k].nome + ' para confirmar', 1600); return; } } drPrev = null; escolher(t.dataset.k); } else abrirInfo(t.dataset.k);
   });
+  // ── faixa do Draft com as artes de combate ──
+  let drPrev = null; const drVistos = new Set();
+  function drArte(k){ return '<img alt="" src="arte/vs/' + k + '.webp" onerror="if(!this.dataset.b){this.dataset.b=1;this.src=\'../arte/vs/' + k + '.webp\'}else{this.replaceWith(Object.assign(document.createElement(\'img\'),{src:EMB_SRC(\'' + k + '\'),style:\'width:60%;margin:0 20%\'}))}">'; }
+  window.EMB_SRC = k => EMB[k] || '';
+  function palcoDraft(){
+    const box = $('#drPalco'); if (!box) return;
+    if (!box.firstChild) box.innerHTML = '<div class="pal"><div class="q q0"></div><div class="q q1"></div><div class="ra"></div><div class="ld ld0"></div><div class="ld ld1"></div><div class="cab c0"></div><div class="cab c1"></div><div class="bans b0"></div><div class="bans b1"></div></div>';
+    const pal = box.firstChild, w = box.clientWidth || 1280, sc = Math.min(1, w / 1280);
+    pal.style.transform = 'scale(' + sc + ')'; box.style.height = Math.round(400 * sc) + 'px';
+    const fim = S.picks.length >= 6;
+    [0, 1].forEach(j => {
+      pal.querySelector('.c' + j).innerHTML = '<b>JOGADOR ' + (j + 1) + '</b>' + nomeJ(j).toUpperCase();
+      pal.querySelector('.b' + j).innerHTML = bans().filter(b => b.j === j).map(b => '<span title="' + CH[b.key].nome + '" style="background-image:url(' + (EMB[b.key] || '') + ')"></span>').join('');
+      const L = pal.querySelector('.ld' + j), ks = S.picks.filter(p => p.j === j).map(p => p.key);
+      const pv = drPrev && drPrev.j === j && !ks.includes(drPrev.k) && !fim ? drPrev.k : null, lista = pv ? ks.concat(pv) : ks;
+      [...L.children].forEach(el => { if (!lista.includes(el.dataset.k) || (el.classList.contains('prev') && el.dataset.k !== pv)) el.remove(); });
+      lista.forEach(k => { let el = L.querySelector('[data-k="' + k + '"]');
+        if (!el) { el = document.createElement('div'); el.className = 'pk'; el.dataset.k = k; el.innerHTML = drArte(k); L.appendChild(el); if (k !== pv && drVistos.has('p' + k)) {} else if (k !== pv) el.classList.add('entra'); }
+        el.classList.toggle('prev', k === pv); if (k !== pv) { drVistos.add('p' + k); setTimeout(() => el.classList.remove('entra'), 600); } });
+      const n = lista.length;
+      lista.forEach((k, i) => { const el = L.querySelector('[data-k="' + k + '"]'); let x, y, s, z;
+        if (fim) { s = .62; x = [20, 190, 360][i]; y = 0; z = 3 - i; }
+        else { const q = n - 1 - i; s = [.85, .64, .5][q] || .5; x = [230, 80, 0][q] || 0; y = [0, -40, -110][q] || -110; z = 10 - q; }
+        if (j) x = 640 - 430 * s - x;
+        el.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')'; el.style.zIndex = z; });
+    });
+  }
+  addEventListener('resize', () => { if ($('#drPalco') && $('#drPalco').firstChild) palcoDraft(); });
+  $('#drCols').addEventListener('mouseover', e => { const t = e.target.closest('.tile'); if (!t || emBan()) return; const k = t.dataset.k, j = vezDraft();
+    const nv = j !== null && podeEscolher(k) ? { j, k } : null; if ((nv && drPrev && nv.k === drPrev.k) || (!nv && !drPrev)) return; drPrev = nv; palcoDraft(); });
+  $('#drCols').addEventListener('mouseleave', () => { if (drPrev) { drPrev = null; palcoDraft(); } });
+
   $('#drSug').addEventListener('click', e => { const b = e.target.closest('[data-sk]'); if (!b || b.disabled) return; if (podeEscolher(b.dataset.sk)) escolher(b.dataset.sk); else abrirInfo(b.dataset.sk); });
   $('#drCols').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.classList.contains('tile')) e.target.click(); });
   $('#drDesfazer').addEventListener('click', () => {
@@ -9204,9 +9264,9 @@ body.mn-calmo .cp-po{display:none}
           return '<div class="time2 t' + j + '">' + I.map((im, n) => '<div class="p2" style="left:' + a.pos[n][0] + 'px;top:' + a.pos[n][1] + 'px;width:' + a.w + 'px;z-index:' + (ord.indexOf(n) + 1) + ';animation-delay:' + (.3 + n * .12).toFixed(2) + 's,' + (1 + n * .1).toFixed(2) + 's"><img alt="" src="' + im.src + '"></div>').join('') + '</div>'; });
         const nm = j => '<div class="nm n' + j + '"><b>' + nomeJ(j).toUpperCase() + '</b>' + S.times[j].map(c => CH[c.k].nome).join(' · ') + '</div>';
         const e = document.createElement('div'); e.className = 'fx-vs2';
-        e.innerHTML = '<div class="pal"><div class="lado2 q0"></div><div class="lado2 q1"></div><div class="ra"></div>' + lados.join('') + nm(0) + nm(1) + '<div class="vs"><span>VS</span></div><div class="fl"></div><div class="pul">TOQUE PARA PULAR</div></div>';
+        e.innerHTML = '<div class="pal"><div class="lado2 q0"></div><div class="lado2 q1"></div><div class="ra"></div>' + lados.join('') + nm(0) + nm(1) + '<div class="vs"><span>VS</span></div><div class="fl"></div><div class="pul">PRESSIONE QUALQUER TECLA OU CLIQUE PARA CONTINUAR</div></div>';
         const tira = palco(e), fora = () => { tira(); e.remove(); };
-        e.addEventListener('click', fora); setTimeout(fora, 3800);
+        const tecla = ev => { ev.preventDefault(); ev.stopPropagation(); removeEventListener('keydown', tecla, true); fora(); }; e.addEventListener('click', () => { removeEventListener('keydown', tecla, true); fora(); }); addEventListener('keydown', tecla, true);
         document.body.appendChild(e); ant = null;
       });
     }
@@ -9226,9 +9286,9 @@ body.mn-calmo .cp-po{display:none}
       const lado = j => '<div class="lado l' + j + '" style="--tc:var(--j' + j + ')"><h3>' + nomeJ(j).toUpperCase() + '</h3><div class="trio">' +
         S.times[j].map((c, n) => '<figure style="animation-delay:' + (300 + n * 120) + 'ms">' + (embC(c) ? '<img alt="" src="' + embC(c) + '">' : '<span style="font-size:60px">' + CH[c.k].icon + '</span>') + '<figcaption>' + CH[c.k].nome + '</figcaption></figure>').join('') + '</div></div>';
       const e = document.createElement('div'); e.className = 'fx-vs';
-      e.innerHTML = lado(0) + lado(1) + '<div class="raio"></div><div class="vs">VS</div><div class="pular">TOQUE PARA PULAR</div>';
+      e.innerHTML = lado(0) + lado(1) + '<div class="raio"></div><div class="vs">VS</div><div class="pular">PRESSIONE QUALQUER TECLA OU CLIQUE PARA CONTINUAR</div>';
       const fora = () => { e.remove(); };
-      e.addEventListener('click', fora); setTimeout(fora, 3600);
+      const tecla = ev => { ev.preventDefault(); ev.stopPropagation(); removeEventListener('keydown', tecla, true); fora(); }; e.addEventListener('click', () => { removeEventListener('keydown', tecla, true); fora(); }); addEventListener('keydown', tecla, true);
       document.body.appendChild(e);
       ant = null;
     }
