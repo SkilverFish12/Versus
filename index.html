@@ -2078,6 +2078,12 @@ body.mn-calmo .dr-palco .pk,body.mn-calmo .dr-palco .pk img{transition:none;anim
 .dr-cols.pag .tile{padding:4px 2px 5px}
 .dr-cols.pag .tile .tn{font-size:13px}
 @media (max-width:640px){.dr-seta{flex-basis:28px;font-size:18px}.dr-cols.pag{gap:4px}.dr-abas{display:none}.dr-cols.pag .dr-grid > .tile{flex-basis:calc(33.333% - 4px)}.dr-cols.pag .tile .tc{width:60px;height:60px}}
+
+.fx-sup .frase{font-family:Bangers,Impact,sans-serif;margin-top:20px;color:#fff;font-size:40px;line-height:1.08;letter-spacing:1px;text-shadow:3px 3px 0 #000,-2px -2px 0 #000;max-width:600px;opacity:0;transform:translateY(20px);animation:supFrase .35s 1s forwards}
+.fx-sup .frase::before{content:"“";font-family:Georgia,serif;font-weight:700;color:var(--ac);font-size:66px;vertical-align:-18px;margin-right:4px;text-shadow:3px 3px 0 #000}
+.fx-sup .frase::after{content:"”";font-family:Georgia,serif;font-weight:700;color:var(--ac);font-size:66px;vertical-align:-30px;margin-left:4px;text-shadow:3px 3px 0 #000}
+@keyframes supFrase{to{opacity:1;transform:none}}
+.fx-sup.com-frase{animation-delay:3.6s}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Amatic+SC&family=Audiowide&family=Black+Ops+One&family=Bungee&family=Butcherman&family=Caveat+Brush&family=Cherry+Swash&family=Cinzel:wght@400;700&family=Cinzel+Decorative&family=Creepster&family=Eater&family=Exo+2:wght@400;700&family=Fascinate&family=Fredericka+the+Great&family=Grenze+Gotisch&family=Limelight&family=Lobster&family=Lora:wght@400;700&family=Marcellus+SC&family=MedievalSharp&family=Metal+Mania&family=Michroma&family=Monoton&family=New+Rocker&family=Nosifer&family=Orbitron&family=Oswald:wght@400;700&family=Pacifico&family=Pirata+One&family=Playfair+Display:ital,wght@0,400;0,700;1,900&family=Racing+Sans+One&family=Righteous&family=Rubik+Beastly&family=Rubik+Bubbles&family=Rubik+Burned&family=Rubik+Glitch&family=Rubik+Moonrocks&family=Rubik+Wet+Paint&family=Russo+One&family=Rye&family=Saira+Stencil+One&family=Sancreek&family=Special+Elite&family=Teko:wght@400;700&family=Tilt+Warp&family=Uncial+Antiqua&family=UnifrakturMaguntia&family=Zen+Dots&display=swap" rel="stylesheet"><style>
 /* ═══ FICHA COM IMAGEM + PÁGINA DE HISTÓRIA ═══ */
@@ -5779,11 +5785,35 @@ body.mn-calmo .cp-po{display:none}
   let drPrev = null; const drVistos = new Set();
   function drArte(k){ return '<img alt="" src="arte/vs/' + k + '.webp" onerror="if(!this.dataset.b){this.dataset.b=1;this.src=\'../arte/vs/' + k + '.webp\'}else{this.replaceWith(Object.assign(document.createElement(\'img\'),{src:EMB_SRC(\'' + k + '\'),style:\'width:60%;margin:0 20%\'}))}">'; }
   window.EMB_SRC = k => EMB[k] || '';
+  // contorno de cada arte (parte visível), para posicionar o trio lado a lado sem cortes, como na tela VS
+  const drBB = {};
+  function drBox(k){
+    if (drBB[k]) return drBB[k]; const b = drBB[k] = { x0: .14, x1: .86, y0: .03, y1: 1 };
+    const im = new Image(); im.onload = () => { try { const W = 140, H = 112, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const cx = cv.getContext('2d'); cx.drawImage(im, 0, 0, W, H);
+      const d = cx.getImageData(0, 0, W, H).data; let x0 = W, x1 = 0, y0 = H, y1 = 0;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (d[(y * W + x) * 4 + 3] > 60) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      if (x1 > x0 && y1 > y0) Object.assign(b, { x0: x0 / W, x1: (x1 + 1) / W, y0: y0 / H, y1: (y1 + 1) / H }); } catch (e) {} if (S.picks && S.picks.length >= 6) palcoDraft(); };
+    im.onerror = () => { if (!im.dataset.b) { im.dataset.b = 1; im.src = '../arte/vs/' + k + '.webp'; } }; im.src = 'arte/vs/' + k + '.webp';
+    return b;
+  }
+  function drTrio(ks, Hv){
+    const B = ks.map(drBox), W = 430, H = 344, LIM = 590;
+    for (let s = 1.3; s >= .3; s -= .02) {
+      const ss = B.map((b, i) => s * (i === 1 ? .88 : 1)), cw = B.map((b, i) => W * ss[i] * (b.x1 - b.x0)), ch = B.map((b, i) => H * ss[i] * (b.y1 - b.y0));
+      const ov = .28 * Math.min(...cw), tot = cw.reduce((a, v) => a + v, 0) - 2 * ov;
+      if (tot > LIM || Math.max(...ch) > Hv * .9) continue;
+      let L = Math.max(6, (LIM - tot) / 2);
+      return B.map((b, i) => { const x = L - W * ss[i] * b.x0; L += cw[i] - ov;
+        const base = Hv + 20 - H * ss[i] * (1 - b.y1), alvo = Hv + .03 * ch[i] - (i === 1 ? Math.min(Hv * .16, Hv * .97 - ch[i]) : 0);
+        return [x, alvo - base, ss[i], [3, 1, 2][i]]; });
+    }
+    return ks.map((k, i) => [[20, 190, 360][i], 0, .4, 3 - i]);
+  }
   function palcoDraft(){
     const box = $('#drPalco'); if (!box) return;
     if (!box.firstChild) box.innerHTML = '<div class="pal"><div class="q q0"></div><div class="q q1"></div><div class="ra"></div><div class="ld ld0"></div><div class="ld ld1"></div><div class="cab c0"></div><div class="cab c1"></div><div class="bans b0"></div><div class="bans b1"></div></div>';
-    box.style.width = ''; const pal = box.firstChild, w = box.clientWidth || 1280, sc = Math.min(1, w / 1280, Math.max(.22, innerHeight * .34 / 400));
-    pal.style.transform = 'scale(' + sc + ')'; box.style.height = Math.round(400 * sc) + 'px'; box.style.width = Math.round(1280 * sc) + 6 + 'px';
+    box.style.width = ''; const pal = box.firstChild, w = box.clientWidth || 1280, sc = w / 1280, bh = Math.round(Math.min(400 * sc, Math.max(130, innerHeight * .4))), Hv = bh / sc, f = Hv / 400;
+    pal.style.transform = 'scale(' + sc + ')'; pal.style.height = Hv + 'px'; box.style.height = bh + 'px';
     { let hb = 0; const el = document.elementFromPoint(innerWidth / 2, 2); for (let x = el; x && x !== document.body; x = x.parentElement) { const ps = getComputedStyle(x).position; if (ps === 'fixed' || ps === 'sticky') { if (x !== box) hb = x.getBoundingClientRect().bottom; break; } } box.style.top = Math.max(0, Math.round(hb)) + 4 + 'px'; if (!box.dataset.rolou && box.offsetParent) { box.dataset.rolou = 1; setTimeout(() => scrollTo({ top: box.getBoundingClientRect().top + scrollY - hb - 8, behavior: 'smooth' }), 80); } }
     const fim = S.picks.length >= 6;
     [0, 1].forEach(j => {
@@ -5795,10 +5825,10 @@ body.mn-calmo .cp-po{display:none}
       lista.forEach(k => { let el = L.querySelector('[data-k="' + k + '"]');
         if (!el) { el = document.createElement('div'); el.className = 'pk'; el.dataset.k = k; el.innerHTML = drArte(k); L.appendChild(el); if (k !== pv && drVistos.has('p' + k)) {} else if (k !== pv) el.classList.add('entra'); }
         el.classList.toggle('prev', k === pv); if (k !== pv) { drVistos.add('p' + k); setTimeout(() => el.classList.remove('entra'), 600); } });
-      const n = lista.length;
+      const n = lista.length, tr = fim ? drTrio(lista, Hv) : null;
       lista.forEach((k, i) => { const el = L.querySelector('[data-k="' + k + '"]'); let x, y, s, z;
-        if (fim) { s = .62; x = [20, 190, 360][i]; y = 0; z = 3 - i; }
-        else { const q = n - 1 - i; s = [.85, .64, .5][q] || .5; x = [230, 80, 0][q] || 0; y = [0, -40, -110][q] || -110; z = 10 - q; }
+        if (fim) { [x, y, s, z] = tr[i]; }
+        else { const q = n - 1 - i; s = ([.85, .64, .5][q] || .5) * f; x = [230, 80, 0][q] || 0; y = ([0, -40, -110][q] || -110) * f; z = 10 - q; }
         if (j) x = 640 - 430 * s - x;
         el.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')'; el.style.zIndex = z; });
     });
@@ -10819,13 +10849,14 @@ body.mn-calmo .cp-po{display:none}
       });
     }
     let supUlt = '';
+    const FRASE = {"kael": "Pela Honra da Ordem", "cambiante": "É Hora de virar QUIMERA", "cavalo": "Meu Sofrimento nunca acaba", "carvao": "Eu sou Incontrolável", "gatoxadrez": "A Assimilação é Inevitável", "ancora": "Nada escapa de Mim", "ignifrost": "Vou ao Extremo", "vale": "Floresçam, minhas Crianças", "drive": "TAN-TAN-TAAAN! TAN-TAN-TAAAN! VRUUUUM!", "genio": "Esse é o único Jeito", "oliva": "O Mar Levanta, a Maré Desaba", "invicto": "Vem pra cima, menor", "relicario": "Protejam-se em sua Luz", "peste": "Lembre-te que vais Morrer", "promessa": "Sem mais Sangue", "andarilho": "Tá quase lá", "duque": "Sentem-se à mesa, Cobaias", "bigorna": "Eu decido a Ordem do mundo", "medonho": "Melhor não olhar pra mim", "manilhas": "Formação: Mão de Onze", "johnny": "Isso é o que você Merece", "sable": "TSSSK! GLUB, GLUB, GLUB... FSSSHHHHH!", "magnus": "EU COMANDO AGORA", "torre": "Isso sim vai te derrubar", "dinamo": "Tenho que ir até o fim", "fantasma": "Mergulhe em meu abismo", "ceifadora": "Trajeto marcado, senhorita Lin", "reator": "ARRRGHHH... BOOM!", "vespera": "Você caiu em minha Teia", "agentecaos": "O Caos é o único Caminho", "kazan": "Temam as chamas, Crianças", "ritmista": "Agora eu vou com tudo!", "maleavel": "Tenta fugir de mim", "tharen": "Observem a liberdade, Crianças", "cobrador": "Sem mais Atrasos no Pagamento", "eclipse": "Unam-se a nossa Sombra", "espreitador": "Te Peguei!", "semelhante": "Todo mundo pra cima dele!", "fundadora": "Eterna seja a Ordem dos Protetores", "profanacao": "GRRRR! ARRGH!", "mira": "Ninguém vai cair aqui!", "sonhadora": "É hora de ir mimir", "neo": "Invertendo tudo", "betterfly": "É tudo tão bonito", "juiza": "Me da um segundo e fica quieto", "bispo": "Eu tenho que estar lá", "arquiteto": "Seu eu agora é Meu", "assobio": "FIU-FIU-FIIIUUU! PRRU, PRRU... FLAP-FLAP-FLAP!", "saltadora": "Dobrando-os à minha vontade", "ninguem": "Silencie sua Mente", "forasteiro": "Vamos Respirar um Pouco?", "maligno": "Sofram e alimentam a própria Dor", "axioma": "Ouça a Verdade, Crianças", "aquarela": "Colorindo o Mundo Todo", "cupido": "O Amor está no Ar", "tatuadora": "Vai ficar no estilo", "superior": "Irei livrá-los dessa pobre existência.", "parlenda": "Vem até mim, Crianças", "tecelao": "As Leis sou eu que faço.", "contrabandista": "Só do bom e do melhor"};
     function sup(c, nomeH){
       if (calmo() || !c) return; const id = c.k + '|' + nomeH + '|' + (S.tk || 0); if (supUlt === id) return; supUlt = id;
       arte('sup', c.k).then(im => {
-        const e = document.createElement('div'); e.className = 'fx-sup t-' + c.k;
-        e.innerHTML = '<div class="pal"><div class="esc"></div><div class="fx"></div>' + (im ? '<div class="arte"><img alt="" src="' + im.src + '"></div>' : '') + '<div class="tx"><div class="tag">★ SUPREMA</div><div class="quem">' + CH[c.k].nome + '</div><div class="nome">' + nomeH + '</div></div><div class="fl"></div></div>';
+        const e = document.createElement('div'); e.className = 'fx-sup t-' + c.k + (FRASE[c.k] ? ' com-frase' : '');
+        e.innerHTML = '<div class="pal"><div class="esc"></div><div class="fx"></div>' + (im ? '<div class="arte"><img alt="" src="' + im.src + '"></div>' : '') + '<div class="tx"><div class="tag">★ SUPREMA</div><div class="quem">' + CH[c.k].nome + '</div><div class="nome">' + nomeH + '</div>' + (FRASE[c.k] ? '<div class="frase">' + FRASE[c.k] + '</div>' : '') + '</div><div class="fl"></div></div>';
         const tira = palco(e), fora = () => { tira(); e.remove(); };
-        e.addEventListener('click', fora); setTimeout(fora, 3000);
+        e.addEventListener('click', fora); setTimeout(fora, FRASE[c.k] ? 4000 : 3000);
         document.body.appendChild(e);
       });
     }
