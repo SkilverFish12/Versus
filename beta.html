@@ -2098,6 +2098,28 @@ body.mn-calmo .dr-palco .pk,body.mn-calmo .dr-palco .pk img{transition:none;anim
 .tb-pas span.p{border-style:dashed; border-color:#7b5cc4}
 .tb-pas span.e{border-color:#555; color:#ddd}
 .tb-pas span i{font-style:normal; font-weight:400; color:#bbb}
+/* tutorial */
+.tut-luz{position:fixed;z-index:9000;pointer-events:none;border-radius:10px;box-shadow:0 0 0 200vmax rgba(0,0,0,.58);transition:left .25s,top .25s,width .25s,height .25s}
+.tut-luz.on{outline:3px solid #ffd400;outline-offset:2px;animation:tutPulsa 1.4s ease-in-out infinite}
+@keyframes tutPulsa{50%{outline-color:#fff6b0;outline-offset:5px}}
+.tut-balao{position:fixed;z-index:9001;top:-9999px;left:12px;background:#fffbe8;color:#141414;border:3px solid #141414;box-shadow:6px 6px 0 #ffd400,6px 6px 0 3px #141414;border-radius:6px;padding:12px 14px 12px;font-size:14.5px;line-height:1.45;max-height:calc(100vh - 24px);overflow:auto;transition:left .25s,top .25s}
+.tut-balao.vem{animation:tutVem .3s ease-out}
+.tut-balao.treme{animation:tutTreme .35s}
+@keyframes tutVem{from{opacity:0;transform:translateY(8px) scale(.97)}}
+@keyframes tutTreme{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.mn-calmo .tut-balao,.mn-calmo .tut-luz{animation:none!important;transition:none}
+.tut-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;letter-spacing:.06em;color:#7a5c00;font-weight:700;margin-bottom:4px}
+.tut-top button{background:none;border:2px solid #141414;border-radius:4px;font:700 11px/1 inherit;padding:4px 7px;cursor:pointer;color:#141414}
+.tut-balao h4{font-family:'Bangers',cursive;font-size:24px;letter-spacing:.03em;margin:2px 0 6px;color:#c0281e;line-height:1.05}
+.tut-tx b{color:#000}
+.tut-pe{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:10px;flex-wrap:wrap}
+.tut-n{margin-right:auto;font-size:12px;color:#666;font-weight:700}
+.tut-faca{font-weight:700;color:#c0281e;font-size:13px}
+.tut-b{background:#ffd400;color:#141414;border:3px solid #141414;border-radius:4px;font-family:'Bangers',cursive;font-size:19px;letter-spacing:.04em;padding:5px 14px 3px;cursor:pointer;box-shadow:3px 3px 0 #141414}
+.tut-b.sec{background:#fff}
+.tut-b:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #141414}
+body.tut-on #atlFab,body.tut-on .kb-dica{z-index:auto}
+@media (max-width:600px){.tut-balao{font-size:13.5px;padding:10px 11px}.tut-balao h4{font-size:21px}}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Amatic+SC&family=Audiowide&family=Black+Ops+One&family=Bungee&family=Butcherman&family=Caveat+Brush&family=Cherry+Swash&family=Cinzel:wght@400;700&family=Cinzel+Decorative&family=Creepster&family=Eater&family=Exo+2:wght@400;700&family=Fascinate&family=Fredericka+the+Great&family=Grenze+Gotisch&family=Limelight&family=Lobster&family=Lora:wght@400;700&family=Marcellus+SC&family=MedievalSharp&family=Metal+Mania&family=Michroma&family=Monoton&family=New+Rocker&family=Nosifer&family=Orbitron&family=Oswald:wght@400;700&family=Pacifico&family=Pirata+One&family=Playfair+Display:ital,wght@0,400;0,700;1,900&family=Racing+Sans+One&family=Righteous&family=Rubik+Beastly&family=Rubik+Bubbles&family=Rubik+Burned&family=Rubik+Glitch&family=Rubik+Moonrocks&family=Rubik+Wet+Paint&family=Russo+One&family=Rye&family=Saira+Stencil+One&family=Sancreek&family=Special+Elite&family=Teko:wght@400;700&family=Tilt+Warp&family=Uncial+Antiqua&family=UnifrakturMaguntia&family=Zen+Dots&display=swap" rel="stylesheet"><style>
 /* ═══ FICHA COM IMAGEM + PÁGINA DE HISTÓRIA ═══ */
@@ -3937,11 +3959,19 @@ body.mn-calmo .cp-po{display:none}
     const MENUS = {
       raiz: () => ({ cam: '', itens: [
         { ic: '⚔️', t: 'JOGAR', c: 'var(--red)', d: emPartida() ? 'Partida em andamento: Rodada ' + S.rodada + ' · ' + S.nomes[0] + ' × ' + S.nomes[1] + '. Toque para continuar.' : 'Escolha a arena, faça o Draft e monte os trios. Dois jogadores, um vencedor.', s: emPartida() ? 'CONTINUAR · RODADA ' + S.rodada : '', ok: () => sair('combate') },
+        { ic: '🎓', t: 'TUTORIAL', c: '#2a9d5a', d: 'Opcional: aprenda a jogar no próprio site, em lições curtas e jogando de verdade. Básico para começar, Avançado para os detalhes.', s: window.TUT ? TUT.progresso() + ' LIÇÕES' : '', ok: () => abrir('tutorial') },
         { ic: '📖', t: 'MANUAL', c: 'var(--blue)', d: temHist ? 'As regras, as fichas dos personagens, os cenários e os arquivos do universo.' : 'As regras, as fichas dos personagens e os cenários.', ok: () => temHist ? abrir('manual') : sair('manual') },
         { ic: '📜', t: 'HISTÓRIAS', c: 'var(--estrategista)', trav: true, d: 'O modo história ainda está sendo escrito. Em breve, as aventuras do universo de Versus.' },
         { ic: '⚙️', t: 'OPÇÕES', c: '#2a9d5a', d: 'Tela cheia, animações, sons e tela de título.', ok: () => abrir('opcoes') },
         { ic: '⭐', t: 'CRÉDITOS', c: '#d98a00', d: 'Quem fez Versus.', ok: () => abrir('creditos') }
       ]}),
+      tutorial: () => ({ cam: '› TUTORIAL', itens: [
+        { ic: '🎓', t: 'BÁSICO', c: '#2a9d5a', s: TUT.progresso('BÁSICO'), d: 'Seis lições: a tela de combate, mover e atacar, habilidades, Medidor e Suprema, efeitos e fichas, e montar o time.', ok: () => abrir('tutB') },
+        { ic: '🧠', t: 'AVANÇADO', c: '#7b2fbe', s: TUT.progresso('AVANÇADO'), d: 'Quatro lições: movimento nas habilidades, obstáculos e estruturas, rodada e vitória, e as ferramentas da mesa.', ok: () => abrir('tutA') },
+        { volta: 1 }
+      ]}),
+      tutB: () => ({ cam: '› TUTORIAL › BÁSICO', itens: TUT.itens('BÁSICO').map(x => Object.assign(x, { ok: (o => () => transicao(o))(x.ok) })).concat([{ volta: 1 }]) }),
+      tutA: () => ({ cam: '› TUTORIAL › AVANÇADO', itens: TUT.itens('AVANÇADO').map(x => Object.assign(x, { ok: (o => () => transicao(o))(x.ok) })).concat([{ volta: 1 }]) }),
       manual: () => ({ cam: '› MANUAL', itens: [
         { ic: '📖', t: 'REGRAS E FICHAS', c: 'var(--blue)', d: 'O manual da 1ª Edição: classes, aptidões, a partida, habilidades, cenários e as fichas.', ok: () => sair('manual') },
         { ic: '🌆', t: 'ARQUIVOS DO UNIVERSO', c: 'var(--estrategista)', d: 'O mundo de Versus, as eras, as organizações e quem luta nele.', ok: () => sair('historia') },
@@ -4060,7 +4090,8 @@ body.mn-calmo .cp-po{display:none}
         if (passou) { pilha = []; atual = 'raiz'; mostrarMenu(true); }
         else mostrarTitulo();
       },
-      sair(){ clearInterval(dTimer); }
+      sair(){ clearInterval(dTimer); },
+      abrirTut(){ if (tela !== 'capa') return; pilha = [{ m: 'raiz', sel: 1 }]; atual = 'tutorial'; sel = 0; mostrarMenu(false); }
     };
   })();
   function atualizarCapa(){ MN.entrar(); }
@@ -4074,7 +4105,7 @@ body.mn-calmo .cp-po{display:none}
   let S = store.get(CHAVE);
   if (!S || !S.fase) S = novo();
   let hist = [];
-  const salvar = () => { if (!SECO) store.set(CHAVE, S); };
+  const salvar = () => { if (!SECO && !window.TUT_ON) store.set(CHAVE, S); };
   // fim da Multidão (Fechar Nele!): nenhum capturado sobrando ou Semelhante caiu
   function multidaoChecar(){
     if (SECO || !S.times) return;
@@ -9797,6 +9828,352 @@ body.mn-calmo .cp-po{display:none}
     obs.observe(document.body, { childList: true, subtree: true });
     return { tecla: k => tecla(k === 'back' ? 'back' : k) };
   })();
+
+  // ═════════ TUTORIAL (opcional, pelo menu) ═════════
+  const TUT = (function(){
+    const KEY = 'versus-tutorial';
+    let L = null, k = 0, salvo = null, hSalvo = null, rnd0 = Math.random, tick = null, luz = null, bal = null, livre = false, avancando = false, alvoEl = null, telaAnt = null;
+    const feitos = () => store.get(KEY) || {};
+    const marcarFeito = id => { const f = feitos(); f[id] = 1; store.set(KEY, f); };
+    const Q = s => !s ? null : typeof s === 'function' ? s() : $(s);
+    const P = key => { if (!S.times) return null; for (let j = 0; j < 2; j++) { const i = S.times[j].findIndex(x => x.k === key); if (i >= 0) return [j, i]; } return null; };
+    const C = key => { const r = P(key); return r ? S.times[r[0]][r[1]] : null; };
+    const ativoE = key => { const r = P(key); return !!(S.ativo && r && S.ativo[0] === r[0] && S.ativo[1] === r[1]); };
+    const aberto = id => { const m = $('#' + id); return !!m && !m.hidden; };
+    const habBt = re => [...$$('#ptAcao [data-hab]')].find(b => re.test(b.innerText));
+    const habPerm = re => t => { const b = t.closest && t.closest('[data-hab]'); return !!b && re.test(b.innerText); };
+    const tirarVS = () => [150, 500, 1000, 1800, 2800].forEach(ms => setTimeout(() => $$('.fx-vs2,.fx-vs').forEach(e => e.click()), ms));
+    // monta uma cena de treino: times, posições e Medidor
+    function cena(o){
+      S = novo(['Você', 'Treino']); S.cenOk = true; S.prim = 0; S.auto = true;
+      S.picks = o.a.map(key => ({ j: 0, key })).concat(o.b.map(key => ({ j: 1, key })));
+      iniciarPartida();
+      S.vez = 0; S.ini = 0; S.prim = 0;
+      Object.keys(o.pos || {}).forEach(key => { const c = C(key); if (c) c.pos = o.pos[key]; });
+      if (o.med) S.med = o.med.slice();
+      if (o.fn) o.fn();
+      modo = null; selTok = null; hist = [];
+      render(); tirarVS();
+    }
+    const TIME_A = ['kael', 'torre', 'bispo'], TIME_B = ['oliva', 'johnny', 'mira'];
+    // passos comuns
+    const pQuem = (key, nome) => ({ alvo: () => $('[data-quem="' + P(key).join(',') + '"]'), permite: t => !!t.closest('[data-quem="' + P(key).join(',') + '"]'), ok: () => ativoE(key), t: 'Escolha ' + nome, x: 'É a sua vez. Toque em <b>' + nome.toUpperCase() + '</b> para começar o turno.' });
+    const pAlvo = (key, nome, x) => ({ alvo: () => $('[data-alvotk="' + P(key).join(',') + '"]') || $('#ptBoard'), permite: t => !!(t.closest('[data-alvotk="' + P(key).join(',') + '"]') || t.closest('#ptBoard [data-tok="' + P(key).join(',') + '"]')), ok: () => aberto('mAcao'), t: 'Escolha o alvo', x: x || 'Toque em <b>' + nome.toUpperCase() + '</b>, no tabuleiro ou na lista de alvos.' });
+    const pRolar = (dados, x) => ({ alvo: '#rsRolar', permite: '#rsRolar', dados, ok: () => !$('#rsRolar') || !!$('#rsAplicar'), t: 'Role os dados', x: x || 'Toque em <b>ROLAR</b>.' });
+    const pAplicar = x => ({ alvo: '#rsAplicar', permite: '#rsAplicar', ok: () => !aberto('mAcao'), t: 'Aplicar', x: x || 'Toque em <b>APLICAR</b>. O site tira os PV e faz os efeitos e movimentos sozinho.' });
+    const pEncerrar = (key, x) => ({ alvo: '#ptAcao [data-fimturno]', permite: '#ptAcao [data-fimturno]', ok: () => C(key).agiu, t: 'Encerrar o turno', x: x || 'Toque em <b>✓ ENCERRAR TURNO</b> para passar a vez.' });
+
+    const LICOES = [
+      { id: 'b1', nivel: 'BÁSICO', n: 1, nome: 'A tela de combate', desc: 'Cada parte da tela, posicionar uma peça e começar um turno.',
+        cena: () => cena({ a: TIME_A, b: TIME_B, pos: { torre: 'K4', bispo: 'K5', oliva: 'A2', johnny: 'A3', mira: 'A5' } }),
+        passos: [
+          { t: 'Bem-vindo ao tutorial!', x: 'Esta é a tela de combate. Vou mostrar cada parte dela e você joga junto. É só um treino: nada aqui vale como partida, e se você tinha uma partida salva, ela continua guardada.<br><br>Toque em <b>PRÓXIMO</b> (ou Enter) para seguir. <b>SAIR</b> fecha o tutorial quando quiser.' },
+          { alvo: '#cbPassos', t: 'Etapas do combate', x: 'Toda partida passa por quatro etapas: <b>Cenário</b> (a arena), <b>Iniciativa</b> (quem começa), <b>Times</b> (banimento e Draft) e <b>Partida</b>. A lição <i>Montar o time</i> passa pelas três primeiras.' },
+          { alvo: '.pt-rodada', t: 'Rodada', x: 'O número da rodada. Em cada rodada, todo personagem vivo age uma vez.' },
+          { alvo: '.pt-info', t: 'Iniciativa e vez', x: 'Mostra qual jogador começou a rodada e de quem é a vez. Durante um turno, aparece aqui o personagem que está agindo e uma bolinha para cada ação que ainda resta.' },
+          { alvo: '#ptDesfazer', t: '↶ Desfazer', x: 'Volta o último passo: um movimento, um ataque aplicado, um toque errado. Pode tocar várias vezes seguidas.' },
+          { alvo: '#ptResumo', t: '📋 Resumo das regras', x: 'Uma cola rápida das regras principais, para consultar sem sair da partida.' },
+          { alvo: '#ptDados', t: '🧾 Histórico de dados', x: 'Todas as rolagens da partida: quem rolou, quantos dados, contra qual Defesa e o resultado.' },
+          { alvo: '#ptFimRodada', t: 'Fim da rodada', x: 'Quando todos já agiram, este botão fecha a rodada. A próxima começa, o Medidor sobe e os efeitos com prazo avançam.' },
+          { alvo: '#ptMenu', t: '⋯ Opções da partida', x: 'Abre o manual, o histórico da partida, recomeça com os mesmos times, monta um combate novo e liga ou desliga sons e etapas das ações.' },
+          { alvo: '#ptTabBtn', t: 'Esconder tabuleiro', x: 'Esconde o tabuleiro do site, para quem joga com peças de verdade na mesa e usa o site só para as fichas e os dados.' },
+          { alvo: '#ptBoard .tb-svg', t: 'O tabuleiro', x: 'A arena tem 91 casas. As fileiras vão de <b>A</b> (borda Norte, em cima) a <b>K</b> (borda Sul, embaixo). Cada casa tem 6 vizinhas, todas a 1 casa de distância. A casa do meio é a F6.' },
+          { alvo: '.banco', t: 'O banco', x: 'Quem ainda não entrou no tabuleiro fica aqui. No começo da partida, cada jogador posiciona o trio na sua borda: quem começa fica na borda Sul (K), o outro na Norte (A).' },
+          { alvo: '.banco-tk[data-tok="0,0"]', permite: '.banco-tk[data-tok="0,0"]', ok: () => !!(selTok && selTok[0] === 0 && selTok[1] === 0), t: 'Pegue o Guardião', x: 'Toque no <b>GUARDIÃO</b> no banco.' },
+          { alvo: '#ptBoard .tb-svg', permite: t => !!(t.closest('#ptBoard [data-cell^="K"]') && !t.closest('[data-tok]')), ok: () => { const c = C('kael'); return !!(c.pos && c.pos[0] === 'K'); }, t: 'Posicione na borda Sul', x: 'Agora toque numa casa vazia da fileira <b>K</b>, lá embaixo. Se a borda encher (como com o Manilhas e Breu e Fresta), as peças que sobrarem vão para a fileira J.' },
+          { alvo: '.quem', t: 'Quem joga?', x: 'Em cada vez, o jogador escolhe qual personagem do time vai agir. Quem já agiu na rodada fica apagado. No teclado, as teclas 1, 2 e 3 escolhem.' },
+          pQuem('kael', 'o Guardião'),
+          { alvo: '.ac-topo', t: 'O turno', x: 'Quem está agindo e quantas ações restam. Todo turno tem 3 ações (no mínimo 1 e no máximo 5, com bônus e penalidades). Cada bolinha é uma ação.' },
+          { alvo: '.ac-stat', t: 'PV e Defesas', x: 'Os Pontos de Vida e as quatro Defesas. Cada Defesa protege contra testes de uma aptidão: um ataque de Físico precisa passar a <b>Defesa contra Físico</b>.' },
+          { alvo: '.ac-alvos', t: 'Defesa dos inimigos', x: 'A Defesa de cada inimigo e a distância até ele. Em destaque, a Defesa contra a aptidão de ataque do seu personagem: é o número que cada dado precisa alcançar.' },
+          { alvo: '.ac-grade', t: 'Ações', x: 'Mover, Ataque Básico, as habilidades e a Suprema (★). Cada botão mostra o custo em ações, o alcance, o teste e a categoria. Quando não dá para usar, o botão fica apagado e diz o motivo.' },
+          { alvo: '.ac-rodape', t: 'Rodapé do turno', x: '<b>⚡ Aprimorar</b> gasta 1 Medidor para fortalecer a próxima habilidade. <b>🏗️ Estrutura</b> coloca uma peça de habilidade à mão. <b>✓ Encerrar turno</b> passa a vez, mesmo com ações sobrando.' },
+          { alvo: '.ac-pas', t: 'Passivas', x: 'Aqui ficam as passivas: regras do personagem que funcionam sozinhas, sem gastar ação. Os recursos e efeitos delas aparecem em selos no painel.' },
+          { alvo: '.tb-info', t: 'Peça selecionada', x: 'Com uma peça selecionada, aparece esta faixa: 🎲 rola dados para ela, 📄 abre a ficha completa, ⤓ tira a peça do tabuleiro e ✕ solta a seleção. Tocar em outra peça mostra a distância até cada um.' },
+          { alvo: '#ptTimes', t: 'Fichas da partida', x: 'Embaixo do tabuleiro ficam os cartões dos seis personagens e o Medidor de cada time. Servem para ajustar tudo à mão. Quase nunca é preciso descer até aqui: o painel do turno já mostra o que importa.' },
+          { alvo: '#dadoFab', t: '🎲 Dado rápido', x: 'Rola dados soltos a qualquer hora, para resolver algo à mão ou jogar com peças na mesa.' },
+          { alvo: '#atlFab', t: 'Atalhos', x: 'Mostra os atalhos do teclado (tecla H). Dá para jogar a partida inteira pelo teclado ou com controle.' },
+          { fim: true, t: 'Lição concluída!', x: 'Você já conhece a tela. Na próxima lição, o Guardião vai se mover e atacar.' }
+        ] },
+      { id: 'b2', nivel: 'BÁSICO', n: 2, nome: 'Mover e atacar', desc: 'Mover, Ataque Básico, dados contra Defesa e encerrar o turno.',
+        cena: () => cena({ a: TIME_A, b: TIME_B, pos: { kael: 'F3', torre: 'K4', bispo: 'K5', oliva: 'F6', johnny: 'A3', mira: 'A5' } }),
+        passos: [
+          pQuem('kael', 'o Guardião'),
+          { alvo: '.ac-alvos', t: 'Longe demais', x: 'A Azeitona está a 3 casas. O Ataque Básico do Guardião só alcança quem está <b>adjacente</b> (a 1 casa). Primeiro, chegue perto.' },
+          { alvo: '#ptAcao [data-ac="mover"]', permite: '#ptAcao [data-ac="mover"]', ok: () => !!(modo && modo.t === 'mover'), t: 'Mover', x: 'Toque em <b>👣 MOVER</b>. Cada Mover custa 1 ação e anda até o deslocamento do personagem (2 casas).' },
+          { alvo: '#ptBoard .tb-svg', permite: t => !!(t.closest('#ptBoard [data-cell]') || t.closest('[data-ac="mover"]') || t.closest('[data-cancelar]')), ok: () => { const a = C('kael'), b = C('oliva'); return !!(a.pos && b.pos && dist(a.pos, b.pos) === 1); }, t: 'Escolha a casa', x: 'As casas destacadas são onde ele pode chegar, e os números mostram a distância. Toque numa casa <b>ao lado da Azeitona</b>. Se precisar, use MOVER de novo.' },
+          { alvo: '.pt-info', t: 'Uma ação a menos', x: 'Mover gastou 1 ação: sobraram 2 bolinhas. As ações podem ser gastas em qualquer ordem.' },
+          { alvo: '#ptAcao [data-ac="basico"]', permite: '#ptAcao [data-ac="basico"]', ok: () => !!(modo && modo.t === 'basico'), t: 'Ataque Básico', x: 'Toque em <b>👊 ATAQUE BÁSICO</b>. Custa 1 ação e rola tantos dados quanto a aptidão de ataque do personagem (o Guardião ataca com Físico 4).' },
+          pAlvo('oliva', 'a Azeitona', 'Os alvos possíveis brilham no tabuleiro e aparecem na lista. Toque na <b>AZEITONA</b>. O ✕ Cancelar desiste sem gastar ação.'),
+          { alvo: '#mAcao .modal-caixa', t: 'O teste', x: 'Este é o teste: <b>4 dados contra Defesa 7</b>. Cada dado é um d10, e todo dado que tirar 7 ou mais acerta. No Ataque Básico, cada acerto causa <b>2 de dano</b>.' },
+          pRolar('alto'),
+          { alvo: '#mAcao .modal-caixa', t: 'Resultado', x: 'Os dados que passaram a Defesa são acertos. A caixa verde mostra o dano em cada alvo e as caixas marcadas dizem o que vai ser aplicado. Se algo não valer, é só desmarcar.' },
+          pAplicar(),
+          { alvo: '.ac-alvos', t: 'Dano aplicado', x: 'A Azeitona perdeu PV: veja aqui e na barrinha embaixo da peça. Enquanto aplica, o site mostra as <b>etapas</b> da ação; o botão PULAR (ou a tecla P) adianta, e dá para desligar nas Opções.' },
+          { alvo: '#ptDesfazer', t: 'Errou?', x: 'Se tocar em algo errado, o ↶ Desfazer volta o último passo. Agora não precisa.' },
+          pEncerrar('kael', 'Ainda sobra 1 ação, mas não há nada útil para fazer. Toque em <b>✓ ENCERRAR TURNO</b>.'),
+          { alvo: '.quem', t: 'A vez passa', x: 'Agora o outro jogador escolhe um personagem. Os jogadores alternam, um personagem por vez, até todos agirem na rodada.' },
+          { fim: true, t: 'Lição concluída!', x: 'Você moveu, atacou e passou a vez. Na próxima lição, a Torre usa uma habilidade.' }
+        ] },
+      { id: 'b3', nivel: 'BÁSICO', n: 3, nome: 'Habilidades', desc: 'Custo, alcance, teste, categoria e bloqueio de alcance.',
+        cena: () => cena({ a: TIME_A, b: TIME_B, pos: { kael: 'K3', torre: 'F2', bispo: 'K5', oliva: 'D4', johnny: 'F5', mira: 'F8' } }),
+        passos: [
+          pQuem('torre', 'a Torre'),
+          { alvo: () => habBt(/RIFLE/), t: 'Uma habilidade', x: '<b>Rifle de Precisão</b>: custa 2 ações, alcança um alvo a até 6 casas, faz teste de <b>Visão</b> e é um 🎯 Projétil. Se acertar, causa 4 de dano.' },
+          { t: 'Categorias', x: 'Toda habilidade de ataque tem uma categoria:<br>🥊 <b>Golpe</b>: corpo ou arma; ativa reações de contato.<br>🎯 <b>Projétil</b>: viaja até o alvo e para no primeiro inimigo ou Obstáculo.<br>⚡ <b>Energia</b>: surge direto no alvo.<br>🧠 <b>Mental</b>: age na mente e ignora obstáculos.' },
+          { alvo: () => habBt(/RIFLE/), permite: habPerm(/RIFLE/), ok: () => !!(modo && modo.t === 'hab'), t: 'Use o Rifle', x: 'Toque em <b>RIFLE DE PRECISÃO</b>.' },
+          { alvo: '#ptBoard .tb-svg', t: 'Alvos e bloqueio', x: 'Só o <b>Predador</b> e a <b>Azeitona</b> podem ser alvo. A Mira está no alcance, mas fica atrás do Predador: <b>inimigos bloqueiam</b> a linha de Golpes e Projéteis. Aliados não atrapalham.' },
+          pAlvo('johnny', 'o Predador'),
+          pRolar('alto'),
+          { alvo: '#mAcao .modal-caixa', t: 'Dano de habilidade', x: 'Nas habilidades, o dano é fixo: basta <b>1 dado</b> passar a Defesa para causar os 4 de dano. Mais acertos não somam, a não ser que a ficha diga.' },
+          pAplicar(),
+          { t: 'Notas de movimento', x: 'Muitas habilidades movem alguém, e a nota <b>↪</b> da ficha explica quando. <b>Avançar, saltar e atravessar</b> acontecem antes do teste, mesmo se errar. <b>Empurrar, puxar e arremessar</b> só valem no alvo acertado. O site faz esses movimentos sozinho.' },
+          pEncerrar('torre'),
+          { fim: true, t: 'Lição concluída!', x: 'Você usou uma habilidade e viu o bloqueio de alcance. Na próxima lição: Medidor, Aprimorar e Suprema.' }
+        ] },
+      { id: 'b4', nivel: 'BÁSICO', n: 4, nome: 'Medidor e Suprema', desc: 'Aprimorar uma habilidade e usar a Técnica Suprema.',
+        cena: () => cena({ a: TIME_A, b: TIME_B, med: [3, 2], pos: { kael: 'K3', torre: 'F4', bispo: 'F2', oliva: 'A2', johnny: 'C6', mira: 'A5' }, fn: () => { C('torre').pv = 14; } }),
+        passos: [
+          { alvo: '.time-h .medidor', t: 'Medidor', x: 'Cada time tem um Medidor, de 0 a 5. Começa em 2, sobe 1 a cada rodada nova e 1 para os dois times quando alguém é eliminado. Os botões − e + ajustam à mão. Seu time está com 3.' },
+          pQuem('bispo', 'a Lady Bispo'),
+          { alvo: '.ac-apr', permite: t => !!t.closest('.ac-apr'), ok: () => !!($('#acApr') && $('#acApr').checked), t: '⚡ Aprimorar', x: 'Marque <b>⚡ APRIMORAR</b>. Gasta 1 Medidor e a próxima habilidade ganha o efeito <b>+1 MEDIDOR</b> da ficha. Cada personagem aprimora uma vez por rodada.' },
+          { alvo: () => habBt(/REVERTER/), permite: habPerm(/REVERTER/), ok: () => !!(modo && modo.t === 'hab') || aberto('mAcao'), t: 'Reverter o Tempo', x: 'A Torre está ferida (14 PV). Toque em <b>REVERTER O TEMPO</b>.' },
+          { alvo: () => $('[data-alvotk="' + P('torre').join(',') + '"]') || $('#ptBoard'), permite: t => !!(t.closest('[data-alvotk="' + P('torre').join(',') + '"]') || t.closest('#ptBoard [data-tok="' + P('torre').join(',') + '"]')), ok: () => aberto('mAcao'), t: 'Escolha a Torre', x: 'Toque na <b>TORRE</b>.' },
+          { alvo: '#mAcao .modal-caixa', t: 'Sem teste', x: 'Curar um aliado não pede teste. Aprimorada, a cura sobe de 6 para <b>8 PV</b> e tira todas as Penalidades. A Lady Bispo vai até ficar ao lado da Torre.' },
+          { alvo: () => $('#rsAplicar') || $('#rsRolar'), permite: '#rsAplicar, #rsRolar', ok: () => !aberto('mAcao'), t: 'Aplicar', x: 'Toque no botão para confirmar.' },
+          { alvo: '.time-h .medidor', t: 'Medidor gasto', x: 'O Medidor do seu time caiu de 3 para 2.' },
+          { antes: () => cena({ a: TIME_A, b: TIME_B, med: [3, 2], pos: { kael: 'F5', torre: 'K4', bispo: 'K5', oliva: 'E5', johnny: 'F6', mira: 'A5' } }), t: 'Outra situação', x: 'Agora o Guardião está entre dois inimigos e o time tem <b>3 de Medidor</b>, o preço de uma Técnica Suprema.' },
+          pQuem('kael', 'o Guardião'),
+          { alvo: '#ptAcao [data-hab="sup"]', t: '★ Técnica Suprema', x: 'A Suprema custa 3 Medidor e só pode ser usada <b>uma vez por partida</b>. <b>Abalo Sísmico</b>: todos os inimigos no Raio 1 sofrem 8 de dano e perdem 1 ação. Se o teste falhar, ela não se perde: a ficha diz o efeito menor (SE ERRAR).' },
+          { alvo: '#ptAcao [data-hab="sup"]', permite: '#ptAcao [data-hab="sup"]', ok: () => !!(modo && modo.t === 'hab') || aberto('mAcao'), t: 'Use a Suprema', x: 'Toque em <b>★ ABALO SÍSMICO</b>.' },
+          { alvo: '#ptAcao [data-confirmar]', permite: '#ptAcao [data-confirmar]', ok: () => aberto('mAcao'), t: 'Confirme os alvos', x: 'Em habilidades de área, o site já marca todos os inimigos que podem ser atingidos (✓). Tocar num alvo tira ou põe a marca. Toque em <b>USAR ▶</b>.' },
+          pRolar('alto', 'Um teste contra cada inimigo da área. Toque em <b>ROLAR</b>.'),
+          pAplicar(),
+          { fim: true, t: 'Lição concluída!', x: 'Você aprimorou uma habilidade e usou uma Suprema. Na próxima lição: efeitos, passivas e as fichas.' }
+        ] },
+      { id: 'b5', nivel: 'BÁSICO', n: 5, nome: 'Efeitos e fichas', desc: 'Selos de efeito, passivas, a ficha completa e os ajustes à mão.',
+        cena: () => cena({ a: TIME_A, b: TIME_B, pos: { kael: 'F5', torre: 'K4', bispo: 'K5', oliva: 'A2', johnny: 'B4', mira: 'A5' } }),
+        passos: [
+          pQuem('kael', 'o Guardião'),
+          { alvo: () => habBt(/PETRIFICA/), permite: habPerm(/PETRIFICA/), ok: () => aberto('mAcao') || (C('kael').efs || []).length > 0, t: 'Petrificação', x: 'Toque em <b>PETRIFICAÇÃO</b>: o Guardião reduz o dano que sofre, mas fica Imóvel.' },
+          { alvo: () => aberto('mAcao') ? ($('#rsAplicar') || $('#rsRolar')) : null, permite: '#rsAplicar, #rsRolar', ok: () => !aberto('mAcao'), t: 'Aplicar', x: 'Sem teste: toque em <b>APLICAR</b>.' },
+          { alvo: () => $('#ptAcao .as-rec') || $('#ptAcao .ac-stat'), t: 'Selos de efeito', x: 'A Petrificação virou um efeito: reduz 2 de todo dano e deixa o Guardião Imóvel até o próximo turno dele. Os selos do painel mostram efeitos, recursos (como Guardas e Cargas) e passivas em jogo, com o prazo de cada um.' },
+          { alvo: '.ac-pas', permite: t => !!t.closest('.ac-pas summary'), ok: () => !!($('.ac-pas') && $('.ac-pas').open), t: 'Passivas', x: 'Toque em <b>Passivas de GUARDIÃO</b> para abrir. A Blindagem funciona sozinha: quem acerta um Golpe nele perde 1 PV.' },
+          { alvo: '.tb-info [data-ficha]', permite: '.tb-info [data-ficha]', ok: () => aberto('mFicha'), t: '📄 Ficha completa', x: 'Toque em <b>📄</b> para abrir a ficha do Guardião.' },
+          { alvo: '#mFicha .modal-x', permite: '#mFicha .modal-x', ok: () => !aberto('mFicha'), t: 'A ficha', x: 'É a mesma ficha do manual, com as aptidões e Defesas de agora (▲ verde quando sobem, ▼ quando descem). Role para ler e feche no <b>✕</b>.' },
+          { alvo: '#ptTimes .cc .pv-linha', t: 'Cartão: PV', x: 'Nos cartões, embaixo do tabuleiro, os PV podem ser ajustados com −5, −1, +1 e +5. A linha de baixo aplica um valor digitado como <b>DANO</b>, <b>CURA</b> ou <b>dano PSÍQUICO</b> (que ignora reduções).' },
+          { alvo: '#ptTimes .cc .st-grid', t: 'Cartão: ajustes', x: 'Ajustes à mão: ações do próximo turno, dano, dados, Defesa, deslocamento, redução de dano e escudo. Use quando uma regra da mesa não estiver automática.' },
+          { alvo: '#ptTimes .cc .ef-box', t: 'Efeitos ativos', x: 'Todos os efeitos do personagem, com quem causou e quando acaba. <b>+ EFEITO</b> lista os efeitos das fichas dos 6 personagens da partida, já com duração e modificadores, para colocar à mão.' },
+          { alvo: '#ptTimes .cc .dc-box', t: 'Dano Contínuo e status', x: '🩸 Dano Contínuo: quanto e por quantos turnos. ⛓ Imóvel liga e desliga o estado, e ↺ Limpar status tira tudo de uma vez.' },
+          pEncerrar('kael'),
+          { fim: true, t: 'Lição concluída!', x: 'Você conhece efeitos, passivas e fichas. Na última lição do Básico, você monta os times do zero.' }
+        ] },
+      { id: 'b6', nivel: 'BÁSICO', n: 6, nome: 'Montar o time', desc: 'Cenário, iniciativa, banimento, Draft e posicionamento.',
+        cena: () => { S = novo(['Jogador 1', 'Jogador 2']); modo = null; selTok = null; hist = []; render(); },
+        passos: [
+          { alvo: '#cenGrid', t: 'Escolham a arena', x: 'Cada cenário muda uma regra para os dois lados: fogo que se espalha, ondas, caminhões, Medidor extra. 🎲 Sortear escolhe ao acaso.' },
+          { alvo: '#cenComum', permite: '#cenComum', ok: () => S.fase === 'iniciativa', t: 'Arena comum', x: 'Para aprender, toque em <b>⬡ ARENA COMUM</b>, sem regra extra.' },
+          { alvo: '.ini-nomes', permite: '#nome0, #nome1', t: 'Nomes', x: 'Os nomes dos dois jogadores. Pode digitar se quiser.' },
+          { alvo: '.moeda-area', permite: '#btnMoeda, [data-prim]', ok: () => S.prim != null, t: 'Quem começa?', x: 'Toque em <b>🪙 CARA OU COROA</b>, ou escolham direto quem começa. Quem começa escolhe primeiro no Draft e posiciona primeiro.' },
+          { alvo: '.ini-box .ini-auto', t: 'Temporizador e Turno guiado', x: '<b>⏱️ Temporizador</b> (opcional): 1 minuto para escolher quem joga e 2 para agir. <b>🤖 Turno guiado</b>: ligado, o site mostra as ações, rola os dados e aplica tudo; desligado, vocês controlam pelas fichas e pelo dado.' },
+          { alvo: '#btnIrDraft', permite: '#btnIrDraft', ok: () => S.fase === 'draft', t: 'Aos times', x: 'Toque em <b>ESCOLHER TIMES ▶</b>.' },
+          { alvo: '.dr-topo', t: 'Banimento e Draft', x: 'Aqui aparece quem escolhe agora e a ordem. Primeiro vem o <b>banimento</b>: cada jogador bane 2 personagens, alternando, e ninguém pode escolher os banidos.' },
+          { alvo: '#drCols', permite: '#drCols, #drPalco', ok: () => (S.bans || []).length >= 1, t: 'Bana um personagem', x: 'Os personagens estão separados por classe e subclasse. Toque em um para <b>banir</b>. A tecla I abre a ficha.' },
+          { alvo: '#drPularBan', permite: '#drPularBan', ok: () => !!S.semBan || (S.bans || []).length >= 4, t: 'Pular o resto', x: 'Para ir mais rápido, toque em <b>⏭ PULAR BANIMENTO</b>.' },
+          { alvo: '#drCols', permite: '#drCols, #drPalco', ok: () => S.picks.length >= 1, t: 'O Draft', x: 'Cada time precisa de <b>1 Defensor, 1 Combatente e 1 Apoiador</b>. A ordem é A, B, B, A, A, B. Toque num personagem para escolher.' },
+          { alvo: '#drSug', t: 'Equipes sugeridas', x: 'Embaixo dos times aparecem equipes que combinam com quem você já escolheu. Tocar no nome de uma equipe escolhe os personagens dela.' },
+          { alvo: '#drAleatorio', permite: '#drCols, #drPalco, #drAleatorio, #drDesfazer, #drSug', ok: () => S.picks.length >= 6, t: 'Completem os times', x: 'Escolham o resto. Cada toque em <b>❓ ALEATÓRIO</b> escolhe um personagem ao acaso para quem está na vez. ↶ Desfazer escolha volta uma escolha.' },
+          { alvo: '#drConfirmar', permite: '#drConfirmar', ok: () => S.fase === 'partida', t: 'Começar', x: 'Toque em <b>⚡ COMEÇAR PARTIDA ⚡</b>.' },
+          { antes: tirarVS, alvo: '.tb-dica', t: 'Posicionamento', x: 'Agora cada jogador posiciona o trio na sua borda: quem começa na Sul (K), o outro na Norte (A). Se a borda encher, as peças que sobrarem vão para a fileira seguinte (J ou B).' },
+          { fim: true, t: 'Básico concluído!', x: 'Você já sabe jogar uma partida inteira. O nível <b>Avançado</b> mostra movimentos de habilidade, obstáculos, fim de rodada e as ferramentas da mesa.' }
+        ] },
+      { id: 'a1', nivel: 'AVANÇADO', n: 1, nome: 'Movimento nas habilidades', desc: 'Avançar mesmo errando, empurrões só no acerto.',
+        cena: () => cena({ a: TIME_A, b: TIME_B, pos: { kael: 'F3', torre: 'K4', bispo: 'K5', oliva: 'F5', johnny: 'A3', mira: 'A5' } }),
+        passos: [
+          pQuem('kael', 'o Guardião'),
+          { alvo: () => habBt(/AVANÇO/), t: 'Avanço Imparável', x: 'Linha 3. A nota ↪ diz: <b>avança antes do teste</b>, mesmo se errar. Se acertar, empurra o alvo 2 casas, causa 5 de dano e o Guardião fica na casa onde o alvo estava.' },
+          { alvo: () => habBt(/AVANÇO/), permite: habPerm(/AVANÇO/), ok: () => !!(modo && modo.t === 'hab'), t: 'Use o Avanço', x: 'Toque em <b>AVANÇO IMPARÁVEL</b>.' },
+          { alvo: '#ptBoard .tb-svg', permite: t => !!(t.closest('#ptBoard [data-cell]') || t.closest('#ptBoard [data-tok]') || t.closest('[data-cancelar]') || t.closest('#ptAcao [data-alvotk]')), ok: () => !!$('#ptAcao [data-confirmar]') || aberto('mAcao'), t: 'Escolha a direção', x: 'Habilidades em <b>Linha</b> pedem uma direção. Toque na casa logo à direita do Guardião, na direção da Azeitona.' },
+          { alvo: '#ptAcao [data-confirmar]', permite: t => !!(t.closest('#ptAcao [data-confirmar]') || t.closest('#ptBoard [data-cell]') || t.closest('#ptAcao [data-cancelar]')), ok: () => aberto('mAcao'), t: 'Confirme', x: 'A linha fica marcada no tabuleiro, e o painel diz quantos alvos ela pega. Toque em <b>USAR ▶</b>.' },
+          pRolar('baixo', 'Desta vez vamos ver um <b>erro</b>. Toque em <b>ROLAR</b>.'),
+          { alvo: '#mAcao .modal-caixa', t: 'Errou', x: 'Nenhum dado passou. O avanço acontece mesmo assim, porque vem antes do teste. O empurrão e o dano, não.' },
+          pAplicar(),
+          { alvo: '#ptBoard .tb-svg', t: 'Resultado', x: 'O Guardião avançou e parou ao lado da Azeitona, que não saiu do lugar.' },
+          { antes: () => cena({ a: TIME_A, b: TIME_B, pos: { kael: 'K3', torre: 'F3', bispo: 'K5', oliva: 'F5', johnny: 'A3', mira: 'A5' } }), t: 'Agora, um empurrão', x: 'Outra situação: a Torre vai usar a <b>Escopeta de Pulso</b>, que empurra o alvo 2 casas. Empurrão só acontece se acertar.' },
+          pQuem('torre', 'a Torre'),
+          { alvo: () => habBt(/ESCOPETA/), permite: habPerm(/ESCOPETA/), ok: () => !!(modo && modo.t === 'hab'), t: 'Escopeta de Pulso', x: 'Toque em <b>ESCOPETA DE PULSO</b>.' },
+          pAlvo('oliva', 'a Azeitona'),
+          pRolar('alto'),
+          pAplicar(),
+          { alvo: '#ptBoard .tb-svg', t: 'Empurrada', x: 'Acertou: a Azeitona foi empurrada 2 casas para longe da Torre. Se ela batesse num personagem ou Obstáculo, pararia ali; a colisão só causa dano quando a ficha diz.' },
+          { t: 'Resumo', x: 'O quadro <b>Quando o Movimento Acontece</b> (capítulo 04 do manual) resume tudo: <b>avança, salta, atravessa</b> antes do teste; <b>empurra, puxa, arrasta, arremessa</b> só no acertado; <b>é puxado até o alvo</b> e <b>move-se depois do ataque</b> só se acertar; <b>teleporta</b> na hora (num inimigo, só se acertar).' },
+          { fim: true, t: 'Lição concluída!', x: 'Na próxima lição: obstáculos e estruturas.' }
+        ] },
+      { id: 'a2', nivel: 'AVANÇADO', n: 2, nome: 'Obstáculos e estruturas', desc: 'Projéteis param em obstáculos; estruturas à mão.',
+        cena: () => cena({ a: TIME_A, b: TIME_B, pos: { kael: 'K3', torre: 'F2', bispo: 'K5', oliva: 'A2', johnny: 'C3', mira: 'F6' }, fn: () => { S.est = (S.est || []).concat([{ tipo: 'Bloco de Aço', cell: 'F4', dono: 1, autor: '1,0', autorNome: 'Treino', info: 'Obstáculo de treino.' }]); } }),
+        passos: [
+          { alvo: '#ptBoard .tb-svg', t: 'Estruturas', x: 'Estruturas são peças criadas por habilidades: Galhos, Muralhas, Pássaros, Cópias e outras. Este <b>Bloco de Aço 🧱</b> em F4 é um <b>Obstáculo</b>: ninguém passa por ele e Projéteis param nele.' },
+          pQuem('torre', 'a Torre'),
+          { alvo: () => habBt(/RIFLE/), permite: habPerm(/RIFLE/), ok: () => !!(modo && modo.t === 'hab'), t: 'Tente o Rifle', x: 'Toque em <b>RIFLE DE PRECISÃO</b>.' },
+          { alvo: '#ptBoard .tb-svg', t: 'Bloqueado', x: 'A Mira está a 4 casas, dentro do alcance, mas o Bloco de Aço está no caminho: o tiro não passa. O Predador e a Azeitona continuam podendo ser alvo. Uma habilidade de ⚡ Energia ou 🧠 Mental passaria.' },
+          { alvo: '#ptAcao [data-cancelar]', permite: '#ptAcao [data-cancelar]', ok: () => !modo, t: 'Cancelar', x: 'Toque em <b>✕ CANCELAR</b>. Cancelar não gasta ação.' },
+          { alvo: '#ptAcao [data-ac="estrutura"]', t: '🏗️ Estrutura', x: 'Coloca uma estrutura à mão, para jogar com regras que o site não automatiza. Para mover ou remover uma estrutura, toque nela no tabuleiro. Uma peça em cima de uma estrutura mostra um selo com o ícone dela.' },
+          { t: 'Atacar estruturas', x: 'Estruturas com corpo (Galho, Pássaro, Ilusão, Cópia e outras) podem ser atacadas com Ataque Básico ou habilidade. Quando dá, aparece o botão <b>ATACAR ESTRUTURA</b> no painel. Elas se desfazem com 1 acerto.' },
+          pEncerrar('torre'),
+          { fim: true, t: 'Lição concluída!', x: 'Na próxima lição: fim de rodada, eliminação e vitória.' }
+        ] },
+      { id: 'a3', nivel: 'AVANÇADO', n: 3, nome: 'Rodada, eliminação e vitória', desc: 'Fechar a rodada, Medidor, regra de virada e fim de jogo.',
+        cena: () => cena({ a: TIME_A, b: TIME_B, pos: { kael: 'F5', torre: 'K4', bispo: 'K5', oliva: 'A2', johnny: 'F6', mira: 'A5' }, fn: () => { C('johnny').pv = 4; S.times.flat().forEach(c => { if (c.k !== 'kael') c.agiu = true; }); } }),
+        passos: [
+          { alvo: '.pt-info', t: 'Último da rodada', x: 'Todos os outros já agiram nesta rodada. Falta só o Guardião, e o Predador está com 4 PV.' },
+          pQuem('kael', 'o Guardião'),
+          { alvo: '#ptAcao [data-ac="basico"]', permite: '#ptAcao [data-ac="basico"]', ok: () => !!(modo && modo.t === 'basico'), t: 'Ataque Básico', x: 'Toque em <b>👊 ATAQUE BÁSICO</b>.' },
+          pAlvo('johnny', 'o Predador'),
+          pRolar('alto'),
+          pAplicar(),
+          { alvo: () => $('.time-h .medidor'), t: 'Eliminado!', x: 'O Predador caiu. Quando alguém é eliminado, <b>os dois times</b> ganham +1 Medidor. E o time com menos personagens vivos ganha <b>+1 ação</b> por personagem enquanto estiver em desvantagem (a regra de virada).' },
+          pEncerrar('kael'),
+          { alvo: '#ptFimRodada', permite: '#ptFimRodada', ok: () => aberto('mRodada'), t: 'Fim da rodada', x: 'Todos agiram. Toque em <b>FIM DA RODADA ▶</b>.' },
+          { alvo: '#mRodadaCaixa', permite: '#rdOk', ok: () => S.rodada === 2, t: 'O que muda', x: 'O resumo mostra tudo o que acontece ao fechar a rodada: Medidor +1 para os dois times e os eventos do cenário. Se alguém ainda não agiu, aparece um aviso. Toque no botão de confirmar.' },
+          { alvo: '.pt-info', t: 'Rodada 2', x: 'A rodada nova começa com quem <b>não</b> jogou o último turno, para ninguém jogar duas vezes seguidas. Os efeitos com prazo avançaram.' },
+          { t: 'Vitória', x: 'A partida acaba quando um time perde os 3 personagens. O site mostra a tela de vitória e dá para recomeçar com os mesmos times.' },
+          { fim: true, t: 'Lição concluída!', x: 'Na última lição: as ferramentas da mesa.' }
+        ] },
+      { id: 'a4', nivel: 'AVANÇADO', n: 4, nome: 'Ferramentas da mesa', desc: 'Opções da partida, resumo, histórico, dado e atalhos.',
+        cena: () => cena({ a: TIME_A, b: TIME_B, pos: { kael: 'K3', torre: 'K4', bispo: 'K5', oliva: 'A2', johnny: 'A3', mira: 'A5' } }),
+        passos: [
+          { alvo: '#ptMenu', permite: '#ptMenu', ok: () => aberto('mMenu'), t: '⋯ Opções da partida', x: 'Toque em <b>⋯</b>.' },
+          { alvo: '#mMenu .menu-lista', t: 'Opções', x: '📖 abre o <b>manual</b>. 📝 mostra o <b>histórico da partida</b>, jogada por jogada. 🔁 <b>recomeça</b> com os mesmos times. 🆕 monta um <b>combate novo</b>. 🔊 liga ou desliga os <b>sons</b>. 🎞️ liga ou desliga as <b>etapas das ações</b>. 🧰 copia a partida para mandar a quem ajuda com um problema.' },
+          { alvo: '#mMenu .modal-x', permite: '#mMenu .modal-x', ok: () => !aberto('mMenu'), t: 'Fechar', x: 'Feche no <b>✕</b>.' },
+          { alvo: '#ptResumo', permite: '#ptResumo', ok: () => aberto('mResumo'), t: '📋 Resumo das regras', x: 'Toque em <b>📋</b>.' },
+          { alvo: '#mResumo .modal-x', permite: '#mResumo .modal-x', ok: () => !aberto('mResumo'), t: 'A cola', x: 'Teste, dano, Medidor, movimento e categorias numa página só. Feche no <b>✕</b>.' },
+          { alvo: '#dadoFab', permite: '#dadoFab', ok: () => aberto('mDado'), t: '🎲 Dado rápido', x: 'Toque no <b>dado</b> do canto.' },
+          { alvo: '#mDado .modal-x', permite: '#mDado', ok: () => !aberto('mDado'), t: 'Rolagem livre', x: 'Escolha quantos dados e, se quiser, a Defesa: o site conta os acertos. Serve para jogar com peças na mesa ou para regras manuais. Feche no <b>✕</b>.' },
+          { alvo: '#ptDados', t: '🧾 Histórico de dados', x: 'Guarda todas as rolagens, inclusive as do dado rápido.' },
+          { alvo: '#atlFab', t: 'Teclado e controle', x: 'Setas ou WASD movem o cursor, Enter escolhe, Esc cancela, Tab alterna tabuleiro e ações, F abre a ficha. A tecla H mostra todos os atalhos.' },
+          { alvo: '#ptTabBtn', t: 'Jogar na mesa', x: 'Para jogar com tabuleiro e peças de verdade: esconda o tabuleiro e desligue o <b>Turno guiado</b> na Iniciativa. O site vira um painel de fichas, PV, Medidor e dados.' },
+          { fim: true, t: 'Avançado concluído!', x: 'Você terminou o tutorial. Agora é montar os times e jogar!' }
+        ] }
+    ];
+
+    // ── interface do tutorial ──
+    function criarUI(){
+      luz = document.createElement('div'); luz.className = 'tut-luz';
+      bal = document.createElement('div'); bal.className = 'tut-balao'; bal.setAttribute('role', 'dialog');
+      document.body.append(luz, bal);
+      bal.addEventListener('click', e => {
+        const b = e.target.closest('button'); if (!b) return;
+        if (b.dataset.tut === 'ok') proximo();
+        else if (b.dataset.tut === 'sair') sair();
+        else if (b.dataset.tut === 'prox') { const i = LICOES.indexOf(L); sair(LICOES[i + 1] && LICOES[i + 1].id); }
+        else if (b.dataset.tut === 'menu') sair();
+      });
+    }
+    function mostrar(){
+      const p = L.passos[k]; avancando = false;
+      if (p.antes) { livre = true; try { p.antes(); } finally { livre = false; } }
+      Math.random = p.dados === 'alto' ? () => 0.97 : p.dados === 'baixo' ? () => 0.02 : rnd0;
+      const total = L.passos.length;
+      bal.innerHTML = '<div class="tut-top"><span>' + L.nivel + ' · ' + L.n + ' · ' + L.nome.toUpperCase() + '</span><button data-tut="sair" title="Sair do tutorial (Esc)">SAIR ✕</button></div>' +
+        '<h4>' + p.t + '</h4><div class="tut-tx">' + p.x + '</div>' +
+        '<div class="tut-pe"><span class="tut-n">' + (k + 1) + ' / ' + total + '</span>' +
+        (p.fim ? (LICOES[LICOES.indexOf(L) + 1] ? '<button data-tut="prox" class="tut-b">PRÓXIMA LIÇÃO ▶</button>' : '') + '<button data-tut="menu" class="tut-b sec">MENU</button>'
+          : p.ok ? '<span class="tut-faca">👉 Faça no jogo</span>' : '<button data-tut="ok" class="tut-b">PRÓXIMO ▶</button>') + '</div>';
+      bal.classList.remove('vem'); bal.offsetWidth; bal.classList.add('vem');
+      if (p.fim) marcarFeito(L.id);
+      alvoEl = null;
+      setTimeout(() => { const el = Q(p.alvo); if (el && el.scrollIntoView && !el.closest('.modal')) el.scrollIntoView({ block: 'center', behavior: document.body.classList.contains('mn-calmo') ? 'auto' : 'smooth' }); posicionar(); }, 60);
+    }
+    function proximo(){ if (!L) return; if (k < L.passos.length - 1) { k++; mostrar(); } }
+    function posicionar(){
+      if (!L) return;
+      const p = L.passos[k], el = Q(p.alvo); alvoEl = el;
+      const W = innerWidth, H = innerHeight;
+      let r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      if (r && (r.width < 2 || r.height < 2)) r = null;
+      if (r && el && !el.closest('.modal') && getComputedStyle(el).position !== 'fixed' && (r.top < 60 || r.bottom > H - 10) && r.height < H - 120 && Date.now() - (posicionar.rol || 0) > 900) { posicionar.rol = Date.now(); el.scrollIntoView({ block: 'center' }); r = el.getBoundingClientRect(); }
+      if (r) { const pd = 6, x = Math.max(2, r.left - pd), y = Math.max(2, r.top - pd), w = Math.min(W - 4, r.right + pd) - x, h = Math.min(H - 4, r.bottom + pd) - y;
+        Object.assign(luz.style, { left: x + 'px', top: y + 'px', width: Math.max(0, w) + 'px', height: Math.max(0, h) + 'px' }); luz.classList.add('on'); }
+      else { Object.assign(luz.style, { left: W / 2 + 'px', top: H / 2 + 'px', width: '0px', height: '0px' }); luz.classList.remove('on'); }
+      const bw = Math.min(380, W - 24); bal.style.width = bw + 'px';
+      const bh = bal.offsetHeight, m = 12, g = 14;
+      let L0, T0;
+      if (!r) { L0 = (W - bw) / 2; T0 = (H - bh) / 2; }
+      else {
+        const cx = Math.min(Math.max(r.left + r.width / 2 - bw / 2, m), W - bw - m);
+        if (r.bottom + g + bh <= H - m) { L0 = cx; T0 = r.bottom + g; }
+        else if (r.top - g - bh >= m) { L0 = cx; T0 = r.top - g - bh; }
+        else if (r.right + g + bw <= W - m) { L0 = r.right + g; T0 = Math.min(Math.max(r.top, m), H - bh - m); }
+        else if (r.left - g - bw >= m) { L0 = r.left - g - bw; T0 = Math.min(Math.max(r.top, m), H - bh - m); }
+        else { L0 = cx; T0 = (r.top + r.height / 2 > H / 2) ? m : H - bh - m; }
+      }
+      bal.style.left = Math.round(L0) + 'px'; bal.style.top = Math.round(Math.max(m, T0)) + 'px';
+    }
+    function loop(){
+      if (!L) return;
+      if (tela !== 'combate') { sair(); return; }
+      const p = L.passos[k];
+      if (p.ok && !avancando) { let v = false; try { v = p.ok(); } catch (_) {} if (v) { avancando = true; setTimeout(proximo, 450); } }
+      posicionar();
+    }
+    function permitido(p, t){
+      if (!p || !p.permite || !t || !t.closest) return false;
+      return typeof p.permite === 'function' ? p.permite(t) : !!t.closest(p.permite);
+    }
+    function porta(e){
+      if (!L || livre || !e.isTrusted) return;
+      const t = e.target;
+      if (t && t.closest && (t.closest('.tut-balao') || t.closest('#etapas'))) return;
+      if (permitido(L.passos[k], t)) return;
+      e.stopPropagation(); e.preventDefault();
+      if (e.type === 'click') { bal.classList.remove('treme'); bal.offsetWidth; bal.classList.add('treme'); }
+    }
+    function teclas(e){
+      if (!L) return;
+      if (e.target && e.target.closest && e.target.closest('input') && permitido(L.passos[k], e.target)) return;
+      const p = L.passos[k];
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); sair(); return; }
+      if ((e.key === 'Enter' || e.key === ' ') && !p.ok && !p.fim) { e.preventDefault(); e.stopPropagation(); proximo(); return; }
+      e.stopPropagation(); e.preventDefault();
+    }
+    ['click', 'change', 'input', 'submit'].forEach(ev => window.addEventListener(ev, porta, true));
+    window.addEventListener('keydown', teclas, true);
+
+    function iniciar(id, manter){
+      const lic = LICOES.find(x => x.id === id); if (!lic) return;
+      if (!L && !manter) { salvo = JSON.stringify(S); hSalvo = hist; rnd0 = Math.random; }
+      if (!luz) criarUI();
+      window.TUT_ON = true; document.body.classList.add('tut-on');
+      $$('.modal').forEach(m => { m.hidden = true; });
+      L = lic; k = 0;
+      if (tela !== 'combate') ir('combate');
+      livre = true; try { lic.cena(); } finally { livre = false; }
+      window.scrollTo(0, 0);
+      clearInterval(tick); tick = setInterval(loop, 160);
+      mostrar();
+    }
+    function sair(seguinte){
+      if (!L) return;
+      clearInterval(tick); tick = null; L = null;
+      Math.random = rnd0;
+      $$('.modal').forEach(m => { m.hidden = true; });
+      luz.classList.remove('on'); luz.style.width = luz.style.height = '0px'; bal.innerHTML = ''; bal.style.top = '-9999px';
+      if (seguinte) { iniciar(seguinte, true); return; }
+      try { S = JSON.parse(salvo); } catch (_) { S = novo(); }
+      hist = hSalvo || []; modo = null; selTok = null;
+      window.TUT_ON = false; document.body.classList.remove('tut-on');
+      salvar();
+      if (tela === 'combate') { render(); ir('capa'); }
+      setTimeout(() => MN.abrirTut && MN.abrirTut(), 60);
+    }
+    const nivel = nv => LICOES.filter(x => x.nivel === nv);
+    return {
+      iniciar, sair, ativo: () => !!L, LICOES,
+      itens: nv => nivel(nv).map(x => ({ ic: feitos()[x.id] ? '✅' : (nv === 'BÁSICO' ? '🎓' : '🧠'), t: x.n + ' · ' + x.nome.toUpperCase(), c: nv === 'BÁSICO' ? '#2a9d5a' : '#7b2fbe', d: x.desc, ok: () => iniciar(x.id) })),
+      progresso: nv => { const f = feitos(), v = nv ? nivel(nv) : LICOES; return v.filter(x => f[x.id]).length + '/' + v.length; }
+    };
+  })();
+  window.TUT = TUT;
 
   // ═════════ INÍCIO ═════════
   const h0 = location.hash.slice(1);
