@@ -1537,6 +1537,18 @@
   .fim .fim-btns{display:flex; flex-direction:column; gap:10px; max-width:340px; margin:20px auto 0}
   .menu-lista{display:flex; flex-direction:column; gap:10px; padding:16px}
   .log{max-height:300px; overflow-y:auto; margin:0 16px 16px; background:#fff; border:2px solid #000; padding:8px 10px; font-size:12.5px}
+  .lg-barra{position:sticky; top:-8px; z-index:1; display:flex; gap:6px; flex-wrap:wrap; background:#fff; padding:4px 0 8px; margin-bottom:4px; border-bottom:2px dashed #000}
+  .lg-barra button{font-family:'Bangers',cursive; letter-spacing:1px; font-size:14px; background:var(--yellow); border:2px solid #000; box-shadow:2px 2px 0 #000; padding:4px 10px; cursor:pointer}
+  .lg-barra button:active{transform:translate(2px,2px); box-shadow:none}
+  .lg-rod{font-family:'Bangers',cursive; letter-spacing:1px; font-size:15px; margin:8px 0 2px; color:#c81e1e}
+  .reg-vazio{font-weight:700; color:#555}
+  .reg-it{border:3px solid #000; background:#fffbe8; box-shadow:4px 4px 0 #000; padding:10px 12px; margin-bottom:12px}
+  .reg-it h4{font-family:'Bangers',cursive; font-weight:400; letter-spacing:1px; font-size:21px; margin:0}
+  .reg-it .reg-info{font-size:12.5px; font-weight:700; color:#444; margin:2px 0 8px}
+  .reg-it .reg-info b{color:#000}
+  .reg-it pre{white-space:pre-wrap; max-height:260px; overflow:auto; background:#fff; border:2px solid #000; padding:8px; font-size:12px; margin:8px 0 0}
+  .reg-it .lg-barra{position:static; border:0; padding:0; margin:0}
+  .reg-it .lg-barra .apaga{background:#c81e1e; color:#fff}
   .log div{border-bottom:1px dashed #ccc; padding:3px 0}
   .log b{font-family:'Bangers',cursive; font-weight:400; color:var(--red); letter-spacing:1px}
   .toast{pointer-events:none; position:fixed; left:50%; bottom:88px; transform:translateX(-50%); z-index:500; background:var(--dark); color:var(--yellow); border:3px solid var(--yellow); box-shadow:4px 4px 0 #000; padding:10px 18px; font-family:'Bangers',cursive; letter-spacing:1px; font-size:18px; max-width:calc(100vw - 32px); text-align:center; animation:pop .2s ease}
@@ -1690,6 +1702,31 @@
   .est-grade span{font-size:30px; line-height:1}
   .est-grade small{font-family:'Comic Neue',cursive; font-weight:700; font-size:10px; color:var(--red); letter-spacing:0}
   .rs-sub{font-weight:700; font-size:13px; color:#555; margin:0 0 10px}
+  .vd{display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1.1fr); align-items:stretch; gap:8px; margin:0 0 12px}
+  .vd-lado{position:relative; background:linear-gradient(160deg, var(--tc) 0 55%, #111 140%); color:#fff; border:3px solid #000; box-shadow:4px 4px 0 #000; padding:8px 10px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; min-width:0; animation:vdEntra .35s ease-out both}
+  .vd-def-l .vd-lado{animation-delay:.08s}
+  .vd > .vd-lado{align-self:center}
+  .vd-lado .vd-quem{display:flex; align-items:center; gap:7px; max-width:100%}
+  .vd-lado img{width:38px; height:38px; border-radius:50%; flex:none; filter:drop-shadow(0 2px 0 #000)}
+  .vd-lado .vd-quem span{font-size:28px; line-height:1}
+  .vd-lado .vd-quem b{font-family:'Bangers',cursive; font-weight:400; letter-spacing:1px; font-size:19px; line-height:1; text-shadow:2px 2px 0 #000; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .vd-num{display:flex; align-items:baseline; justify-content:center; gap:6px; margin-top:6px; background:#fffbe8; color:#141414; border:3px solid #000; padding:2px 12px 4px; box-shadow:3px 3px 0 #000}
+  .vd-num i{font-style:normal; font-family:'Bangers',cursive; letter-spacing:1px; font-size:17px; color:#c81e1e}
+  .vd-num strong{font-family:'Bangers',cursive; font-weight:400; font-size:40px; line-height:1}
+  .vd-num em{font-style:normal; font-weight:800; font-size:11.5px}
+  .vd-lado small{display:block; margin-top:6px; font-size:11.5px; font-weight:700; color:#f3f3f3; text-shadow:1px 1px 0 #000}
+  .vd-vs{align-self:center; font-family:'Bangers',cursive; font-size:30px; color:var(--yellow); -webkit-text-stroke:1.5px #000; text-shadow:3px 3px 0 #000; transform:rotate(-8deg)}
+  .vd-def-l{display:flex; flex-direction:column; gap:8px; min-width:0}
+  .vd-def-l .vd-lado{padding:6px 8px 8px}
+  .vd-def-l.varios .vd-num strong{font-size:30px}
+  .vd-def-l.varios .vd-lado img{width:30px; height:30px}
+  .vd-lado.ok{outline:4px solid #2fd16a; outline-offset:-1px}
+  .vd-lado.no{filter:grayscale(.55) brightness(.85)}
+  .vd-res{position:absolute; top:-10px; right:-8px; font-family:'Bangers',cursive; letter-spacing:1px; font-size:14px; padding:1px 7px; border:2px solid #000; background:#2fd16a; color:#000; transform:rotate(6deg)}
+  .vd-lado.no .vd-res{background:#ddd}
+  @keyframes vdEntra{from{opacity:0; transform:translateY(8px) scale(.96)}to{opacity:1; transform:none}}
+  .mn-calmo .vd-lado{animation:none}
+  @media (max-width:560px){ .vd{gap:4px} .vd-lado{padding:6px 5px 7px} .vd-lado img{width:26px; height:26px} .vd-lado .vd-quem{gap:4px} .vd-lado .vd-quem b{font-size:15px} .vd-num{padding:1px 6px 2px; gap:4px} .vd-num strong{font-size:28px} .vd-num i{font-size:13px} .vd-num em{font-size:10px} .vd-vs{font-size:20px} .vd-lado small{font-size:10.5px} .vd-def-l.varios .vd-num strong{font-size:24px} }
   .rs-nota{font-size:12px; font-weight:700; color:#777; margin:8px 0 0}
   .rs-alvo{border:3px solid #000; margin-top:10px; background:#fff}
   .rs-alvo.ok{border-color:#1f8a3a} .rs-alvo.no{border-color:#aaa; opacity:.75}
@@ -1790,6 +1827,14 @@
   .ini-auto input{width:22px; height:22px; flex:none; margin-top:2px; accent-color:#ffe000}
   .ini-auto b{display:block; font-family:'Bangers',cursive; font-weight:400; letter-spacing:1.5px; font-size:19px; color:var(--yellow)}
   .ini-auto small{display:block; color:#bbb; font-weight:700; font-size:12.5px}
+  .ini-sub{margin:8px 0 0 30px; border-style:dashed}
+  .ini-sub.off{opacity:.4; pointer-events:none}
+  body.justo .pv-btns, body.justo .pv-valor, body.justo .st .mini-btn, body.justo .dc-box .mini-btn, body.justo [data-limpar], body.justo .ef-add, body.justo .medidor .mini-btn,
+  body.justo .cc-f .btn-med, body.justo [data-tbtirar], body.justo [data-estdel], body.justo #ptAcao [data-ac="estrutura"], body.justo [data-ac2], body.justo .rec .mini-btn,
+  body.justo .acoes-turno span, body.justo #mDado [data-aplicar], body.justo [data-efx]:not(.efx-man){display:none!important}
+  body.justo .st:not(.nz):not(.neg), body.justo .tg-linha .tg:not(.on){display:none}
+  body.justo .tg-linha .tg, body.justo .med-pips i, body.justo [data-acao], body.justo [data-acao2], body.justo .rs-ef input[data-ef]{pointer-events:none; cursor:default}
+  body.justo .pt-rodada::after{content:'🔒'; margin-left:6px; font-size:.8em}
 
   .apts{display:flex; align-items:center; gap:5px; margin-top:9px; flex-wrap:wrap}
   .apts label{font-size:9.5px; font-weight:700; color:#555; letter-spacing:.5px; margin-right:2px}
@@ -1865,6 +1910,10 @@
 .hx.aura.au-fio polygon{stroke:#00a0a0; stroke-width:3; stroke-dasharray:5 3} .lg.au-fio{background:#00a0a033; border:3px dashed #00a0a0}
 .hx.aura.au-invicto polygon{stroke:#e0662a; stroke-width:3; stroke-dasharray:5 3} .lg.au-invicto{background:#e0662a33; border:3px dashed #e0662a}
 .hx.aura.au-roda polygon{stroke:#2e9e3e; stroke-width:3; stroke-dasharray:5 3} .lg.au-roda{background:#2e9e3e33; border:3px dashed #2e9e3e}
+.hx.aura.au-tempC polygon{stroke:#8a8f99; stroke-width:3; stroke-dasharray:3 4; animation:tempCarga 1.6s ease-in-out infinite} .lg.au-tempC{background:#8a8f9933; border:3px dashed #8a8f99}
+.hx.aura.au-tempA polygon{stroke:#4a6cff; stroke-width:3.5; fill:#4a6cff22} .lg.au-tempA{background:#4a6cff33; border:3px solid #4a6cff}
+@keyframes tempCarga{50%{stroke-opacity:.35}}
+.mn-calmo .hx.aura.au-tempC polygon{animation:none}
 .hx.aura.au-copas polygon{stroke:#e0407a; stroke-width:3; stroke-dasharray:5 3} .lg.au-copas{background:#e0407a33; border:3px dashed #e0407a}
   .tb-info small.tb-aura{color:inherit; margin-top:2px}
   .tb-info small.tb-ate{color:#ff6b6b; font-weight:700}
@@ -2099,7 +2148,8 @@ body.mn-calmo .dr-palco .pk,body.mn-calmo .dr-palco .pk img{transition:none;anim
 .tb-pas span.e{border-color:#555; color:#ddd}
 .tb-pas span i{font-style:normal; font-weight:400; color:#bbb}
 /* tutorial */
-.tut-luz{position:fixed;z-index:9000;pointer-events:none;border-radius:10px;box-shadow:0 0 0 200vmax rgba(0,0,0,.58);transition:left .25s,top .25s,width .25s,height .25s}
+.tut-luz{display:none;position:fixed;z-index:9000;pointer-events:none;border-radius:10px;box-shadow:0 0 0 200vmax rgba(0,0,0,.58);transition:left .25s,top .25s,width .25s,height .25s}
+body.tut-on .tut-luz{display:block}
 .tut-luz.on{outline:3px solid #ffd400;outline-offset:2px;animation:tutPulsa 1.4s ease-in-out infinite}
 @keyframes tutPulsa{50%{outline-color:#fff6b0;outline-offset:5px}}
 .tut-balao{position:fixed;z-index:9001;top:-9999px;left:12px;background:#fffbe8;color:#141414;border:3px solid #141414;box-shadow:6px 6px 0 #ffd400,6px 6px 0 3px #141414;border-radius:6px;padding:12px 14px 12px;font-size:14.5px;line-height:1.45;max-height:calc(100vh - 24px);overflow:auto;transition:left .25s,top .25s}
@@ -2520,11 +2570,11 @@ body:not(.em-combate) .atl-box{display:none}
 .perg-bts{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
 .perg-bts button{flex:1; min-width:130px}
 /* ── etapas das ações ── */
-.etp{position:fixed; left:16px; top:120px; z-index:420; width:min(380px, calc(100vw - 32px)); pointer-events:none; display:flex; flex-direction:column; gap:6px}
+.etp{position:fixed; left:50%; bottom:16px; transform:translateX(-50%); z-index:420; width:min(460px, calc(100vw - 32px)); pointer-events:none; display:flex; flex-direction:column; gap:6px}
 .etp-lista{display:flex; flex-direction:column; gap:6px}
-.etp-c{background:rgba(8,8,8,.93); color:#fff; border:3px solid #000; border-left:8px solid var(--ac, #ffe000); box-shadow:4px 4px 0 rgba(0,0,0,.6); padding:7px 11px; font-size:14px; line-height:1.3; transform:translateX(-120%); opacity:0; transition:transform .32s cubic-bezier(.2,1.3,.4,1), opacity .25s}
+.etp-c{background:rgba(8,8,8,.93); color:#fff; border:3px solid #000; border-left:8px solid var(--ac, #ffe000); box-shadow:4px 4px 0 rgba(0,0,0,.6); padding:7px 11px; font-size:14px; line-height:1.3; transform:translateY(26px); opacity:0; transition:transform .32s cubic-bezier(.2,1.3,.4,1), opacity .25s}
 .etp-c.on{transform:none; opacity:1}
-.etp-c.sai{transform:translateX(-30px); opacity:0}
+.etp-c.sai{transform:translateY(12px); opacity:0}
 .etp-c.dano{border-left-color:#e8000d}
 .etp-c.dano b.n{color:#ff6b6b}
 .etp-c.cura{border-left-color:#2a9d5a}
@@ -2532,18 +2582,44 @@ body:not(.em-combate) .atl-box{display:none}
 .etp-c.erro{border-left-color:#777; color:#ccc}
 .etp-c.acerto{border-left-color:#ffe000}
 .etp-c.pas{border-left-style:dashed}
-.etp-tit{background:linear-gradient(100deg, var(--ac, #e8000d) 0, #000 85%); border:3px solid #000; border-left:0; box-shadow:5px 5px 0 #000; padding:6px 16px 8px 14px; transform:translateX(-120%) skewX(-8deg); opacity:0; transition:transform .36s cubic-bezier(.2,1.4,.4,1), opacity .2s; clip-path:polygon(0 0, 100% 0, 94% 100%, 0 100%)}
+.etp-tit{background:linear-gradient(100deg, var(--ac, #e8000d) 0, #000 85%); border:3px solid #000; border-left:0; box-shadow:5px 5px 0 #000; padding:6px 16px 8px 14px; transform:translateY(26px) skewX(-8deg); opacity:0; transition:transform .36s cubic-bezier(.2,1.4,.4,1), opacity .2s; clip-path:polygon(0 0, 100% 0, 94% 100%, 0 100%)}
 .etp-tit.on{transform:skewX(-8deg); opacity:1}
-.etp-tit.sai{transform:translateX(-40px) skewX(-8deg); opacity:0}
+.etp-tit.sai{transform:translateY(12px) skewX(-8deg); opacity:0}
 .etp-tit small{display:block; font-size:12px; letter-spacing:.08em; color:#fff; opacity:.9}
 .etp-tit b{display:block; font:400 30px/1 Bangers, cursive; letter-spacing:1.5px; color:#ffe000; text-shadow:2px 2px 0 #000}
 .etp-tit i{display:inline-block; margin:4px 6px 0 0; font:700 11px/1 system-ui, sans-serif; font-style:normal; background:#ffe000; color:#000; padding:3px 6px; border-radius:3px}
 .etp-tit i.sup{background:#fff; color:#b8860b}
-.etp-pular{pointer-events:auto; align-self:flex-start; background:#000; color:#ffe000; border:2px solid #ffe000; font:400 14px/1 Bangers, cursive; letter-spacing:1.5px; padding:6px 10px; cursor:pointer; display:flex; gap:6px; align-items:center}
+.etp-pular{pointer-events:auto; align-self:center; background:#000; color:#ffe000; border:2px solid #ffe000; font:400 14px/1 Bangers, cursive; letter-spacing:1.5px; padding:6px 10px; cursor:pointer; display:flex; gap:6px; align-items:center}
 .etp-pular kbd{background:#ffe000; color:#000; font:700 11px/1 system-ui, sans-serif; padding:2px 5px; border-radius:3px}
 .etp-pular[hidden]{display:none}
 body:not(.em-combate) .etp{display:none}
-@media (max-width:700px){ .etp{top:64px} .etp-tit b{font-size:24px} .etp-pular kbd{display:none} }
+@media (max-width:700px){ .etp{bottom:12px} .etp-tit b{font-size:24px} .etp-pular kbd{display:none} }
+.etp-capa{position:fixed; inset:0; z-index:395; display:none; cursor:pointer; background:linear-gradient(to top, rgba(0,0,0,.35), transparent 45%)}
+.etp-capa.on{display:block}
+.etp-dlg{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:396; width:min(620px, calc(100vw - 24px)); background:#fffbe8; color:#141414; border:4px solid #000; box-shadow:6px 6px 0 #ffe000, 6px 6px 0 4px #000; border-radius:8px; padding:0 0 8px; display:none; cursor:pointer; overflow:hidden; user-select:none}
+.etp-dlg.on{display:block}
+.etp-dlg.vem .ed-tx{animation:edVem .25s ease-out}
+.ed-h{background:linear-gradient(100deg, var(--ac, #e8000d) 0, #000 92%); color:#fff; padding:6px 14px 8px; border-bottom:3px solid #000}
+.ed-h small{display:block; font-size:12px; letter-spacing:.06em; opacity:.92}
+.ed-h b{display:block; font:400 28px/1 Bangers, cursive; letter-spacing:1.5px; color:#ffe000; text-shadow:2px 2px 0 #000}
+.ed-h i{display:inline-block; margin:4px 6px 0 0; font:700 11px/1 system-ui, sans-serif; font-style:normal; background:#ffe000; color:#000; padding:3px 6px; border-radius:3px}
+.ed-h i.sup{background:#fff; color:#b8860b}
+.ed-tx{padding:12px 16px 4px; font-size:18px; font-weight:700; line-height:1.35; min-height:34px}
+.ed-tx b.n{color:#c81e1e}
+.ed-tx.cura b.n{color:#1f8a3a}
+.ed-tx.erro{color:#666}
+.ed-tx.acerto{color:#0b6b2e}
+.ed-vaz{color:#777; font-size:14px; font-weight:700}
+.ed-pe{display:flex; align-items:center; gap:10px; padding:4px 14px 0; font-size:12px; font-weight:700; color:#777}
+.ed-pe button{margin-left:auto; background:#000; color:#ffe000; border:2px solid #000; font:400 14px/1 Bangers, cursive; letter-spacing:1px; padding:5px 9px; cursor:pointer}
+.ed-pe kbd{background:#ffe000; color:#000; font:700 10px/1 system-ui, sans-serif; padding:2px 4px; border-radius:3px; margin-left:3px}
+.ed-seta{font-size:16px; color:#141414; animation:edSeta .8s ease-in-out infinite}
+.etp-dlg.anim .ed-seta{visibility:hidden}
+@keyframes edSeta{50%{transform:translateY(4px)}}
+@keyframes edVem{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
+.mn-calmo .ed-seta,.mn-calmo .etp-dlg.vem .ed-tx{animation:none}
+body:not(.em-combate) .etp-dlg, body:not(.em-combate) .etp-capa{display:none}
+@media (max-width:700px){ .etp-dlg{bottom:10px} .ed-tx{font-size:15.5px} .ed-h b{font-size:23px} .ed-pe kbd{display:none} }
 </style>
 <style id="capa-css">
 .cp-cena{position:absolute; inset:0; z-index:1; overflow:hidden; opacity:0; visibility:hidden; transition:opacity .5s, visibility 0s .5s}
@@ -5091,6 +5167,7 @@ body.mn-calmo .cp-po{display:none}
       </div>
       <label class="ini-auto"><input type="checkbox" id="iniTimer"><span><b>⏱️ TEMPORIZADOR</b><small>Opcional: cada jogador tem 1 minuto para escolher quem joga no turno e 2 minutos para agir com ele. Se o tempo acabar, o jogo escolhe um personagem ao acaso ou encerra o turno.</small></span></label>
       <label class="ini-auto"><input type="checkbox" id="iniAuto" checked><span><b>🤖 TURNO GUIADO</b><small>O jogo mostra as ações possíveis, checa alcance e ações, rola os dados e aplica os efeitos. Desligado, vocês controlam tudo à mão pelas fichas e pelo dado.</small></span></label>
+      <label class="ini-auto ini-sub" id="iniJustoL"><input type="checkbox" id="iniJusto" checked><span><b>🔒 MODO JUSTO</b><small>Parte do Turno guiado: tira os ajustes à mão (PV, status, efeitos, Medidor, ações, estruturas), só deixa posicionar na borda do time, mover pelo MOVER e não desfaz depois que os dados rolam. Desligue para testar ou jogar regras à mão.</small></span></label>
       <div class="ini-nav"><button class="btn-ghost" data-volta="cenario">◀ CENÁRIO</button><button class="btn-amarelo" id="btnIrDraft" disabled>ESCOLHER TIMES ▶</button></div>
     </div>
   </section>
@@ -5146,6 +5223,8 @@ body.mn-calmo .cp-po{display:none}
     <button class="btn-ghost" id="mnNova">🆕 NOVO COMBATE</button>
     <button class="btn-ghost" id="mnSom">🔊 EFEITOS SONOROS</button>
     <button class="btn-ghost" id="mnEtapas">🎞️ ETAPAS DAS AÇÕES: LIGADAS</button>
+    <button class="btn-ghost" id="mnJusto">🔒 MODO JUSTO: LIGADO</button>
+    <button class="btn-ghost" id="mnReg">🗂️ PARTIDAS GUARDADAS</button>
     <button class="btn-ghost" id="mnCopiar">🧰 COPIAR PARTIDA (PARA SUPORTE)</button>
   </div>
   <div class="log" id="mnLogBox" hidden></div>
@@ -5203,6 +5282,7 @@ body.mn-calmo .cp-po{display:none}
     </ul></section>
   </div>
 </div></div>
+<div class="modal" id="mReg" hidden><div class="modal-caixa larga"><div class="modal-h"><h3>🗂️ PARTIDAS GUARDADAS</h3><button class="modal-x" data-fecha>✕</button></div><div id="mRegCorpo" class="dd-corpo"></div></div></div>
 <div class="modal" id="mFim" hidden><div class="modal-caixa fim" id="mFimCaixa"></div></div>
 
 <div class="modal" id="mPerg" hidden><div class="modal-caixa estreita perg-caixa" id="mPergCaixa"></div></div><div class="etp" id="etapas" aria-live="polite"><div class="etp-lista"></div><button class="etp-pular" id="etpPular" hidden>PULAR ⏭ <kbd>P</kbd></button></div><button class="dado-fab" id="dadoFab" aria-label="Rolar dados" title="Rolar dados">🎲</button><button class="atl-fab" id="atlFab" aria-expanded="false" title="Ver atalhos do teclado (H)">⌨️ ATALHOS <kbd>H</kbd></button><div class="atl-box" id="atlBox" hidden><div class="atl-h"><b>ATALHOS DO TECLADO</b><button id="atlX" aria-label="Fechar atalhos">✕</button></div><ul>
@@ -5482,6 +5562,7 @@ body.mn-calmo .cp-po{display:none}
         { ic: '🎓', t: 'TUTORIAL', c: '#2a9d5a', d: 'Opcional: aprenda a jogar no próprio site, em lições curtas e jogando de verdade. Básico para começar, Avançado para os detalhes.', s: window.TUT ? TUT.progresso() + ' LIÇÕES' : '', ok: () => abrir('tutorial') },
         { ic: '📖', t: 'MANUAL', c: 'var(--blue)', d: temHist ? 'As regras, as fichas dos personagens, os cenários e os arquivos do universo.' : 'As regras, as fichas dos personagens e os cenários.', ok: () => temHist ? abrir('manual') : sair('manual') },
         { ic: '📜', t: 'HISTÓRIAS', c: 'var(--estrategista)', trav: true, d: 'O modo história ainda está sendo escrito. Em breve, as aventuras do universo de Versus.' },
+        { ic: '🗂️', t: 'PARTIDAS GUARDADAS', c: '#d98a00', d: 'O registro de cada partida terminada: quem jogou, os trios e tudo o que aconteceu, rodada por rodada. Dá para copiar, baixar em .txt ou apagar.', s: (() => { const v = store.get('versus-registros'); return Array.isArray(v) && v.length ? v.length + ' GUARDADA' + (v.length > 1 ? 'S' : '') : ''; })(), ok: () => window.abrirReg && window.abrirReg() },
         { ic: '⚙️', t: 'OPÇÕES', c: '#2a9d5a', d: 'Tela cheia, animações, sons e tela de título.', ok: () => abrir('opcoes') },
         { ic: '⭐', t: 'CRÉDITOS', c: '#d98a00', d: 'Quem fez Versus.', ok: () => abrir('creditos') }
       ]}),
@@ -5500,14 +5581,14 @@ body.mn-calmo .cp-po{display:none}
       opcoes: () => ({ cam: '› OPÇÕES', itens: [
         { ic: '🖥️', t: 'TELA CHEIA', c: '#2a9d5a', d: 'Ocupa a tela inteira, sem a barra do navegador.', v: () => telaCheia() ? 'SIM' : 'NÃO', mud: () => { if (telaCheia()) document.exitFullscreen && document.exitFullscreen(); else { const e = document.documentElement; (e.requestFullscreen || e.webkitRequestFullscreen || (() => avisar('Este aparelho não deixa'))).call(e); } setTimeout(desenhar, 250); } },
         { ic: '✨', t: 'ANIMAÇÕES', c: '#2a9d5a', d: 'Reduzidas deixam o fundo quase parado e tiram as transições.', v: () => OP.calmo ? 'REDUZIDAS' : 'COMPLETAS', mud: () => { OP.calmo = !OP.calmo; salvarOp(); aplicarOp(); } },
-        { ic: '🎞️', t: 'ETAPAS DAS AÇÕES', c: '#2a9d5a', d: 'Mostra o nome da habilidade e cada passo do que aconteceu: Amostras, acerto, dano com as reduções, empurrões e passivas. Dá para pular com o botão PULAR ou a tecla P.', v: () => ETP && ETP.on() ? 'LIGADAS' : 'DESLIGADAS', mud: () => { if (ETP) ETP.set(!ETP.on()); } },
+        { ic: '🎞️', t: 'ETAPAS DAS AÇÕES', c: '#2a9d5a', d: 'Mostra o nome da habilidade e cada passo do que aconteceu: acerto, dano com as reduções, empurrões e passivas. AUTOMÁTICAS passam sozinhas. PASSO A PASSO mostra um texto por vez numa caixa embaixo: toque para ver a animação daquela parte e seguir. Dá para pular com PULAR ou a tecla P.', v: () => ETP ? ETP.rotulo() : 'DESLIGADAS', mud: () => { if (ETP) ETP.ciclo(); } },
         { ic: '🎬', t: 'TELA DE TÍTULO', c: '#2a9d5a', d: 'Mostrar o “pressione para começar” ao abrir o jogo, ou ir direto ao menu.', v: () => OP.pular ? 'PULAR' : 'MOSTRAR', mud: () => { OP.pular = !OP.pular; salvarOp(); } },
         { ic: '🎵', t: 'MÚSICA', c: '#555', trav: true, d: 'Trilha sonora: em breve.' },
         { ic: '🔊', t: 'EFEITOS SONOROS', c: '#2a9d5a', d: 'Sons de menu, dados, acertos, empurrões, Supremas e vitória, criados no próprio jogo.', v: () => SFX.on() ? 'LIGADOS' : 'DESLIGADOS', mud: () => { SFX.set({ on: !SFX.on() }); SFX.p('confirmar'); } },
         { ic: '🎚️', t: 'VOLUME DOS EFEITOS', c: '#2a9d5a', d: 'Use ◀ ▶ para baixar ou subir o volume.', v: () => Math.round(SFX.vol() * 100) + '%', mud: dd => { let v = Math.round(SFX.vol() * 10) + (dd < 0 ? -1 : 1); if (v > 10) v = dd === undefined ? 1 : 10; if (v < 1) v = 1; SFX.set({ vol: v / 10 }); SFX.p('clique'); } },
         { volta: 1 }
       ]}),
-      creditos: () => ({ cam: '› CRÉDITOS', painel: '<h3>VERSUS · COMBATES CÔMICOS</h3><p>1ª Edição</p><h3>CRIAÇÃO</h3><p>Derec e irmão</p><h3>PERSONAGENS E UNIVERSO</h3><p>' + artes.length + ' personagens, ' + DATA.cen.length + ' arenas e um mundo inteiro de histórias.</p><h3>OBRIGADO POR JOGAR!</h3>', itens: [ { volta: 1 } ]})
+      creditos: () => ({ cam: '› CRÉDITOS', painel: '<h3>VERSUS · COMBATES CÔMICOS</h3><p>1ª Edição</p><h3>CRIAÇÃO</h3><p>Derec e Deniel</p><h3>PERSONAGENS E UNIVERSO</h3><p>' + artes.length + ' personagens, ' + DATA.cen.length + ' arenas e um mundo inteiro de histórias.</p><h3>OBRIGADO POR JOGAR!</h3>', itens: [ { volta: 1 } ]})
     };
     let atual = 'raiz';
     function abrir(m, voltando){
@@ -5624,7 +5705,7 @@ body.mn-calmo .cp-po{display:none}
   }
   let S = store.get(CHAVE);
   if (!S || !S.fase) S = novo();
-  let hist = [];
+  let hist = [], rolouEm = -1, etpVista = null;
   const salvar = () => { if (!SECO && !window.TUT_ON) store.set(CHAVE, S); };
   // fim da Multidão (Fechar Nele!): nenhum capturado sobrando ou Semelhante caiu
   function multidaoChecar(){
@@ -5642,7 +5723,7 @@ body.mn-calmo .cp-po{display:none}
   }
   function mudar(fn, msg){
     hist.push(JSON.stringify(S));
-    if (hist.length > 80) hist.shift();
+    if (hist.length > 80) { hist.shift(); rolouEm--; }
     fn();
     fendaVarre();
     transVarre();
@@ -5651,7 +5732,28 @@ body.mn-calmo .cp-po{display:none}
     if (msg) log(typeof msg === 'function' ? msg() : msg);
     salvar(); render();
   }
-  function log(t){ S.log.push({ r: S.rodada, t }); if (S.log.length > 400) S.log.shift(); }
+  function log(t){ S.log.push({ r: S.rodada, t }); if (S.log.length > 2000) S.log.shift(); }
+  // ── Modo justo (dentro do Turno guiado) ──
+  function justoOn(){ return !!S && S.fase === 'partida' && S.auto !== false && S.justo !== false && !window.TUT_ON; }
+  const JUSTO_BLQ = '[data-pv],[data-pvv],[data-pvin],[data-st],[data-tg],[data-limpar],[data-efnovo],[data-medd],[data-med],[data-acao],[data-acao2],[data-gasto],[data-tbtirar],[data-estdel],#ptAcao [data-ac="estrutura"],[data-ac2],[data-tat],[data-tatr],[data-div],[data-rec],#mDado [data-aplicar],.rs-ef input[data-ef]';
+  function justoPorta(e){
+    if (!justoOn() || !e.target || !e.target.closest) return;
+    let b = e.target.closest(JUSTO_BLQ);
+    if (!b) { const x = e.target.closest('[data-efx]'); if (x) { const [j, i, id] = x.dataset.efx.split(','); const ef = ((S.times[+j] || [])[+i] || {}).efs; const z = (ef || []).find(q => q.id === id); if (z && !(z.exp && z.exp.t === 'man')) b = x; } }
+    if (!b) return;
+    e.stopPropagation(); e.preventDefault();
+    if (e.type === 'click') toast('🔒 Modo justo: o Turno guiado cuida disso. Para ajustar à mão, desligue o Modo justo no menu ⋯.', 2600);
+  }
+  ['click', 'change', 'input'].forEach(ev => document.addEventListener(ev, justoPorta, true));
+  function justoPosicao(c, id){
+    if (c.pos && !(c.k === 'eclipse' && !c.pos2)) return '🔒 Modo justo: depois de posicionadas, as peças só andam pelo MOVER e pelas habilidades do turno.';
+    if (S.rodada !== 1) return '';
+    const j = S.times.findIndex(t => t.includes(c)), fs = j === S.prim ? ['K', 'J'] : ['A', 'B'];
+    const livres = r => Object.keys(CELL).filter(k => k[0] === r && /^\d+$/.test(k.slice(1)) && !ocupante(k) && !obstaculo(k));
+    const f = livres(fs[0]).length ? fs[0] : livres(fs[1]).length ? fs[1] : null;
+    if (f && id[0] !== f) return '🔒 Modo justo: posicione na borda do seu time, a fileira ' + f + '.';
+    return '';
+  }
   const nomeJ = j => esc(S.nomes[j] || 'Jogador ' + (j + 1));
   const corJ = j => 'var(--j' + j + ')';
   const ordem = p => [p, 1 - p, 1 - p, p, p, 1 - p];
@@ -5677,6 +5779,8 @@ body.mn-calmo .cp-po{display:none}
 
   function render(){
     if (SECO || tela !== 'combate') return;
+    document.body.classList.toggle('justo', justoOn());
+    { const bj = $('#mnJusto'); if (bj) bj.textContent = '🔒 MODO JUSTO: ' + (S.auto === false ? 'SÓ COM TURNO GUIADO' : S.justo !== false ? 'LIGADO' : 'DESLIGADO'); }
     const f = S.fase;
     $$('.cb-fase').forEach(e => e.classList.toggle('on', e.id === 'f-' + f));
     const ordemF = ['cenario', 'iniciativa', 'draft', 'partida'];
@@ -5733,6 +5837,7 @@ body.mn-calmo .cp-po{display:none}
     const c = S.cen ? CEN[S.cen] : null;
     $('#iniCen').innerHTML = 'ARENA: ' + (c ? '<span style="font-size:26px">' + c.icon + '</span><b>' + c.nome + '</b>' : '<b>ARENA COMUM</b>');
     $('#iniAuto').checked = S.auto !== false;
+    $('#iniJusto').checked = S.justo !== false; $('#iniJustoL').classList.toggle('off', S.auto === false);
     $('#iniTimer').checked = !!S.timer;
     $('#nome0').value = S.nomes[0] === 'Jogador 1' ? '' : S.nomes[0];
     $('#nome1').value = S.nomes[1] === 'Jogador 2' ? '' : S.nomes[1];
@@ -5748,7 +5853,8 @@ body.mn-calmo .cp-po{display:none}
   [0, 1].forEach(j => $('#nome' + j).addEventListener('input', e => {
     S.nomes[j] = e.target.value.trim() || 'Jogador ' + (j + 1); salvar(); atualizarPrim();
   }));
-  $('#iniAuto').addEventListener('change', e => { S.auto = e.target.checked; salvar(); });
+  $('#iniAuto').addEventListener('change', e => { S.auto = e.target.checked; $('#iniJustoL').classList.toggle('off', !S.auto); salvar(); });
+  $('#iniJusto').addEventListener('change', e => { S.justo = e.target.checked; salvar(); });
   $('#iniTimer').addEventListener('change', e => { S.timer = e.target.checked; salvar(); });
   $$('[data-prim]').forEach(b => b.addEventListener('click', () => { S.prim = +b.dataset.prim; salvar(); atualizarPrim(); }));
   $('#btnMoeda').addEventListener('click', () => {
@@ -6061,7 +6167,7 @@ body.mn-calmo .cp-po{display:none}
   }
   function iniciarPartida(){
     const ord = CLASSES.map(c => c[0]);
-    hist = [];
+    hist = []; rolouEm = -1; S.regIni = Date.now(); S.regId = null;
     S.times = [0, 1].map(j => S.picks.filter(p => p.j === j).sort((a, b) => ord.indexOf(CH[a.key].classe) - ord.indexOf(CH[b.key].classe)).map(p => personagem(p.key)));
     S.med = [2, 2]; S.rodada = 1; S.ativo = null; S.fim = null; S.ce = {}; S.log = [];
     try { Object.keys(localStorage).filter(x => x.indexOf('versus-forma-') === 0).forEach(x => localStorage.removeItem(x)); } catch (_) {}
@@ -6542,7 +6648,7 @@ body.mn-calmo .cp-po{display:none}
     const daAura = aurasEm(c).filter(([, a, ali]) => textoAura(a, ali)).map(([e, a, ali]) => '<div class="ef-item ef-aura"><div><b>' + esc(a.nome) + '</b> <span class="ef-por">' + (ESTI[e.tipo] || ESTI.Marcador)[1] + ' ' + esc(e.tipo) + ' em ' + e.cell + (e.autorNome ? ' · por ' + esc(e.autorNome) : '') + '</span><small>' + esc(textoAura(a, ali)) + '</small><small class="ef-ate">⌛ enquanto estiver no Raio ' + a.raio + (a.acaba || e.acaba ? ' · acaba ' + esc(a.acaba || e.acaba) : '') + '</small></div></div>').join('');
     const lista = daAura + L.map(e => '<div class="ef-item"><div><b>' + esc(e.nome) + '</b>' + (e.autor ? ' <span class="ef-por">por ' + esc(e.autor) + '</span>' : '') +
       (e.faz ? '<small>' + realce(e.faz) + '</small>' : '') + (e.contra && porRef(e.contra) ? '<small class="ef-contra' + (ativoRef() === e.contra ? ' on' : '') + '">🎯 só contra ' + esc(nomeC(porRef(e.contra))) + (e.cmods ? ' (' + esc(modsTxt(e.cmods)) + ')' : '') + (ativoRef() === e.contra ? ' · valendo agora' : '') + '</small>' : '') + '<small class="ef-ate">⌛ acaba ' + esc(e.acaba) + '</small></div>' +
-      '<button class="mini-btn" data-efx="' + id + ',' + e.id + '" title="Remover efeito">✕</button></div>').join('');
+      '<button class="mini-btn' + (e.exp && e.exp.t === 'man' ? ' efx-man' : '') + '" data-efx="' + id + ',' + e.id + '" title="Remover efeito">✕</button></div>').join('');
     const der = efDerivados(c);
     return '<div class="ef-box"><div class="ef-h"><label>✦ EFEITOS ATIVOS</label><button class="mini-btn ef-add" data-efnovo="' + id + '" title="Adicionar efeito à mão">+ EFEITO</button></div>' +
       ((lista + der) || '<div class="ef-vazio">Nenhum efeito.</div>') + '</div>';
@@ -6694,7 +6800,7 @@ body.mn-calmo .cp-po{display:none}
     ['invicto', 'Sem Aberturas', () => 1, 'invicto'],
     ['parlenda', 'Comunidade', () => 1, 'roda'],
   ];
-  const AURA_NOME = { pavor: 'Raio do Pavor (Medonho)', tribunal: 'Presença de Tribunal (Juíza)', calor: 'Calor Radiante (Carvão)', corte: 'Etiqueta da Corte (Duque)', fio: 'Fio Tenso (Véspera)', invicto: 'Raio do Invicto', roda: 'Comunidade (Parlenda)', copas: 'Copas (Manilhas)' };
+  const AURA_NOME = { pavor: 'Raio do Pavor (Medonho)', tribunal: 'Presença de Tribunal (Juíza)', calor: 'Calor Radiante (Carvão)', corte: 'Etiqueta da Corte (Duque)', fio: 'Fio Tenso (Véspera)', invicto: 'Raio do Invicto', roda: 'Comunidade (Parlenda)', copas: 'Copas (Manilhas)', tempC: 'Tempestade carregando (dano só depois do Estrondo)', tempA: 'Tempestade ativa (3 ou 5 de dano no início do turno)' };
   function areasTab(){
     const out = [];
     (S.est || []).forEach(e => { if (!CELL[e.cell]) return;
@@ -6702,7 +6808,7 @@ body.mn-calmo .cp-po{display:none}
       if (e.area) r = Math.max(r, e.area);
       if (e.tipo === 'Nuvem' && e.hab === 'Nuvem Carregada') r = Math.max(r, e.aprim ? 2 : 1);
       if (!r && AREA_TIPO[e.tipo]) r = AREA_TIPO[e.tipo];
-      if (r) out.push({ cell: e.cell, raio: r, dono: e.dono, sel: e.id === estSel, nome: (e.hab || e.tipo) + (e.autorNome ? ' (' + e.autorNome + ')' : '') }); });
+      if (r) out.push({ cell: e.cell, raio: r, dono: e.dono, sel: e.id === estSel, tipo: e.tipo === 'Tempestade' ? (e.estr === false ? 'tempC' : 'tempA') : undefined, nome: (e.hab || e.tipo) + (e.tipo === 'Tempestade' ? (e.estr === false ? ' carregando: dano só depois do Estrondo' : ' ativa: 3 ou 5 de dano a quem começar o turno nela') : '') + (e.autorNome ? ' (' + e.autorNome + ')' : '') }); });
     [0, 1].forEach(j => S.times[j].forEach((x, i) => { if (x.elim || !x.pos || !CELL[x.pos]) return;
       (x.efs || []).forEach(e => {
         let r = e.area || 0;
@@ -7016,6 +7122,7 @@ body.mn-calmo .cp-po{display:none}
   });
   $('#ptDesfazer').addEventListener('click', () => {
     if (!hist.length) return;
+    if (justoOn() && hist.length - 1 <= rolouEm) { toast('🔒 Modo justo: depois que os dados rolam, a ação não volta.', 2600); return; }
     S = JSON.parse(hist.pop()); window.VSFX && VSFX.pular(); salvar(); render(); toast('↶ Desfeito', 1200);
   });
 
@@ -7127,6 +7234,7 @@ body.mn-calmo .cp-po{display:none}
   // ── menu e vitória ──
   $('#ptMenu').addEventListener('click', () => { $('#mnLogBox').hidden = true; abrir('mMenu'); });
   $('#ptResumo').addEventListener('click', () => abrir('mResumo'));
+  $('#mnReg').addEventListener('click', () => { fechar('mMenu'); abrirReg(); });
   $('#ptDados').addEventListener('click', () => {
     const L = (S.dh || []).slice().reverse();
     $('#mDadosCorpo').innerHTML = L.length ? L.map(x => '<div class="dh-it"><div class="dh-h"><span class="dh-r">R' + x.r + '</span>' + (EMB[x.k] ? '<img src="' + EMB[x.k] + '" alt="">' : '') + '<b>' + esc(x.q) + '</b><em>' + esc(x.t) + '</em></div><div class="dd-dados">' + x.d.map(v => '<i class="' + (x.def != null ? (v >= x.def ? 'hit' : 'miss') : x.dm ? (v >= x.dm ? 'hit' : 'miss') : (v === Math.max(...x.d) ? 'hit' : 'miss')) + '">' + v + '</i>').join('') + '</div><small>' + (x.def != null ? 'contra Defesa ' + x.def : 'maior dado: ' + Math.max(...x.d)) + (x.al ? ' · ' + esc(x.al) : '') + (x.n ? ' · ' + esc(x.n) : '') + '</small></div>').join('') : '<p class="rs-nota">Nenhum teste aplicado ainda nesta partida.</p>';
@@ -7141,12 +7249,78 @@ body.mn-calmo .cp-po{display:none}
     const mostrar = () => { box.hidden = false; box.innerHTML = '<textarea readonly style="width:100%;height:160px;font-size:11px">' + txt.replace(/</g, '&lt;') + '</textarea><small>Copie o texto acima (segure e toque em Copiar).</small>'; const ta = box.querySelector('textarea'); ta.focus(); ta.select(); };
     try { navigator.clipboard.writeText(txt).then(ok, mostrar); } catch (e) { mostrar(); }
   });
+  // ── registro da partida: texto, copiar, baixar e guardar ──
+  const semTag = t => String(t).replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+  const dataTxt = ms => { const d0 = new Date(ms), z = n => String(n).padStart(2, '0'); return z(d0.getDate()) + '/' + z(d0.getMonth() + 1) + '/' + d0.getFullYear() + ' ' + z(d0.getHours()) + ':' + z(d0.getMinutes()); };
+  function regTexto(){
+    const nm = j => S.nomes[j] || 'Jogador ' + (j + 1);
+    const L = ['VERSUS · REGISTRO DA PARTIDA', 'Data: ' + dataTxt(S.regIni || Date.now()), 'Arena: ' + (S.cen ? CEN[S.cen].nome : 'Arena Comum')];
+    if (S.prim != null) L.push('Começou: ' + nm(S.prim));
+    if (S.times) [0, 1].forEach(j => L.push(nm(j) + ': ' + S.times[j].map(c => CH[c.k].nome + (c.elim ? ' (eliminado)' : ' (' + c.pv + '/' + c.max + ' PV)')).join(', ')));
+    if ((S.bans || []).length) L.push('Banidos: ' + S.bans.map(b => CH[b.key] ? CH[b.key].nome : b.key).join(', '));
+    L.push('Turno guiado: ' + (S.auto === false ? 'desligado' : S.justo !== false ? 'ligado, Modo justo' : 'ligado'));
+    L.push(S.fim ? 'Resultado: vitória de ' + nm(S.fim.venc) + ' na rodada ' + S.fim.rodada : 'Situação: em andamento, rodada ' + S.rodada);
+    L.push('', '────────────────────────');
+    let r0 = null;
+    (S.log || []).forEach(l => { if (l.r !== r0) { r0 = l.r; L.push('', 'RODADA ' + l.r); } L.push('• ' + semTag(l.t)); });
+    return L.join('\n');
+  }
+  const regTitulo = () => (S.nomes[0] || 'Jogador 1') + ' × ' + (S.nomes[1] || 'Jogador 2');
+  const regLista = () => { const v = store.get('versus-registros'); return Array.isArray(v) ? v : []; };
+  function regGuardar(quieto){
+    if (SECO || window.TUT_ON || !S.times) return;
+    const L = regLista(); if (!S.regId) S.regId = 'p' + Date.now();
+    const it = { id: S.regId, quando: Date.now(), titulo: regTitulo(), cen: S.cen ? CEN[S.cen].nome : 'Arena Comum', venc: S.fim ? (S.nomes[S.fim.venc] || 'Jogador ' + (S.fim.venc + 1)) : null, rodada: S.fim ? S.fim.rodada : S.rodada,
+      trios: S.times.map(t => t.map(c => CH[c.k].nome).join(', ')), txt: regTexto() };
+    const i = L.findIndex(x => x.id === it.id); if (i >= 0) L.splice(i, 1);
+    L.unshift(it); while (L.length > 30) L.pop();
+    store.set('versus-registros', L); salvar();
+    if (!quieto) toast('🗂️ Partida guardada. Veja em ⋯ › PARTIDAS GUARDADAS ou no menu da capa.', 3000);
+  }
+  function copiarTxt(txt, msg){
+    const ok = () => toast(msg || '📋 Registro copiado.', 2400);
+    const falha = () => { const w = document.createElement('textarea'); w.value = txt; w.style.cssText = 'position:fixed;left:-9999px;top:0'; document.body.appendChild(w); w.select(); let f = false; try { f = document.execCommand('copy'); } catch (e) {} w.parentNode.removeChild(w); if (f) ok(); else toast('Não deu para copiar aqui. Use BAIXAR .TXT.', 3000); };
+    try { navigator.clipboard.writeText(txt).then(ok, falha); } catch (e) { falha(); }
+  }
+  function baixarTxt(txt, nome){
+    try { const u = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' })); const a = document.createElement('a'); a.href = u; a.download = nome; document.body.appendChild(a); a.click(); a.parentNode.removeChild(a); setTimeout(() => URL.revokeObjectURL(u), 4000); toast('💾 Arquivo baixado: ' + nome, 2600); }
+    catch (e) { toast('Não deu para baixar aqui. Use COPIAR.', 2600); }
+  }
+  const nomeArq = (titulo, ms) => { const d0 = new Date(ms), z = n => String(n).padStart(2, '0'); return 'versus_' + d0.getFullYear() + '-' + z(d0.getMonth() + 1) + '-' + z(d0.getDate()) + '_' + z(d0.getHours()) + 'h' + z(d0.getMinutes()) + '_' + titulo.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.txt'; };
+  function rLogBox(){
+    const b = $('#mnLogBox'); let r0 = null;
+    const linhas = S.log.slice().reverse().map(l => { let h = ''; if (l.r !== r0) { r0 = l.r; h = '<div class="lg-rod">RODADA ' + l.r + '</div>'; } return h + '<div>' + esc(l.t) + '</div>'; }).join('');
+    b.innerHTML = '<div class="lg-barra"><button data-lg="copiar">📋 COPIAR</button><button data-lg="baixar">💾 BAIXAR .TXT</button><button data-lg="guardar">🗂️ GUARDAR</button></div>' + (linhas || '<div>Nada ainda.</div>');
+  }
   $('#mnLog').addEventListener('click', () => {
     const b = $('#mnLogBox'); b.hidden = !b.hidden;
-    b.innerHTML = S.log.slice().reverse().map(l => '<div><b>R' + l.r + '</b> ' + esc(l.t) + '</div>').join('') || '<div>Nada ainda.</div>';
+    if (!b.hidden) rLogBox();
   });
+  $('#mnLogBox').addEventListener('click', e => {
+    const x = e.target.closest('[data-lg]'); if (!x) return;
+    if (x.dataset.lg === 'copiar') copiarTxt(regTexto());
+    else if (x.dataset.lg === 'baixar') baixarTxt(regTexto(), nomeArq(regTitulo(), S.regIni || Date.now()));
+    else if (x.dataset.lg === 'guardar') regGuardar();
+  });
+  function abrirReg(){
+    const L = regLista();
+    $('#mRegCorpo').innerHTML = L.length ? L.map((x, n) => '<div class="reg-it"><h4>' + esc(x.titulo) + '</h4><div class="reg-info">' + dataTxt(x.quando) + ' · ' + esc(x.cen) + ' · ' +
+      (x.venc ? '🏆 <b>' + esc(x.venc) + '</b> venceu na rodada ' + x.rodada : 'guardada na rodada ' + x.rodada) + '<br>' + (x.trios || []).map(esc).join(' <b>×</b> ') + '</div>' +
+      '<div class="lg-barra"><button data-rg="ver,' + n + '">👁️ VER</button><button data-rg="copiar,' + n + '">📋 COPIAR</button><button data-rg="baixar,' + n + '">💾 BAIXAR .TXT</button><button class="apaga" data-rg="apagar,' + n + '">🗑️ APAGAR</button></div></div>').join('')
+      : '<p class="reg-vazio">Nenhuma partida guardada ainda. As partidas terminadas entram aqui sozinhas, e uma partida em andamento pode ser guardada em ⋯ › HISTÓRICO DA PARTIDA › GUARDAR.</p>';
+    abrir('mReg');
+  }
+  $('#mReg').addEventListener('click', e => {
+    const x = e.target.closest('[data-rg]'); if (!x) return;
+    const [ac, n] = x.dataset.rg.split(','), L = regLista(), it = L[+n]; if (!it) return;
+    if (ac === 'ver') { const box = x.closest('.reg-it'), pr = box.querySelector('pre'); if (pr) pr.parentNode.removeChild(pr); else { const p0 = document.createElement('pre'); p0.textContent = it.txt; box.appendChild(p0); } }
+    else if (ac === 'copiar') copiarTxt(it.txt);
+    else if (ac === 'baixar') baixarTxt(it.txt, nomeArq(it.titulo, it.quando));
+    else if (ac === 'apagar') perguntar({ ic: '🗑️', tit: 'APAGAR REGISTRO', sim: 'APAGAR', nao: 'VOLTAR', txt: ['Apagar o registro de ' + esc(it.titulo) + ' (' + dataTxt(it.quando) + ')?'] }).then(ok => { if (!ok) { abrir('mReg'); return; } L.splice(+n, 1); store.set('versus-registros', L); abrirReg(); });
+  });
+  window.abrirReg = abrirReg;
   function recomecar(){
-    const keep = { picks: S.picks, prim: S.prim, cen: S.cen, cenOk: true, nomes: S.nomes };
+    const keep = { picks: S.picks, prim: S.prim, cen: S.cen, cenOk: true, nomes: S.nomes, auto: S.auto, justo: S.justo, timer: S.timer };
     S = Object.assign(novo(S.nomes), keep);
     iniciarPartida();
   }
@@ -7156,14 +7330,16 @@ body.mn-calmo .cp-po{display:none}
     if (!S.fim) return;
     SFX.p('vitoria', 300);
     const v = S.fim.venc;
+    regGuardar(true);
     $('#mFimCaixa').innerHTML = '<h2>VITÓRIA!</h2><div class="fim-nome" style="color:' + corJ(v) + '">' + nomeJ(v).toUpperCase() + '</div>' +
       '<div class="fim-trio">' + S.times[v].map(c => '<span title="' + CH[c.k].nome + '" style="' + (c.elim ? 'filter:grayscale(1);opacity:.5' : '') + '">' + (embC(c) ? '<img alt="" src="' + embC(c) + '">' : CH[c.k].icon) + '</span>').join('') + '</div>' +
       '<p>Venceu na rodada ' + S.fim.rodada + (S.cen ? ' em ' + CEN[S.cen].nome : '') + '.</p>' +
-      '<div class="fim-btns"><button class="btn-amarelo" id="fimRev">🔁 REVANCHE COM OS MESMOS TIMES</button><button class="btn-ghost" id="fimNovo">🆕 NOVO COMBATE</button><button class="btn-ghost" id="fimVer">👀 VER A MESA</button><button class="btn-ghost" id="fimCapa">🏠 CAPA</button></div>';
+      '<div class="fim-btns"><button class="btn-amarelo" id="fimRev">🔁 REVANCHE COM OS MESMOS TIMES</button><button class="btn-ghost" id="fimNovo">🆕 NOVO COMBATE</button><button class="btn-ghost" id="fimVer">👀 VER A MESA</button><button class="btn-ghost" id="fimReg">📝 REGISTRO: COPIAR OU BAIXAR</button><button class="btn-ghost" id="fimCapa">🏠 CAPA</button></div>';
     abrir('mFim');
     $('#fimRev').onclick = () => { fechar('mFim'); recomecar(); };
-    $('#fimNovo').onclick = () => { fechar('mFim'); S = novo(S.nomes); hist = []; salvar(); render(); };
+    $('#fimNovo').onclick = () => { fechar('mFim'); S = novo(S.nomes); hist = []; rolouEm = -1; salvar(); render(); };
     $('#fimVer').onclick = () => fechar('mFim');
+    $('#fimReg').onclick = () => { fechar('mFim'); abrirReg(); };
     $('#fimCapa').onclick = () => { fechar('mFim'); ir('capa'); };
   }
 
@@ -7302,6 +7478,7 @@ body.mn-calmo .cp-po{display:none}
     return out;
   }
   function rBoard(){
+    if (etpVista && S !== etpVista) { const real = S; S = etpVista; try { return rBoard(); } finally { S = real; } }
     const box = $('#ptBoard');
     $('#ptTabBtn').textContent = mostrarTab ? '▾ ESCONDER TABULEIRO' : '▸ MOSTRAR TABULEIRO';
     box.hidden = !mostrarTab;
@@ -7464,6 +7641,7 @@ body.mn-calmo .cp-po{display:none}
       const x = (S.est || []).find(z => z.id === estSel); const id = cl ? cl.dataset.cell : (() => { const [tj, ti] = t.dataset.tok.split(',').map(Number); return S.times[tj][ti].pos; })();
       if (!id) return;
       const at = S.ativo && ativoC(), th = x && x.tipo === 'Tempestade' && at && at.k === 'tharen' && x.dono === S.ativo[0];
+      if (justoOn() && !th) { toast('🔒 Modo justo: as estruturas só mudam pelas habilidades.', 2400); estSel = null; rBoard(); return; }
       if (th && dist(x.cell, id) > 2) { toast('⛈️ A Tempestade anda até 2 casas por vez', 2200); return; }
       if (th && at.gastas >= at.acts) { toast('Sem ações para mover a Tempestade', 2200); return; }
       if (x && !bloqueada(id)) { estSel = null; mudar(() => { x.cell = id; if (th) at.gastas++; }, x.tipo + ' movido para ' + id + (th ? ' (1 ação)' : '') + '.'); }
@@ -7480,6 +7658,7 @@ body.mn-calmo .cp-po{display:none}
       const id = cl.dataset.cell, c = S.times[selTok[0]][selTok[1]];
       if (bloqueada(id)) { toast('O casco da nave bloqueia essa casa', 1600); return; }
       if (ocupante(id)) return;
+      if (justoOn()) { const jm = justoPosicao(c, id); if (jm) { toast(jm, 2600); return; } }
       if (c.k === 'eclipse' && c.pos && !c.pos2) { mudar(() => { c.pos2 = id; }, '🌑 ' + IRM(c)[1] + ' entrou em ' + id + '.'); return; }
       const de = c.pos;
       mudar(() => { if (c.carona) c.carona = null; moverPeca(c, id); if (!de) autoRobs(c); }, CH[c.k].nome + (de ? ' moveu de ' + de + ' para ' + id + ' (' + dist(de, id) + ' casas).' : ' entrou em ' + id + '.'));
@@ -10736,13 +10915,52 @@ body.mn-calmo .cp-po{display:none}
     return '<div class="rs-prev" id="rsPrev"><b>O QUE VAI ACONTECER AO APLICAR</b><ul>' + p.L.map(x => '<li>' + realce(x) + '</li>').join('') + p.depois.map(x => '<li class="dep">Depois: ' + x + '</li>').join('') + '</ul></div>';
   }
   function supBanner(n, quem){ try { const o = document.getElementById('supBan'); if (o) o.remove(); const b = document.createElement('div'); b.id = 'supBan'; b.innerHTML = '<div><small>★ SUPREMA DE ' + esc(quem) + ' ★</small><b>' + esc(n.toUpperCase()) + '</b></div>'; document.body.appendChild(b); setTimeout(() => b.remove(), 2300); } catch (e) {} }
+  // destaque atacante x Defesa no quadro da ação
+  function duelo(r){
+    try {
+      const c = r.atkRef ? S.times[r.atkRef[0]][r.atkRef[1]] : ativoC(); if (!c) return '';
+      const aj = timeDe(c);
+      let apt = r.bas && r.bas.apt != null ? r.bas.apt : r.h && r.h.x >= 0 ? r.h.x : -1;
+      if (apt < 0) { const m0 = /\b(FÍS|DES|VIS|AST)\b/.exec(r.sub || ''); apt = m0 ? APT.indexOf(m0[1]) : -1; }
+      const mn = /(\d+) dados?/.exec(r.sub || ''); if (apt < 0 || !mn) return '';
+      const n = +mn[1];
+      let alvos = [];
+      if (r.linhas && r.linhas.length) alvos = r.linhas.map(l => [l.alvo, l]);
+      else if (r.alvoB) alvos = [[r.alvoB, null]];
+      else if (r.m && r.m.sel) alvos = r.m.sel.map(a => [a, null]);
+      alvos = alvos.filter(([a]) => a && a[0] !== aj && S.times[a[0]] && S.times[a[0]][a[1]]);
+      const vistos = {}; alvos = alvos.filter(([a]) => { const k = a.join(','); if (vistos[k]) return false; vistos[k] = 1; return true; });
+      if (!alvos.length) return '';
+      const ic = x => embC(x) ? '<img alt="" src="' + embC(x) + '">' : '<span>' + CH[x.k].icon + '</span>';
+      const base = aptE(c, apt), dif = n - base;
+      const chance = def => { const p = Math.max(0, Math.min(10, 11 - def)) / 10; return Math.round(100 * (1 - Math.pow(1 - p, n))); };
+      const rolou = r.dados && r.dados.length;
+      const lado = ([a, l]) => {
+        const t = S.times[a[0]][a[1]];
+        let def = null;
+        if (l && l.txt) { const md = /Defesa (\d+)/.exec(l.txt); if (md) def = +md[1]; }
+        if (def == null && r.def != null && alvos.length === 1) def = r.def;
+        if (def == null) def = clamp(defesas(t)[apt] + adef(c), 2, 10);
+        const res = rolou && l && l.ok !== undefined ? (l.ok ? ' ok' : ' no') : '';
+        const hits = rolou ? r.dados.filter(v => v >= def).length : 0;
+        return '<div class="vd-lado' + res + '" style="--tc:var(--j' + a[0] + ')">' + (res ? '<span class="vd-res">' + (l.ok ? hits + (hits > 1 ? ' ACERTOS' : ' ACERTO') : 'ERROU') + '</span>' : '') +
+          '<div class="vd-quem">' + ic(t) + '<b>' + esc(CH[t.k].nome) + '</b></div>' +
+          '<div class="vd-num"><i>DEFESA</i><strong>' + def + '</strong><em>vs ' + APT[apt] + '</em></div>' +
+          '<small>' + (rolou ? 'acerta com ' + def + ' ou mais' : 'precisa de ' + def + '+ em cada dado · ' + chance(def) + '% de acertar pelo menos 1') + '</small></div>';
+      };
+      return '<div class="vd"><div class="vd-lado" style="--tc:var(--j' + aj + ')"><div class="vd-quem">' + ic(c) + '<b>' + esc(CH[c.k].nome) + '</b></div>' +
+        '<div class="vd-num"><i>' + APT[apt] + '</i><strong>' + n + '</strong><em>' + (n > 1 ? 'DADOS' : 'DADO') + '</em></div>' +
+        '<small>' + APT[apt] + ' ' + base + (dif ? ' · ' + (dif > 0 ? '+' : '−') + Math.abs(dif) + (Math.abs(dif) > 1 ? ' dados' : ' dado') + ' de bônus' : '') + '</small></div>' +
+        '<div class="vd-vs">VS</div><div class="vd-def-l' + (alvos.length > 1 ? ' varios' : '') + '">' + alvos.slice(0, 6).map(lado).join('') + '</div></div>';
+    } catch (e) { return ''; }
+  }
   function mostrarResultado(r){
     res = r; { const cx = $('#mAcaoCaixa'); if (cx) cx.classList.toggle('sup', !!r.sup); }
     if (reacApos && !(r.pend && !r.rolado)) { r.reacT = reacApos; reacApos = null; }
     if (r.reacT) aplicarReac(r);
     if (r.pend && !r.rolado) {
       const opsP = r.ops ? '<div class="rs-ops"><b>' + (r.multi ? (r.nome === 'Armadilha de Caça' ? 'ESCOLHA AS 2 ARMADILHAS (1 marcada = duas iguais)' : 'ESCOLHA OS EFEITOS ANTES DE ROLAR (aprimorado: pode marcar os dois)') : 'ESCOLHA O EFEITO ANTES DE ROLAR') + '</b>' + r.ops.map((o, i) => '<button data-op="' + i + '" class="' + (r.opSel.includes(i) ? 'on' : '') + '"><strong>' + o.nome + '</strong><small>' + o.txt + '</small></button>').join('') + '</div>' : '';
-      $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>' + r.titulo + '</h3>' + (r.rolado ? '' : '<button class="modal-x" data-fecha title="Fechar sem usar">✕</button>') + '</div><div class="dd-corpo"><p class="rs-sub">' + r.sub + '</p>' +
+      $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>' + r.titulo + '</h3>' + (r.rolado ? '' : '<button class="modal-x" data-fecha title="Fechar sem usar">✕</button>') + '</div><div class="dd-corpo"><p class="rs-sub">' + r.sub + '</p>' + duelo(r) +
         (r.notas.length ? '<p class="rs-nota">' + r.notas.join(' · ') + '</p>' : '') + opsP + reacHtml(r) +
         (r.desc ? '<details class="rs-desc"><summary>O que a ficha diz</summary><p>' + r.desc + '</p></details>' : '') +
         '<p class="rs-nota">' + (r.ops ? 'Escolha o efeito e role os dados.' : 'Confira e role os dados.') + ' Fechar agora não gasta nada.</p>' +
@@ -10750,6 +10968,7 @@ body.mn-calmo .cp-po{display:none}
       if ($('#mAcao').hidden) abrir('mAcao');
       return;
     }
+    if (r.dados && r.dados.length) rolouEm = Math.max(rolouEm, hist.length);
     const defL = r.def !== null && r.def !== undefined ? r.def : (() => { const ds = (r.linhas || []).map(l => +((/Defesa (\d+)/.exec(l.txt || '') || [])[1] || 0)).filter(Boolean); return ds.length ? Math.min(...ds) : null; })();
     const dadosH = r.dados.length ? '<div class="dd-dados">' + r.dados.map((x, n) => '<i style="animation-delay:' + n * 70 + 'ms" class="' + (defL !== null ? (x >= defL ? 'hit' : 'miss') : (x === r.max ? 'hit' : 'miss')) + '">' + x + '</i>').join('') + '</div>' : '';
     const trav = !!(r.pend && r.rolado);
@@ -10762,7 +10981,7 @@ body.mn-calmo .cp-po{display:none}
     if (r.semAlvo) lin += '<p class="rs-nota">Nenhum personagem foi atingido.</p>';
     if (r.pre && r.pre.length) lin = '<div class="rs-ef extra">' + r.pre.map((e, ei) => '<label><input type="checkbox" data-pre="' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + '</label>').join('') + '</div>' + lin;
     if (r.extras && r.extras.length) lin += '<div class="rs-ef extra">' + r.extras.map((e, ei) => '<label><input type="checkbox" data-ex="' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + '</label>').join('') + '</div>';
-    $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>' + r.titulo + '</h3>' + (r.rolado ? '' : '<button class="modal-x" data-fecha title="Fechar sem usar">✕</button>') + '</div><div class="dd-corpo"><p class="rs-sub">' + r.sub + '</p>' +
+    $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>' + r.titulo + '</h3>' + (r.rolado || (justoOn() && r.dados.length) ? '' : '<button class="modal-x" data-fecha title="Fechar sem usar">✕</button>') + '</div><div class="dd-corpo"><p class="rs-sub">' + r.sub + '</p>' + duelo(r) +
       (r.notas.length ? '<p class="rs-nota">' + r.notas.join(' · ') + '</p>' : '') + dadosH + opsH + lin + prevHtml(r) +
       (r.desc ? '<details class="rs-desc"' + (r.linhas.some(l => l.ok && !l.ef.length) || (!r.linhas.length && !r.extras.length) ? ' open' : '') + '><summary>O que a ficha diz</summary><p>' + r.desc + '</p></details>' : '') +
       '<p class="rs-nota">Marque o que vale e aplique. Empurrões, puxões e avanços são feitos no tabuleiro sozinhos. O que não estiver na lista, ajuste direto no tabuleiro ou na ficha.</p>' +
@@ -10794,9 +11013,10 @@ body.mn-calmo .cp-po{display:none}
     fechar('mAcao');
     const r = res, c = r.atkRef ? S.times[r.atkRef[0]][r.atkRef[1]] : ativoC(), [aj] = r.atkRef || S.ativo;
     if (r.sup && c && window.VSFX && VSFX.sup) VSFX.sup(c, r.nome);
-    const msg = [];
+    const msg = [], pre0 = ETP && ETP.prep ? ETP.prep() : null;
     comRng(r, () => mudar(() => corpoAplicar(r, c, aj, msg), () => (r.nome ? (r.sup ? '★ ' : '✨ ') + CH[c.k].nome + ' usou ' + r.nome : '👊 ' + CH[c.k].nome + ' fez um Ataque Básico') + (msg.length ? ': ' + msg.join(', ') : '') + '.'));
-    if (ETP && ETP.on()) ETP.resultado(r, c, aj, msg);
+    if (ETP && ETP.on()) ETP.resultado(r, c, aj, msg, pre0);
+    else if (pre0) { etpVista = null; render(); }
     else { msg.filter(x => RX_EV.test(x)).forEach(evento); if (r.sup) toast('★ ' + r.nome.toUpperCase() + ' ★', 2200); }
     if (r.nome === 'Marca Titânica' && r.ops && r.opSel.some(i => r.ops[i].nome === 'Céus') && r.linhas[0] && r.linhas[0].ok) { const al = r.linhas[0].alvo, t = S.times[al[0]][al[1]]; if (!t.elim && t.pos) setTimeout(() => { iniciarModo({ t: 'ceus', alvo: al }); toast('☁️ Céus: toque na casa ao lado de ' + CH[t.k].nome + ' para a direção do empurrão', 3000); }, 60); }
     if (c.possQuer) setTimeout(() => iniciarPossessao(c), 60);
@@ -11111,8 +11331,17 @@ body.mn-calmo .cp-po{display:none}
     const lista = $('#etapas .etp-lista'), pular = $('#etpPular');
     let fila = [], rodando = false, tFila = null, tSai = null, ultTit = null;
     const on = () => { const v = store.get('versus-etapas'); return v !== false && v !== 0 && v !== '0'; };
+    const modoE = () => store.get('versus-etapas-modo') === 'passo' ? 'passo' : 'auto';
+    const passoOn = () => on() && modoE() === 'passo' && !window.TUT_ON && !SECO;
     const calmo = () => document.body.classList.contains('mn-calmo');
-    function set(v){ store.set('versus-etapas', v ? 1 : 0); const b = $('#mnEtapas'); if (b) b.textContent = '🎞️ ETAPAS DAS AÇÕES: ' + (v ? 'LIGADAS' : 'DESLIGADAS'); if (!v) limpar(); }
+    const rotulo = () => !on() ? 'DESLIGADAS' : modoE() === 'passo' ? 'PASSO A PASSO' : 'AUTOMÁTICAS';
+    function set(v){
+      const m = v === true ? 'auto' : v === false ? 'off' : v;
+      store.set('versus-etapas', m === 'off' ? 0 : 1); if (m !== 'off') store.set('versus-etapas-modo', m);
+      const b = $('#mnEtapas'); if (b) b.textContent = '🎞️ ETAPAS DAS AÇÕES: ' + rotulo();
+      if (m === 'off') limpar(); if (m !== 'passo' && dq.length) terminar();
+    }
+    const ciclo = () => set(!on() ? 'auto' : modoE() === 'auto' ? 'passo' : 'off');
     function limpar(){ fila = []; rodando = false; clearTimeout(tFila); clearTimeout(tSai); lista.innerHTML = ''; pular.hidden = true; }
     function sair(){ const cs = [...lista.children]; cs.forEach(c => c.classList.add('sai')); tSai = setTimeout(limpar, 320); }
     function proximo(){
@@ -11120,34 +11349,122 @@ body.mn-calmo .cp-po{display:none}
       const it = fila.shift();
       if (!it) { rodando = false; tSai = setTimeout(sair, 2400 + Math.min(4, lista.children.length) * 350); return; }
       rodando = true; pular.hidden = false;
-      while (lista.children.length >= 7) { const v = [...lista.children].find(x => !x.classList.contains('etp-tit')); if (!v) break; v.remove(); }
+      while (lista.children.length >= 5) { const v = [...lista.children].find(x => !x.classList.contains('etp-tit')); if (!v) break; v.parentNode.removeChild(v); }
       const d = document.createElement('div'); d.className = it.cls; if (it.ac) d.style.setProperty('--ac', it.ac); d.innerHTML = it.html;
       lista.appendChild(d); void d.offsetWidth; setTimeout(() => d.classList.add('on'), 20);
       tFila = setTimeout(proximo, calmo() ? 120 : it.cls.includes('etp-tit') ? 950 : 800);
     }
-    function por(it){ if (!on() || SECO) return; if (!it.cls.includes('etp-tit') && ultTit && !lista.children.length && !fila.length && Date.now() - ultTit.t < 120000) fila.push(ultTit.it); if (fila.some(x => x.html === it.html) || [...lista.children].some(x => x.innerHTML === it.html)) return; fila.push(it); if (!rodando) proximo(); }
+    function por(it){
+      if (!on() || SECO) return;
+      if (passoOn()) { if (it.cls.includes('etp-tit')) return; pend.push({ html: it.html, cls: it.cls.replace('etp-c', '').trim(), st: 0 }); clearTimeout(tPend); tPend = setTimeout(flush, 350); return; }
+      if (!it.cls.includes('etp-tit') && ultTit && !lista.children.length && !fila.length && Date.now() - ultTit.t < 120000) fila.push(ultTit.it); if (fila.some(x => x.html === it.html) || [...lista.children].some(x => x.innerHTML === it.html)) return; fila.push(it); if (!rodando) proximo(); }
     const realce = t => String(t).replace(/([−+-]\d+ PV|\d+ de dano|[−+]\d+ na Defesa|[−+]\d+ dados?|[−+]\d+ casas?)/g, '<b class="n">$1</b>');
-    function passo(t, tipo){
-      const cls = tipo || (/−\d+ PV|de dano/.test(t) ? 'dano' : /\+\d+ PV/.test(t) ? 'cura' : '');
-      por({ cls: 'etp-c ' + cls, html: realce(t) });
-    }
+    const tipoDe = t => /−\d+ PV|de dano/.test(t) ? 'dano' : /\+\d+ PV/.test(t) ? 'cura' : '';
+    function passo(t, tipo){ por({ cls: 'etp-c ' + (tipo || tipoDe(t)), html: realce(t) }); }
+    const titHtml = (nome, quem, tags, alvos) => '<small>' + esc(quem) + ' usa' + (alvos && alvos.length ? ' em ' + alvos.map(esc).join(', ') : '') + '</small><b>' + esc(nome) + '</b>' + (tags || []).map(t => '<i' + (/SUPREMA/.test(t) ? ' class="sup"' : '') + '>' + t + '</i>').join('');
     function titulo(nome, quem, ac, tags, alvos){
-      const it = { cls: 'etp-tit', ac, html: '<small>' + esc(quem) + ' usa' + (alvos && alvos.length ? ' em ' + alvos.map(esc).join(', ') : '') + '</small><b>' + esc(nome) + '</b>' + (tags || []).map(t => '<i' + (/SUPREMA/.test(t) ? ' class="sup"' : '') + '>' + t + '</i>').join('') };
+      const it = { cls: 'etp-tit', ac, html: titHtml(nome, quem, tags, alvos) };
       ultTit = { it, t: Date.now() }; por(it);
     }
-    function resultado(r, c, aj, msg){
+
+    // ── passo a passo: caixa de diálogo embaixo, um texto por toque, a animação vem depois do toque ──
+    let dlg = null, capa = null, dq = [], dk = -1, ctx = null, travado = false, pend = [], tPend = null, tit = null;
+    function criarDlg(){
+      capa = document.createElement('div'); capa.className = 'etp-capa';
+      dlg = document.createElement('div'); dlg.className = 'etp-dlg'; dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-live', 'polite');
+      document.body.append(capa, dlg);
+      const vai = e => { e.stopPropagation(); if (e.target.closest && e.target.closest('[data-etpskip]')) { terminar(); return; } avancar(); };
+      capa.addEventListener('click', vai); dlg.addEventListener('click', vai);
+    }
+    const aberta = () => !!(dlg && dlg.classList.contains('on'));
+    function desenhar(){
+      const it = dq[dk]; if (!it) return;
+      if (it.tit) tit = it;
+      dlg.innerHTML = (tit ? '<div class="ed-h" style="--ac:' + (tit.ac || '#e8000d') + '">' + tit.html + '</div>' : '') +
+        '<div class="ed-tx ' + (it.cls || '') + '">' + (it.tit ? '<span class="ed-vaz">' + (dq.length > 1 ? 'Toque para ver o que acontece.' : '') + '</span>' : it.html) + '</div>' +
+        '<div class="ed-pe"><span class="ed-n">' + (dk + 1) + ' / ' + dq.length + '</span><button type="button" data-etpskip>PULAR ⏭ <kbd>P</kbd></button><span class="ed-seta">▼</span></div>';
+      dlg.classList.remove('vem'); void dlg.offsetWidth; dlg.classList.add('vem');
+    }
+    function abrir(itens, c0){
+      if (!dlg) criarDlg();
+      dq = itens; dk = 0; ctx = c0 || null; tit = null; travado = false;
+      capa.classList.add('on'); dlg.classList.add('on'); desenhar();
+    }
+    function estagio(st){ ctx.vis = st; etpVista = st >= 2 ? null : st === 1 ? ctx.hyb : ctx.pre; rBoard(); }
+    function avancar(){
+      if (travado || !dq.length) return;
+      const it = dq[dk];
+      if (ctx && it && it.st > ctx.vis) {
+        estagio(it.st); travado = true; dlg.classList.add('anim');
+        setTimeout(() => { travado = false; if (dlg) dlg.classList.remove('anim'); seguir(); }, calmo() ? 150 : 900);
+        return;
+      }
+      seguir();
+    }
+    function seguir(){ if (dk < dq.length - 1) { dk++; desenhar(); } else terminar(); }
+    function terminar(){
+      ctx = null; dq = []; dk = -1; tit = null; travado = false; etpVista = null;
+      if (dlg) { dlg.classList.remove('on', 'anim'); capa.classList.remove('on'); dlg.innerHTML = ''; }
+      render();
+      if (pend.length) { clearTimeout(tPend); tPend = setTimeout(flush, 250); }
+    }
+    function flush(){
+      if (!pend.length || !passoOn()) { pend = []; return; }
+      if (aberta() || $$('.modal').some(m => !m.hidden)) { tPend = setTimeout(flush, 400); return; }
+      abrir(pend.splice(0), null);
+    }
+    // antes de aplicar: guarda a mesa como estava, para mostrar por partes
+    function prep(){
+      if (!passoOn() || tela !== 'combate') return null;
+      if (aberta()) terminar();
+      const p = JSON.parse(JSON.stringify(S)); etpVista = p; return p;
+    }
+    function resultado(r, c, aj, msg, pre){
       if (!on()) return;
       const nome = r.nome ? r.nome : r.cupCura ? 'Amor Ambíguo' : 'Ataque Básico';
-      titulo(nome, CH[c.k].nome, CH[c.k].ac, r.nome ? [r.sup ? '★ SUPREMA' : '', r.aprim && !r.sup ? '⚡ MEDIDOR' : ''].filter(Boolean) : [], (r.linhas || []).map(l => { const t = S.times[l.alvo[0]] && S.times[l.alvo[0]][l.alvo[1]]; return t && t !== c ? CH[t.k].nome : ''; }).filter(Boolean));
-      if ((r.ataque || (r.basico && !r.cupCura)) && r.usouDados) (r.linhas || []).forEach(l => { if (l.ok === undefined || l.alvo[0] === aj) return; const t = S.times[l.alvo[0]][l.alvo[1]]; if (!t) return; passo((l.ok ? '🎯 Acertou ' : '💨 Errou ') + CH[t.k].nome, l.ok ? 'acerto' : 'erro'); });
-      msg.filter(x => !/acabou \(já valeu/.test(x)).forEach(x => passo(x));
+      const tags = r.nome ? [r.sup ? '★ SUPREMA' : '', r.aprim && !r.sup ? '⚡ MEDIDOR' : ''].filter(Boolean) : [];
+      const alvos = (r.linhas || []).map(l => { const t = S.times[l.alvo[0]] && S.times[l.alvo[0]][l.alvo[1]]; return t && t !== c ? CH[t.k].nome : ''; }).filter(Boolean);
+      const acertos = [];
+      if ((r.ataque || (r.basico && !r.cupCura)) && r.usouDados) (r.linhas || []).forEach(l => { if (l.ok === undefined || l.alvo[0] === aj) return; const t = S.times[l.alvo[0]][l.alvo[1]]; if (!t) return; acertos.push([(l.ok ? '🎯 Acertou ' : '💨 Errou ') + CH[t.k].nome, l.ok ? 'acerto' : 'erro']); });
+      const linhas = msg.filter(x => !/acabou \(já valeu/.test(x));
+      if (pre && passoOn()) {
+        clearTimeout(tPend);
+        const its = pend.splice(0).map(x => Object.assign(x, { st: 0 }));
+        its.push({ tit: true, ac: CH[c.k].ac, html: titHtml(nome, CH[c.k].nome, tags, alvos), st: 0 });
+        acertos.forEach(([t, k]) => its.push({ html: realce(t), cls: k, st: 0 }));
+        linhas.forEach(t => its.push({ html: realce(t), cls: tipoDe(t), st: /PV|dano|elimin|cura|Escudo|cai\b|derrotad/i.test(t) ? 1 : 2 }));
+        const ord = its.map((x, n) => [x, n]).sort((a, b) => a[0].st - b[0].st || a[1] - b[1]).map(x => x[0]);
+        const hyb = JSON.parse(JSON.stringify(pre));
+        S.times.forEach((t, j) => t.forEach((x, i) => { const h = hyb.times && hyb.times[j] && hyb.times[j][i]; if (h) { h.pv = x.pv; h.elim = x.elim; } }));
+        if (!ord.some(x => x.st > 0)) ord.push({ html: '<span class="ed-vaz">Nada mudou na mesa.</span>', cls: '', st: 2 });
+        abrir(ord, { pre, hyb, vis: 0 });
+        return;
+      }
+      if (pre) { etpVista = null; render(); }
+      titulo(nome, CH[c.k].nome, CH[c.k].ac, tags, alvos);
+      acertos.forEach(([t, k]) => passo(t, k));
+      linhas.forEach(x => passo(x));
       ultTit = null;
     }
     pular.addEventListener('click', limpar);
-    document.addEventListener('keydown', e => { if ((e.key === 'p' || e.key === 'P') && !e.ctrlKey && !e.metaKey && !e.altKey && (rodando || lista.children.length)) { const a = document.activeElement; if (a && a.matches && a.matches('input:not([type=checkbox]), textarea')) return; e.preventDefault(); limpar(); } }, true);
-    return { on, set, passo, titulo, resultado, limpar };
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const a = document.activeElement; if (a && a.matches && a.matches('input:not([type=checkbox]), textarea')) return;
+      if (aberta() && !$$('.modal').some(m => !m.hidden)) {
+        if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); terminar(); return; }
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); e.stopImmediatePropagation(); avancar(); return; }
+      }
+      if ((e.key === 'p' || e.key === 'P') && (rodando || lista.children.length)) { e.preventDefault(); limpar(); }
+    }, true);
+    return { on, set, ciclo, rotulo, passoOn, prep, passo, titulo, resultado, limpar, aberta };
   })();
-  { const b = $('#mnEtapas'); if (b) { b.textContent = '🎞️ ETAPAS DAS AÇÕES: ' + (ETP.on() ? 'LIGADAS' : 'DESLIGADAS'); b.addEventListener('click', () => ETP.set(!ETP.on())); } }
+  { const b = $('#mnJusto'); if (b) b.addEventListener('click', () => {
+      if (S.auto === false) { toast('O Modo justo faz parte do Turno guiado, que está desligado nesta partida.', 2600); return; }
+      const v = S.justo === false;
+      perguntar({ ic: '🔒', tit: v ? 'LIGAR O MODO JUSTO' : 'DESLIGAR O MODO JUSTO', sim: v ? 'LIGAR' : 'DESLIGAR', nao: 'VOLTAR', txt: [v ? 'Os ajustes à mão somem e tudo passa pelo Turno guiado.' : 'Os ajustes à mão voltam: PV, status, efeitos, Medidor, ações e estruturas. Combinem antes com o outro jogador.'] })
+        .then(ok => { if (!ok) return; S.justo = v; log((v ? '🔒 Modo justo ligado' : '🔓 Modo justo desligado') + '.'); salvar(); render(); });
+    }); }
+  { const b = $('#mnEtapas'); if (b) { b.textContent = '🎞️ ETAPAS DAS AÇÕES: ' + ETP.rotulo(); b.addEventListener('click', () => ETP.ciclo()); } }
   // ── quadro de atalhos (botão ⌨️ e tecla H) ──
   (function(){
     const fab = $('#atlFab'), box = $('#atlBox'), fixo = $('#atlFixo'); if (!fab || !box) return;
@@ -11365,7 +11682,7 @@ body.mn-calmo .cp-po{display:none}
     const tirarVS = () => [150, 500, 1000, 1800, 2800].forEach(ms => setTimeout(() => $$('.fx-vs2,.fx-vs').forEach(e => e.click()), ms));
     // monta uma cena de treino: times, posições e Medidor
     function cena(o){
-      S = novo(['Você', 'Treino']); S.cenOk = true; S.prim = 0; S.auto = true;
+      S = novo(['Você', 'Treino']); S.cenOk = true; S.prim = 0; S.auto = true; S.justo = false;
       S.picks = o.a.map(key => ({ j: 0, key })).concat(o.b.map(key => ({ j: 1, key })));
       iniciarPartida();
       S.vez = 0; S.ini = 0; S.prim = 0;
@@ -11495,7 +11812,7 @@ body.mn-calmo .cp-po{display:none}
           { alvo: '#cenComum', permite: '#cenComum', ok: () => S.fase === 'iniciativa', t: 'Arena comum', x: 'Para aprender, toque em <b>⬡ ARENA COMUM</b>, sem regra extra.' },
           { alvo: '.ini-nomes', permite: '#nome0, #nome1', t: 'Nomes', x: 'Os nomes dos dois jogadores. Pode digitar se quiser.' },
           { alvo: '.moeda-area', permite: '#btnMoeda, [data-prim]', ok: () => S.prim != null, t: 'Quem começa?', x: 'Toque em <b>🪙 CARA OU COROA</b>, ou escolham direto quem começa. Quem começa escolhe primeiro no Draft e posiciona primeiro.' },
-          { alvo: '.ini-box .ini-auto', t: 'Temporizador e Turno guiado', x: '<b>⏱️ Temporizador</b> (opcional): 1 minuto para escolher quem joga e 2 para agir. <b>🤖 Turno guiado</b>: ligado, o site mostra as ações, rola os dados e aplica tudo; desligado, vocês controlam pelas fichas e pelo dado.' },
+          { alvo: '.ini-box .ini-auto', t: 'Temporizador e Turno guiado', x: '<b>⏱️ Temporizador</b> (opcional): 1 minuto para escolher quem joga e 2 para agir. <b>🤖 Turno guiado</b>: ligado, o site mostra as ações, rola os dados e aplica tudo; desligado, vocês controlam pelas fichas e pelo dado. O <b>🔒 Modo justo</b>, dentro dele, esconde os ajustes à mão para que tudo passe pelo jogo.' },
           { alvo: '#btnIrDraft', permite: '#btnIrDraft', ok: () => S.fase === 'draft', t: 'Aos times', x: 'Toque em <b>ESCOLHER TIMES ▶</b>.' },
           { alvo: '.dr-topo', t: 'Banimento e Draft', x: 'Aqui aparece quem escolhe agora e a ordem. Primeiro vem o <b>banimento</b>: cada jogador bane 2 personagens, alternando, e ninguém pode escolher os banidos.' },
           { alvo: '#drCols', permite: '#drCols, #drPalco', ok: () => (S.bans || []).length >= 1, t: 'Bana um personagem', x: 'Os personagens estão separados por classe e subclasse. Toque em um para <b>banir</b>. A tecla I abre a ficha.' },
@@ -11602,7 +11919,7 @@ body.mn-calmo .cp-po{display:none}
       bal.classList.remove('vem'); bal.offsetWidth; bal.classList.add('vem');
       if (p.fim) marcarFeito(L.id);
       alvoEl = null;
-      setTimeout(() => { const el = Q(p.alvo); if (el && el.scrollIntoView && !el.closest('.modal')) el.scrollIntoView({ block: 'center', behavior: document.body.classList.contains('mn-calmo') ? 'auto' : 'smooth' }); posicionar(); }, 60);
+      setTimeout(() => { const el = Q(p.alvo); if (el && el.scrollIntoView) el.scrollIntoView({ block: el.closest('.modal') ? 'nearest' : 'center', behavior: document.body.classList.contains('mn-calmo') ? 'auto' : 'smooth' }); posicionar(); }, 60);
     }
     function proximo(){ if (!L) return; if (k < L.passos.length - 1) { k++; mostrar(); } }
     function posicionar(){
@@ -11611,7 +11928,7 @@ body.mn-calmo .cp-po{display:none}
       const W = innerWidth, H = innerHeight;
       let r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
       if (r && (r.width < 2 || r.height < 2)) r = null;
-      if (r && el && !el.closest('.modal') && getComputedStyle(el).position !== 'fixed' && (r.top < 60 || r.bottom > H - 10) && r.height < H - 120 && Date.now() - (posicionar.rol || 0) > 900) { posicionar.rol = Date.now(); el.scrollIntoView({ block: 'center' }); r = el.getBoundingClientRect(); }
+      if (r && el && getComputedStyle(el).position !== 'fixed' && (r.top < 60 || r.bottom > H - 10) && r.height < H - 120 && Date.now() - (posicionar.rol || 0) > 900) { posicionar.rol = Date.now(); el.scrollIntoView({ block: el.closest('.modal') ? 'nearest' : 'center' }); r = el.getBoundingClientRect(); }
       if (r) { const pd = 6, x = Math.max(2, r.left - pd), y = Math.max(2, r.top - pd), w = Math.min(W - 4, r.right + pd) - x, h = Math.min(H - 4, r.bottom + pd) - y;
         Object.assign(luz.style, { left: x + 'px', top: y + 'px', width: Math.max(0, w) + 'px', height: Math.max(0, h) + 'px' }); luz.classList.add('on'); }
       else { Object.assign(luz.style, { left: W / 2 + 'px', top: H / 2 + 'px', width: '0px', height: '0px' }); luz.classList.remove('on'); }
@@ -11677,7 +11994,7 @@ body.mn-calmo .cp-po{display:none}
       clearInterval(tick); tick = null; L = null;
       Math.random = rnd0;
       $$('.modal').forEach(m => { m.hidden = true; });
-      luz.classList.remove('on'); luz.style.width = luz.style.height = '0px'; bal.innerHTML = ''; bal.style.top = '-9999px';
+      luz.classList.remove('on'); luz.style.width = luz.style.height = '0px'; bal.innerHTML = ''; bal.style.top = '-9999px'; luz.style.boxShadow = '';
       if (seguinte) { iniciar(seguinte, true); return; }
       try { S = JSON.parse(salvo); } catch (_) { S = novo(); }
       hist = hSalvo || []; modo = null; selTok = null;
