@@ -3060,7 +3060,7 @@ body.mn-calmo .cp-po{display:none}
         <dt>"Até o início / fim do próximo turno"</dt>
         <dd>Conta o próximo turno do personagem citado na frase. Se não citar ninguém, é o de quem usou a habilidade.</dd>
         <dt>Contra um personagem</dt> <dd>Bônus e penalidades que dizem "contra ele", "contra o mesmo personagem" ou "contra Fulano" só valem quando esse personagem está na jogada: Defesa e deslocamento contam no turno dele, e dados e dano contam quando o ataque é contra ele. Na mesa, deixe o marcador do efeito encostado na peça desse personagem. Exemplo: um bônus de +1 na Defesa só contra um inimigo vale apenas no turno desse inimigo.</dd> <dt>Rodada</dt>
-        <dd>Um ciclo em que todos os personagens em jogo agem uma vez. "Por 2 rodadas" conta a rodada em que o efeito começou como a primeira: usado na rodada 3, acaba no fim da rodada 4.</dd>
+        <dd>Um ciclo em que todos os personagens em jogo agem uma vez. "Por 2 rodadas" não conta a rodada em que o efeito foi aplicado: o personagem afetado age 2 turnos inteiros sob o efeito, e o efeito acaba no fim do 2º turno dele. Se foi aplicado durante o turno do próprio afetado, esse turno não conta.</dd>
       </dl>
     </div>
   </div></div>
@@ -3584,6 +3584,7 @@ body.mn-calmo .cp-po{display:none}
     <button class="btn-ghost" id="mnLog">📝 HISTÓRICO DA PARTIDA</button>
     <button class="btn-ghost" id="mnReiniciar">🔁 RECOMEÇAR COM OS MESMOS TIMES</button>
     <button class="btn-ghost" id="mnNova">🆕 NOVO COMBATE</button>
+    <button class="btn-ghost" id="mnSom">🔊 EFEITOS SONOROS</button>
     <button class="btn-ghost" id="mnEtapas">🎞️ ETAPAS DAS AÇÕES: LIGADAS</button>
     <button class="btn-ghost" id="mnCopiar">🧰 COPIAR PARTIDA (PARA SUPORTE)</button>
   </div>
@@ -3681,6 +3682,66 @@ body.mn-calmo .cp-po{display:none}
     get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
     set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
+
+  // ═════════ EFEITOS SONOROS (sintetizados no navegador) ═════════
+  window.SFX = (function(){
+    let ctx = null, master = null, nbuf = null, ult = {};
+    const OPS = Object.assign({ on: true, vol: .6 }, store.get('versus-som') || {});
+    function init(){
+      if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+        ctx = new AC(); master = ctx.createGain(); master.gain.value = OPS.vol; const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
+        nbuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate); const d = nbuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      if (ctx.state === 'suspended') ctx.resume();
+      return true;
+    }
+    function tone(o){ const f = o.f || 440, t = o.t || 0, d = o.d || .2, v = o.v || .25, s = ctx.currentTime + t, osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = o.type || 'square'; osc.frequency.setValueAtTime(f, s); if (o.f2) osc.frequency.exponentialRampToValueAtTime(o.f2, s + d);
+      g.gain.setValueAtTime(.0001, s); g.gain.exponentialRampToValueAtTime(v, s + .004); g.gain.exponentialRampToValueAtTime(.0001, s + d);
+      osc.connect(g); g.connect(master); osc.start(s); osc.stop(s + d + .05); }
+    function noise(o){ const t = o.t || 0, d = o.d || .2, v = o.v || .3, s = ctx.currentTime + t, src = ctx.createBufferSource(); src.buffer = nbuf;
+      const flt = ctx.createBiquadFilter(); flt.type = o.type || 'lowpass'; flt.Q.value = o.q || 1; flt.frequency.setValueAtTime(o.f || 1000, s); if (o.f2) flt.frequency.exponentialRampToValueAtTime(o.f2, s + d);
+      const g = ctx.createGain(); g.gain.setValueAtTime(.0001, s); g.gain.exponentialRampToValueAtTime(v, s + .005); g.gain.exponentialRampToValueAtTime(.0001, s + d);
+      src.connect(flt); flt.connect(g); g.connect(master); src.start(s, Math.random() * 1.5, d + .05); }
+    const R = (a, b) => a + Math.random() * (b - a);
+    const SONS = {
+      dados(){ let t = 0; for (let i = 0; i < 7; i++) { noise({ t, d: .04, v: .35, type: 'highpass', f: 2500 }); tone({ t, f: R(220, 420), f2: 120, d: .05, type: 'triangle', v: .2 }); t += .05 + i * .018 + R(0, .02); } tone({ t: t + .02, f: 880, d: .12, v: .12 }); },
+      acerto(){ noise({ d: .18, v: .6, f: 3000, f2: 200 }); tone({ f: 200, f2: 45, d: .22, type: 'sine', v: .7 }); tone({ t: .01, f: 900, f2: 300, d: .08, v: .15 }); },
+      erro(){ noise({ d: .35, v: .25, type: 'bandpass', f: 500, f2: 3000, q: 2 }); tone({ f: 520, f2: 180, d: .3, type: 'sine', v: .15 }); },
+      cura(){ [523, 659, 784, 1047, 1319].forEach((f, i) => { tone({ t: i * .08, f, d: .35, type: 'sine', v: .2 }); tone({ t: i * .08, f: f * 2, d: .2, type: 'triangle', v: .05 }); }); },
+      empurrao(){ tone({ f: 260, f2: 70, d: .28, type: 'sawtooth', v: .2 }); noise({ d: .28, v: .2, type: 'bandpass', f: 600, f2: 150 }); tone({ t: .26, f: 110, f2: 35, d: .3, type: 'sine', v: .8 }); noise({ t: .26, d: .25, v: .5, f: 900, f2: 100 }); },
+      eletricidade(){ for (let i = 0; i < 16; i++) tone({ t: i * .028, f: R(120, 1800), d: .03, type: 'sawtooth', v: .14 }); noise({ d: .5, v: .18, type: 'highpass', f: 3500 }); tone({ t: .45, f: 60, d: .2, v: .1 }); },
+      explosao(){ noise({ d: 1.1, v: .7, f: 4000, f2: 80 }); tone({ f: 140, f2: 28, d: 1, type: 'sine', v: .9 }); noise({ t: .05, d: .5, v: .3, type: 'bandpass', f: 900, f2: 200 }); },
+      medidor(){ tone({ f: 660, d: .07, v: .2 }); tone({ t: .07, f: 990, d: .07, v: .2 }); tone({ t: .14, f: 1320, d: .16, v: .2 }); },
+      suprema(){ tone({ f: 90, f2: 900, d: 1, type: 'sawtooth', v: .18 }); noise({ d: 1, v: .25, type: 'bandpass', f: 300, f2: 5000, q: 3 }); [262, 330, 392, 523].forEach(f => tone({ t: 1, f, d: .9, v: .12 })); tone({ t: 1, f: 130, f2: 30, d: 1, type: 'sine', v: .9 }); noise({ t: 1, d: .9, v: .6, f: 4000, f2: 100 }); },
+      eliminacao(){ tone({ f: 440, f2: 50, d: .7, type: 'sawtooth', v: .2 }); noise({ d: .3, v: .35, f: 2500, f2: 200 }); tone({ t: .7, f: 80, f2: 40, d: .2, type: 'sine', v: .5 }); },
+      vitoria(){ [[523, 0, .12], [659, .12, .12], [784, .24, .12], [1047, .36, .2], [784, .6, .1], [1047, .7, .5]].forEach(n => { tone({ t: n[1], f: n[0], d: n[2], v: .16 }); tone({ t: n[1], f: n[0] / 2, d: n[2], type: 'triangle', v: .12 }); }); },
+      clique(){ tone({ f: 800, d: .04, v: .13 }); tone({ t: .04, f: 1200, d: .05, v: .13 }); },
+      confirmar(){ noise({ d: .03, v: .2, type: 'highpass', f: 3000 }); tone({ f: 784, d: .07, v: .18 }); tone({ t: .06, f: 1175, d: .07, v: .18 }); tone({ t: .12, f: 1568, d: .2, v: .18 }); tone({ t: .12, f: 784, d: .2, type: 'triangle', v: .12 }); },
+      voltar(){ tone({ f: 700, d: .07, v: .17 }); tone({ t: .07, f: 466, d: .15, v: .17 }); tone({ t: .07, f: 233, d: .15, type: 'triangle', v: .12 }); }
+    };
+    // toca o som k (com atraso em ms); o mesmo som não se repete em menos de 70 ms
+    function p(k, atraso){
+      if (!OPS.on || !SONS[k] || (typeof SECO !== 'undefined' && SECO)) return;
+      if (atraso) { setTimeout(() => p(k), atraso); return; }
+      const ag = Date.now(); if (ult[k] && ag - ult[k] < 70) return; ult[k] = ag;
+      if (!init()) return;
+      try { if (ctx.state === 'running') SONS[k](); else ctx.resume().then(() => SONS[k]()); } catch (e) {}
+    }
+    const salvarS = () => store.set('versus-som', OPS);
+    const libera = () => { if (OPS.on) init(); document.removeEventListener('pointerdown', libera, true); document.removeEventListener('keydown', libera, true); };
+    document.addEventListener('pointerdown', libera, true); document.addEventListener('keydown', libera, true);
+    const txtBt = () => '🔊 EFEITOS SONOROS: ' + (OPS.on ? 'LIGADOS' : 'DESLIGADOS');
+    document.addEventListener('click', e => { const b = e.target.closest('#mnSom'); if (!b) return; OPS.on = !OPS.on; salvarS(); b.textContent = txtBt(); p('confirmar'); });
+    setTimeout(() => { const b = document.getElementById('mnSom'); if (b) b.textContent = txtBt(); }, 0);
+    // tema do próximo dano (habilidade usada): elétrico ou explosivo
+    let tema = '';
+    return {
+      p, on: () => OPS.on, vol: () => OPS.vol,
+      set(o){ Object.assign(OPS, o); salvarS(); if (master) master.gain.value = OPS.vol; const b = document.getElementById('mnSom'); if (b) b.textContent = txtBt(); },
+      tema(t){ tema = t || ''; },
+      dano(v, atraso){ const k = /Relâmpago|Elétric|Eletri|Choque|Raio|Trovão|Tempestade|Estrondo|Descarga|Zap|Pulso|Faísca|Tharen|Dínamo/i.test(tema) ? 'eletricidade' : (v >= 10 || /Explo|Bomba|Bazuca|Boom|Combustão|Núcleo|Reação em Cadeia|Detona|Implos|Granada|Míssil/i.test(tema)) ? 'explosao' : 'acerto'; tema = ''; p(k, atraso); }
+    };
+  })();
 
   // ═════════ TELAS ═════════
   let tela = null;
@@ -3861,7 +3922,7 @@ body.mn-calmo .cp-po{display:none}
         { ic: '⚔️', t: 'JOGAR', c: 'var(--red)', d: emPartida() ? 'Partida em andamento: Rodada ' + S.rodada + ' · ' + S.nomes[0] + ' × ' + S.nomes[1] + '. Toque para continuar.' : 'Escolha a arena, faça o Draft e monte os trios. Dois jogadores, um vencedor.', s: emPartida() ? 'CONTINUAR · RODADA ' + S.rodada : '', ok: () => sair('combate') },
         { ic: '📖', t: 'MANUAL', c: 'var(--blue)', d: temHist ? 'As regras, as fichas dos personagens, os cenários e os arquivos do universo.' : 'As regras, as fichas dos personagens e os cenários.', ok: () => temHist ? abrir('manual') : sair('manual') },
         { ic: '📜', t: 'HISTÓRIAS', c: 'var(--estrategista)', trav: true, d: 'O modo história ainda está sendo escrito. Em breve, as aventuras do universo de Versus.' },
-        { ic: '⚙️', t: 'OPÇÕES', c: '#2a9d5a', d: 'Tela cheia, animações e tela de título.', ok: () => abrir('opcoes') },
+        { ic: '⚙️', t: 'OPÇÕES', c: '#2a9d5a', d: 'Tela cheia, animações, sons e tela de título.', ok: () => abrir('opcoes') },
         { ic: '⭐', t: 'CRÉDITOS', c: '#d98a00', d: 'Quem fez Versus.', ok: () => abrir('creditos') }
       ]}),
       manual: () => ({ cam: '› MANUAL', itens: [
@@ -3875,7 +3936,8 @@ body.mn-calmo .cp-po{display:none}
         { ic: '🎞️', t: 'ETAPAS DAS AÇÕES', c: '#2a9d5a', d: 'Mostra o nome da habilidade e cada passo do que aconteceu: Amostras, acerto, dano com as reduções, empurrões e passivas. Dá para pular com o botão PULAR ou a tecla P.', v: () => ETP && ETP.on() ? 'LIGADAS' : 'DESLIGADAS', mud: () => { if (ETP) ETP.set(!ETP.on()); } },
         { ic: '🎬', t: 'TELA DE TÍTULO', c: '#2a9d5a', d: 'Mostrar o “pressione para começar” ao abrir o jogo, ou ir direto ao menu.', v: () => OP.pular ? 'PULAR' : 'MOSTRAR', mud: () => { OP.pular = !OP.pular; salvarOp(); } },
         { ic: '🎵', t: 'MÚSICA', c: '#555', trav: true, d: 'Trilha sonora: em breve.' },
-        { ic: '🔊', t: 'EFEITOS SONOROS', c: '#555', trav: true, d: 'Sons de menu e de combate: em breve.' },
+        { ic: '🔊', t: 'EFEITOS SONOROS', c: '#2a9d5a', d: 'Sons de menu, dados, acertos, empurrões, Supremas e vitória, criados no próprio jogo.', v: () => SFX.on() ? 'LIGADOS' : 'DESLIGADOS', mud: () => { SFX.set({ on: !SFX.on() }); SFX.p('confirmar'); } },
+        { ic: '🎚️', t: 'VOLUME DOS EFEITOS', c: '#2a9d5a', d: 'Use ◀ ▶ para baixar ou subir o volume.', v: () => Math.round(SFX.vol() * 100) + '%', mud: dd => { let v = Math.round(SFX.vol() * 10) + (dd < 0 ? -1 : 1); if (v > 10) v = dd === undefined ? 1 : 10; if (v < 1) v = 1; SFX.set({ vol: v / 10 }); SFX.p('clique'); } },
         { volta: 1 }
       ]}),
       creditos: () => ({ cam: '› CRÉDITOS', painel: '<h3>VERSUS · COMBATES CÔMICOS</h3><p>1ª Edição</p><h3>CRIAÇÃO</h3><p>Derec e irmão</p><h3>PERSONAGENS E UNIVERSO</h3><p>' + artes.length + ' personagens, ' + DATA.cen.length + ' arenas e um mundo inteiro de histórias.</p><h3>OBRIGADO POR JOGAR!</h3>', itens: [ { volta: 1 } ]})
@@ -3886,6 +3948,7 @@ body.mn-calmo .cp-po{display:none}
       atual = m; sel = 0; montar(true);
     }
     function voltar(){
+      SFX.p('voltar');
       if (!pilha.length) { if (!OP.pular) mostrarTitulo(); return; }
       const p = pilha.pop(); atual = p.m; sel = p.sel; montar(true);
     }
@@ -3908,16 +3971,16 @@ body.mn-calmo .cp-po{display:none}
       const x = itens[sel];
       if (x) { desc.textContent = x.d || ''; desc.style.animation = 'none'; desc.offsetWidth; desc.style.animation = ''; }
     }
-    function mover(dd){ if (!itens.length) return; sel = (sel + dd + itens.length) % itens.length; marcar(); }
+    function mover(dd){ if (!itens.length) return; sel = (sel + dd + itens.length) % itens.length; marcar(); SFX.p('clique'); }
     function confirmar(i){
       if (i != null) sel = i;
       const x = itens[sel]; if (!x) return;
       marcar();
-      if (x.trav) { const b = lista.children[sel]; b.classList.remove('trema'); b.offsetWidth; b.classList.add('trema'); avisar(x.t === 'HISTÓRIAS' ? '🔒 MODO HISTÓRIA EM BREVE' : '🔒 EM BREVE'); return; }
+      if (x.trav) { SFX.p('erro'); const b = lista.children[sel]; b.classList.remove('trema'); b.offsetWidth; b.classList.add('trema'); avisar(x.t === 'HISTÓRIAS' ? '🔒 MODO HISTÓRIA EM BREVE' : '🔒 EM BREVE'); return; }
       if (x.mud) { x.mud(); desenhar(); return; }
-      if (x.ok) x.ok();
+      if (x.ok) { SFX.p(x.volta ? 'voltar' : 'confirmar'); x.ok(); }
     }
-    function ajustar(dd){ const x = itens[sel]; if (x && x.mud) { x.mud(); desenhar(); } else if (dd > 0) confirmar(); else if (pilha.length) voltar(); }
+    function ajustar(dd){ const x = itens[sel]; if (x && x.mud) { x.mud(dd); desenhar(); } else if (dd > 0) confirmar(); else if (pilha.length) voltar(); }
 
     // ── título ──
     function mostrarTitulo(){
@@ -3931,13 +3994,13 @@ body.mn-calmo .cp-po{display:none}
     }
     function comecar(){
       if (!raiz.classList.contains('tit') || raiz.classList.contains('saindo')) return;
-      raiz.classList.add('saindo');
+      raiz.classList.add('saindo'); SFX.p('confirmar');
       if (!OP.calmo) { const f = document.createElement('div'); f.className = 'mn-flash'; document.body.appendChild(f); setTimeout(() => f.remove(), 400); }
       setTimeout(() => { pilha = []; atual = 'raiz'; sel = 0; mostrarMenu(true); }, OP.calmo ? 0 : 280);
     }
     $('#mnTitulo').addEventListener('click', comecar);
     lista.addEventListener('click', e => { const b = e.target.closest('[data-mn]'); if (b) confirmar(+b.dataset.mn); });
-    lista.addEventListener('mousemove', e => { const b = e.target.closest('[data-mn]'); if (b && +b.dataset.mn !== sel) { sel = +b.dataset.mn; marcar(); } });
+    lista.addEventListener('mousemove', e => { const b = e.target.closest('[data-mn]'); if (b && +b.dataset.mn !== sel) { sel = +b.dataset.mn; marcar(); SFX.p('clique'); } });
 
     const modalAberto = () => $$('.modal').some(m => !m.hidden);
     function tecla(k){
@@ -4150,7 +4213,7 @@ body.mn-calmo .cp-po{display:none}
   function banir(k){
     if (!emBan() || banido(k)) return;
     const j = vezBan();
-    bans().push({ j, key: k }); salvar(); render();
+    bans().push({ j, key: k }); SFX.p('voltar'); salvar(); render();
     toast('<span style="color:' + corJ(j) + '">' + nomeJ(j) + '</span> baniu ' + CH[k].icon + ' ' + CH[k].nome, 1500);
   }
   function aptMini(c){
@@ -4248,7 +4311,7 @@ body.mn-calmo .cp-po{display:none}
   function escolher(k){
     if (!podeEscolher(k)) return;
     const j = vezDraft();
-    S.picks.push({ j, key: k }); salvar(); render();
+    S.picks.push({ j, key: k }); SFX.p('confirmar'); salvar(); render();
     toast('<span style="color:' + corJ(j) + '">' + nomeJ(j) + '</span> escolheu ' + CH[k].icon + ' ' + CH[k].nome, 1500);
   }
   var drPag = 0, drPagN = '';
@@ -4315,7 +4378,7 @@ body.mn-calmo .cp-po{display:none}
   }
   addEventListener('resize', () => { if ($('#drPalco') && $('#drPalco').firstChild) palcoDraft(); });
   $('#drCols').addEventListener('mouseover', e => { const t = e.target.closest('.tile'); if (!t || emBan()) return; const k = t.dataset.k, j = vezDraft();
-    const nv = j !== null && podeEscolher(k) ? { j, k } : null; if ((nv && drPrev && nv.k === drPrev.k) || (!nv && !drPrev)) return; drPrev = nv; palcoDraft(); });
+    const nv = j !== null && podeEscolher(k) ? { j, k } : null; if ((nv && drPrev && nv.k === drPrev.k) || (!nv && !drPrev)) return; drPrev = nv; if (nv) SFX.p('clique'); palcoDraft(); });
   $('#drCols').addEventListener('mouseleave', () => { if (drPrev) { drPrev = null; palcoDraft(); } });
 
   $('#drSug').addEventListener('click', e => { const b = e.target.closest('[data-sk]'); if (!b || b.disabled) return; if (podeEscolher(b.dataset.sk)) escolher(b.dataset.sk); else abrirInfo(b.dataset.sk); });
@@ -4798,7 +4861,7 @@ body.mn-calmo .cp-po{display:none}
     add(/até o início do (?:seu )?próximo turno/i, m => { const x = quemNoTexto(txt.slice(m.index + m[0].length, m.index + m[0].length + 30), autor, alvo); return { txt: 'no início do próximo turno de ' + nomeC(x), exp: { t: 'ini', ref: refDe(x) } }; });
     add(/até o (?:fim|final) do (?:seu )?próximo turno/i, m => { const x = quemNoTexto(txt.slice(m.index + m[0].length, m.index + m[0].length + 30), autor, alvo); return { txt: 'no fim do próximo turno de ' + nomeC(x), exp: { t: 'fim', ref: refDe(x), pula: ehAtivo(x) ? 1 : 0 } }; });
     add(/até o fim (?:deste|do) turno/i, () => ({ txt: 'no fim deste turno', exp: { t: 'fim', ref: refDe(autor), pula: 0 } }));
-    add(/(?<!Contínuo \d+ )(?:durante|por|dura) (\d+) rodadas?/i, m => { const ate = S.rodada + (+m[1]) - 1; return { txt: 'no fim da rodada ' + ate, exp: { t: 'rod', ate } }; });
+    add(/(?<!Contínuo \d+ )(?:durante|por|dura) (\d+) rodadas?/i, m => { const x = alvo || autor, dt = durTurnos(x, +m[1]); return { txt: dt.acaba, exp: dt.exp }; });
     add(/no (?:fim|final) do (?:seu )?próximo turno/i, m => { const x = quemNoTexto(txt.slice(m.index + m[0].length, m.index + m[0].length + 30), autor, alvo); return { txt: 'no fim do próximo turno de ' + nomeC(x), exp: { t: 'fim', ref: refDe(x), pula: ehAtivo(x) ? 1 : 0 } }; });
     add(/(?<!fim do |final do )no próximo turno/i, () => ({ txt: 'no fim do próximo turno de ' + nomeC(alvo), exp: { t: 'fim', ref: refDe(alvo), pula: ehAtivo(alvo) ? 1 : 0 } }));
     add(/no próximo teste/i, () => ({ txt: 'depois do próximo teste de ' + nomeC(alvo), exp: { t: 'man' } }));
@@ -4807,8 +4870,11 @@ body.mn-calmo .cp-po{display:none}
     cands.sort((a, b) => a[0] - b[0]);
     return cands[0][1];
   }
+  // "por N rodadas": o afetado age N turnos inteiros sob o efeito; o turno/rodada em que foi aplicado não conta
+  function durTurnos(x, n){ n = Math.max(1, n); return { exp: { t: 'fim', ref: refDe(x), pula: n - 1 + (ehAtivo(x) ? 1 : 0), turnos: n }, acaba: n === 1 ? 'no fim do próximo turno de ' + nomeC(x) : 'depois de ' + n + ' turnos inteiros de ' + nomeC(x) }; }
   function novoEf(alvo, e){
     alvo.efs = alvo.efs || [];
+    if (e && e.exp && e.exp.t === 'rod' && !e.exp.fixo && refDe(alvo)) e = Object.assign({}, e, durTurnos(alvo, e.exp.ate - S.rodada + 1));
     if (alvo.efs.some(z => z.imuPen) && !e.imuPen) { const m = e.mods || {}; if ((m.apt && m.apt.some(v => v < 0)) || (ehPen(e) && !['df', 'dd', 'dn', 'ds', 'imo', 'dr', 'cr'].some(k => m[k]))) { evento('🕊️ ' + CH[alvo.k].nome + ' está imune a Penalidades (Inocência)'); return; } }
     if (e.nome && !(e.mods && e.mods.est) && !e.possE) { const ig = alvo.efs.filter(x => x.nome === e.nome && (x.autor || '') === (e.autor || '') && !x.possE);
       if (ig.length) { ig.forEach(x => desfazerMods(alvo, x)); alvo.efs = alvo.efs.filter(x => !ig.includes(x)); if (e.mods && e.mods.imo) alvo.imo = true; } }
@@ -5002,7 +5068,7 @@ body.mn-calmo .cp-po{display:none}
     if ($('#efGuardar') && $('#efGuardar').checked) { const L = efSalvos().filter(x => x.nome !== nome); L.push({ nome, faz: escrito, m: Object.assign({}, efM), imo, ate: v, quem: $('#efQuem').value }); store.set('versus-efeitos', L.slice(-30)); }
     let exp = { t: 'man' }, acaba = 'quando for removido';
     if (v === 'ficha' && efFichaSel) { exp = JSON.parse(JSON.stringify(efFichaSel.du.exp)); acaba = efFichaSel.du.txt; }
-    else if (v[0] === 'r') { const ate = S.rodada + +v[1]; exp = { t: 'rod', ate }; acaba = 'no fim da rodada ' + ate; }
+    else if (v[0] === 'r') { const ate = S.rodada + +v[1]; exp = { t: 'rod', ate, fixo: true }; acaba = 'no fim da rodada ' + ate; }
     else if (v[0] === 'i') { const x = porRef(v.slice(1)); exp = { t: 'ini', ref: v.slice(1) }; acaba = 'no início do próximo turno de ' + nomeC(x); }
     else if (v[0] === 'f') { const x = porRef(v.slice(1)); exp = { t: 'fim', ref: v.slice(1), pula: ehAtivo(x) ? 1 : 0 }; acaba = 'no fim do próximo turno de ' + nomeC(x); }
     fechar('mEf');
@@ -5487,6 +5553,7 @@ body.mn-calmo .cp-po{display:none}
   $('#mnNova').addEventListener('click', () => { fechar('mMenu'); perguntar({ ic: '🆕', tit: 'NOVO COMBATE', sim: 'ABANDONAR E MONTAR OUTRO', nao: 'VOLTAR', txt: ['Abandonar esta partida e montar um combate novo?'] }).then(ok => { if (ok) { S = novo(S.nomes); hist = []; salvar(); render(); } }); });
   function mostrarFim(){
     if (!S.fim) return;
+    SFX.p('vitoria', 300);
     const v = S.fim.venc;
     $('#mFimCaixa').innerHTML = '<h2>VITÓRIA!</h2><div class="fim-nome" style="color:' + corJ(v) + '">' + nomeJ(v).toUpperCase() + '</div>' +
       '<div class="fim-trio">' + S.times[v].map(c => '<span title="' + CH[c.k].nome + '" style="' + (c.elim ? 'filter:grayscale(1);opacity:.5' : '') + '">' + (embC(c) ? '<img alt="" src="' + embC(c) + '">' : CH[c.k].icon) + '</span>').join('') + '</div>' +
@@ -5911,6 +5978,7 @@ body.mn-calmo .cp-po{display:none}
     const out = [];
     if (!t.pos || ((!origem || t.pos === origem) && !(opt && opt.di !== undefined))) return out;
     if (ancorado(t)) { out.push(CH[t.k].nome + ' está Ancorado e não se move'); return out; }
+    SFX.p('empurrao', 120);
     if (t.carona) t.carona = null;
     if (t.k === 'agentecaos') n = Math.min(n, 1);
     const di = opt && opt.di !== undefined ? opt.di : dirPara(origem, t.pos);
@@ -7358,6 +7426,7 @@ body.mn-calmo .cp-po{display:none}
     const al = o.al || [], nm = a => a.nome || CH[a.t.k].nome;
     S.dh = (S.dh || []).concat([{ r: S.rodada, q: CH[o.q.k].nome, k: o.q.k, t: o.t, d: o.d.slice(), def: al.length === 1 ? al[0].def : null, dm: al.length > 1 ? Math.min(...al.map(a => a.def)) : null, al: al.map(a => nm(a) + ' (Def ' + a.def + ')' + (a.ok ? ' ✓' : ' ✗')).join(', '), n: 'automático' }]).slice(-80);
     if (o.pop === false) return;
+    if (al.length && !al.some(a => a.ok)) SFX.p('erro', 450);
     filaAuto.push({ qn: CH[o.q.k].nome, k: o.q.k, t: o.t, apt: o.apt, d: o.d.slice(), al: al.map(a => ({ n: nm(a), ic: a.t ? CH[a.t.k].icon : (a.ic || '🧱'), def: a.def, ok: a.ok, fx: a.ok ? (o.sim || '') : (o.nao || '') })) });
     setTimeout(mostrarAuto, 150);
   }
@@ -7375,7 +7444,7 @@ body.mn-calmo .cp-po{display:none}
       '<div class="rd-rodape" style="padding:10px 0 0"><button class="btn-amarelo" data-fecha>OK</button></div></div>';
     if (bx.hidden) abrir('mAuto');
   }
-  function rolarD10(n){ if (reacMenos) { n = Math.max(1, n - reacMenos); reacMenos = 0; } return Array.from({ length: Math.max(1, n) }, () => d(10)); }
+  function rolarD10(n){ SFX.p('dados'); if (reacMenos) { n = Math.max(1, n - reacMenos); reacMenos = 0; } return Array.from({ length: Math.max(1, n) }, () => d(10)); }
   // ── reações da Promessa (antes da rolagem) ──
   function reacCtx(r){
     const c = r.atkRef ? S.times[r.atkRef[0]][r.atkRef[1]] : ativoC(), aj = r.atkRef ? r.atkRef[0] : S.ativo[0];
@@ -7905,7 +7974,7 @@ body.mn-calmo .cp-po{display:none}
       case 'Prisão Perpétua':
         linhasR.forEach(l => {
           if (l.ok) { sem(l, ['dano', 'imo', 'dados']); fx(l, 'Imóvel e −2 dados por 2 rodadas; quando a cela desaba, 6 de dano', t => aplicarEf(t, { nome: 'Prisão Perpétua', autor: nm, faz: 'Imóvel e −2 dados · ao acabar, a cela desaba: 6 de dano', acaba: txtRod(2), exp: rod(2), mods: { imo: true, dd: -2 }, fim: { dano: 6 } }));
-            fx(l, 'Cela: um Bloco de Aço em cada casa vazia ao redor', (t, msg) => { if (!t.pos) return; const cs = vizinhas(t.pos).filter(id => CELL[id] && livre(id) && !bloqueada(id) && !estNa(id).length); S.est = S.est || []; cs.forEach(id => S.est.push({ id: Date.now() + '' + d(99999), tipo: 'Bloco de Aço', cell: id, dono: aj, autor: cref, autorNome: nm, hab: 'Prisão Perpétua', acaba: txtRod(2), exp: rod(2), info: 'Parede da cela: Obstáculo.' })); if (msg && msg.push) msg.push('🧱 cela com ' + cs.length + ' Blocos'); }); }
+            fx(l, 'Cela: um Bloco de Aço em cada casa vazia ao redor', (t, msg) => { if (!t.pos) return; const cs = vizinhas(t.pos).filter(id => CELL[id] && livre(id) && !bloqueada(id) && !estNa(id).length); S.est = S.est || []; cs.forEach(id => S.est.push({ id: Date.now() + '' + d(99999), tipo: 'Bloco de Aço', cell: id, dono: aj, autor: cref, autorNome: nm, hab: 'Prisão Perpétua', ...durTurnos(t, 2), info: 'Parede da cela: Obstáculo.' })); if (msg && msg.push) msg.push('🧱 cela com ' + cs.length + ' Blocos'); }); }
           else { l.ef = [{ k: 'dano', v: 3, on: true, txt: '3 de dano' }]; fx(l, 'Imóvel até o fim do próximo turno dele', t => aplicarEf(t, { nome: 'Prisão Perpétua (falhou)', autor: nm, faz: 'Imóvel', acaba: txtFim(t), exp: fimP(t), mods: { imo: true } })); }
         });
         break;
@@ -8263,7 +8332,7 @@ body.mn-calmo .cp-po{display:none}
         break;
       case 'Pista de Dança':
         linhasR.forEach(l => { l.ef = []; });
-        if (r.m && r.m.cel) { const cel = r.m.cel, ex = r.aprim ? rod(2) : iniT, ac = r.aprim ? txtRod(2) : txtIni;
+        if (r.m && r.m.cel) { const cel = r.m.cel, dtP = durTurnos(c, 2), ex = r.aprim ? dtP.exp : iniT, ac = r.aprim ? dtP.acaba : txtIni;
           extras.push(supFx('🪩 Pista no Raio 2 de ' + cel + ' (' + ac + '): aliados nela +1 casa de deslocamento', msg => { S.est = S.est || []; S.est = S.est.filter(z => !(z.tipo === 'Pista' && z.autor === cref));
             S.est.push({ id: Date.now() + '' + d(999), tipo: 'Pista', cell: cel, dono: aj, hab: 'Pista de Dança', aprim: !!r.aprim, autor: cref, autorNome: nm, acaba: ac, exp: ex, info: 'Aliados no Raio 2 recebem +1 casa de deslocamento e podem mover-se 1 casa logo após usar uma habilidade ativa.',
               auras: [{ nome: 'Pista de Dança', raio: 2, ali: { ds: 1 }, txt: 'Aliados de ' + nm + ' no Raio 2 recebem +1 casa de deslocamento e podem mover-se 1 casa logo após usar uma habilidade ativa.' }] }); msg.push('Pista em ' + cel); })); }
@@ -8749,6 +8818,7 @@ body.mn-calmo .cp-po{display:none}
   let res = null;
   // ── corpo do APLICAR (usado de verdade e na prévia) ──
   function corpoAplicar(r, c, aj, msg){
+      if (!SECO) { SFX.tema((r.nome || '') + ' ' + CH[c.k].nome); if (r.usouDados && (r.linhas || []).length && !(r.linhas || []).some(l => l.ok)) SFX.p('erro', 350); }
       if (r.usouDados && (r.dados || []).length) { const L = (r.linhas || []).map(l => { const t = S.times[l.alvo[0]][l.alvo[1]], m = /Defesa (\d+)/.exec(l.txt || ''); return CH[t.k].nome + (m ? ' (Def ' + m[1] + ')' : '') + (l.ok ? ' ✓' : ' ✗'); });
         S.dh = (S.dh || []).concat([{ r: S.rodada, q: CH[c.k].nome, k: c.k, t: r.nome || 'Ataque Básico', d: r.dados.slice(), def: r.def, dm: (() => { const ds = (r.linhas || []).map(l => +((/Defesa (\d+)/.exec(l.txt || '') || [])[1] || 0)).filter(Boolean); return ds.length ? Math.min(...ds) : null; })(), al: L.join(', '), n: (r.notas || []).filter(x => /rerrol|Incontestável/.test(x)).join(' · ') }]).slice(-80); }
       if (r.ataque) (r.linhas || []).forEach(l => { if (l.alvo[0] !== aj) S.times[l.alvo[0]][l.alvo[1]].atkTk = S.tk || 0; });
@@ -8879,7 +8949,7 @@ body.mn-calmo .cp-po{display:none}
           if (ef.k === 'imo') t.imo = true;
           if (ef.k === 'contagio') {
             const velho = (t.efs || []).find(e => e.nome === 'Toque Pestilente' && e.mods && e.mods.df);
-            if (velho) { velho.exp = { t: 'rod', ate: S.rodada + 1 }; velho.acaba = 'no fim da rodada ' + (S.rodada + 1); }
+            if (velho) Object.assign(velho, durTurnos(t, 2));
             else { t.df = clamp(t.df - 1, -99, 99); novoEf(t, { nome: 'Toque Pestilente', autor: CH[c.k].nome, faz: 'Contagiado: −1 na Defesa e curas −2', acaba: 'no fim da rodada ' + (S.rodada + 1), exp: { t: 'rod', ate: S.rodada + 1 }, mods: { df: -1 } }); }
             msg.push(CH[t.k].nome + ' ficou Contagiado');
           }
@@ -9163,6 +9233,7 @@ body.mn-calmo .cp-po{display:none}
     if (e.target.id === 'ddAlvo') { dd.alvo = e.target.value; rDado(); }
   });
   function rolar(){
+    SFX.p('dados');
     const res = $('#ddRes');
     if (dd.aba === 'livre') {
       const v = Array.from({ length: dd.qtd }, () => d(dd.livre));
@@ -9233,7 +9304,7 @@ body.mn-calmo .cp-po{display:none}
       const svg = svgEl();
       let t0 = 0;
       // rodada nova e turno novo
-      if (at.rodada > a0.rodada) { rodada(at.rodada, 0); t0 = 1150; }
+      if (at.rodada > a0.rodada) { rodada(at.rodada, 0); t0 = 1150; SFX.p('medidor', 250); }
       if (at.ativo && at.ativo !== a0.ativo) {
         const [j, i] = at.ativo.split(',').map(Number), c = S.times[j][i];
         faixa(c, j, CH[c.k].nome, 'VEZ DE ' + S.nomes[j].toUpperCase(), t0);
@@ -9251,7 +9322,7 @@ body.mn-calmo .cp-po{display:none}
       }
       // dano, cura e eliminação
       const atk = at.ativo, A = atk && at.t[atk], gA = atk && tokG(svg, atk);
-      let n = 0, lunge = false;
+      let n = 0, lunge = false, somD = false, somC = false;
       for (const key in at.t) {
         const x = at.t[key], y = a0.t[key];
         const cell = x.pos || y.pos;
@@ -9267,7 +9338,7 @@ body.mn-calmo .cp-po{display:none}
           if (cell && CELL[cell]) {
             setTimeout(() => { const s2 = svgEl(); if (!s2) return; svgAdd(s2, 'circle', { class: 'fx-anel', cx: CELL[cell].x, cy: CELL[cell].y, r: HS * .8 }, 500); const g = tokG(s2, key); if (g) { g.classList.remove('fx-hit'); void g.getBBox(); g.classList.add('fx-hit'); setTimeout(() => g.classList.remove('fx-hit'), 450); } }, delay);
             const v = y.pv - Math.max(0, x.pv);
-            if (v > 0) numero(svg, cell, v, false, delay);
+            if (v > 0) { numero(svg, cell, v, false, delay); if (!somD) { somD = true; SFX.dano(v, delay); } }
           }
           if (x.elim && !y.elim && cell && CELL[cell]) {
             const [j, i] = key.split(',').map(Number), c = S.times[j][i], p = ponto(svg, CELL[cell].x, CELL[cell].y);
@@ -9275,11 +9346,11 @@ body.mn-calmo .cp-po{display:none}
               const d = HS * 1.6 * p.k, em = embC(c);
               poe('<i style="--ac:' + CH[c.k].ac + (em ? ';background-image:url(' + em + ')' : '') + '"></i><b>K.O.!</b>', 'fx-ko', p.x, p.y, 1300, { '--d': d + 'px' });
             }, delay + 120);
-            faixa(c, j, CH[c.k].nome + ' CAIU!', 'ELIMINADO', delay + 900);
+            faixa(c, j, CH[c.k].nome + ' CAIU!', 'ELIMINADO', delay + 900); SFX.p('eliminacao', delay + 120);
           }
         } else if (x.pv > y.pv && !x.elim && cell && CELL[cell]) {
           const delay = tMov + 80;
-          numero(svg, cell, x.pv - y.pv, true, delay);
+          numero(svg, cell, x.pv - y.pv, true, delay); if (!somC) { somC = true; SFX.p('cura', delay); }
           setTimeout(() => { const s2 = svgEl(), g = s2 && tokG(s2, key); if (g) { g.classList.add('fx-cura'); setTimeout(() => g.classList.remove('fx-cura'), 950); } }, delay);
         }
       }
@@ -9331,7 +9402,7 @@ body.mn-calmo .cp-po{display:none}
     let supUlt = '';
     const FRASE = {"kael": "Pela Honra da Ordem", "cambiante": "É Hora de virar QUIMERA", "cavalo": "Meu Sofrimento nunca acaba", "carvao": "Eu sou Incontrolável", "gatoxadrez": "A Assimilação é Inevitável", "ancora": "Nada escapa de Mim", "ignifrost": "Vou ao Extremo", "vale": "Floresçam, minhas Crianças", "drive": "TAN-TAN-TAAAN! TAN-TAN-TAAAN! VRUUUUM!", "genio": "Esse é o único Jeito", "oliva": "O Mar Levanta, a Maré Desaba", "invicto": "Vem pra cima, menor", "relicario": "Protejam-se em sua Luz", "peste": "Lembre-te que vais Morrer", "promessa": "Sem mais Sangue", "andarilho": "Tá quase lá", "duque": "Sentem-se à mesa, Cobaias", "bigorna": "Eu decido a Ordem do mundo", "medonho": "Melhor não olhar pra mim", "manilhas": "Formação: Mão de Onze", "johnny": "Isso é o que você Merece", "sable": "TSSSK! GLUB, GLUB, GLUB... FSSSHHHHH!", "magnus": "EU COMANDO AGORA", "torre": "Isso sim vai te derrubar", "dinamo": "Tenho que ir até o fim", "fantasma": "Mergulhe em meu abismo", "ceifadora": "Trajeto marcado, senhorita Lin", "reator": "ARRRGHHH... BOOM!", "vespera": "Você caiu em minha Teia", "agentecaos": "O Caos é o único Caminho", "kazan": "Temam as chamas, Crianças", "ritmista": "Agora eu vou com tudo!", "maleavel": "Tenta fugir de mim", "tharen": "Observem a liberdade, Crianças", "cobrador": "Sem mais Atrasos no Pagamento", "eclipse": "Unam-se a nossa Sombra", "espreitador": "Te Peguei!", "semelhante": "Todo mundo pra cima dele!", "fundadora": "Eterna seja a Ordem dos Protetores", "profanacao": "GRRRR! ARRGH!", "mira": "Ninguém vai cair aqui!", "sonhadora": "É hora de ir mimir", "neo": "Invertendo tudo", "betterfly": "É tudo tão bonito", "juiza": "Me da um segundo e fica quieto", "bispo": "Eu tenho que estar lá", "arquiteto": "Seu eu agora é Meu", "assobio": "FIU-FIU-FIIIUUU! PRRU, PRRU... FLAP-FLAP-FLAP!", "saltadora": "Dobrando-os à minha vontade", "ninguem": "Silencie sua Mente", "forasteiro": "Vamos Respirar um Pouco?", "maligno": "Sofram e alimentam a própria Dor", "axioma": "Ouça a Verdade, Crianças", "aquarela": "Colorindo o Mundo Todo", "cupido": "O Amor está no Ar", "tatuadora": "Vai ficar no estilo", "superior": "Irei livrá-los dessa pobre existência.", "parlenda": "Vem até mim, Crianças", "tecelao": "As Leis sou eu que faço.", "contrabandista": "Só do bom e do melhor"};
     function sup(c, nomeH){
-      if (calmo() || !c) return; const id = c.k + '|' + nomeH + '|' + (S.tk || 0); if (supUlt === id) return; supUlt = id;
+      if (calmo() || !c) return; const id = c.k + '|' + nomeH + '|' + (S.tk || 0); if (supUlt === id) return; supUlt = id; SFX.p('suprema');
       arte('sup', c.k).then(im => {
         const e = document.createElement('div'); e.className = 'fx-sup t-' + c.k + (FRASE[c.k] ? ' com-frase' : '');
         e.innerHTML = '<div class="pal"><div class="esc"></div><div class="fx"></div>' + (im ? '<div class="arte"><img alt="" src="' + im.src + '"></div>' : '') + '<div class="tx"><div class="tag">★ SUPREMA</div><div class="quem">' + CH[c.k].nome + '</div><div class="nome">' + nomeH + '</div>' + (FRASE[c.k] ? '<div class="frase">' + FRASE[c.k] + '</div>' : '') + '</div><div class="fl"></div></div>';
