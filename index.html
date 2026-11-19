@@ -2088,6 +2088,15 @@ body.mn-calmo .dr-palco .pk,body.mn-calmo .dr-palco .pk img{transition:none;anim
 .es-selo circle.tn-vermelho{fill:#ff5a5a}.es-selo circle.tn-azul{fill:#4d94ff}.es-selo circle.tn-verde{fill:#38c95a}
 .tn-anel{fill:none;stroke-width:5;stroke-dasharray:7 4;pointer-events:none;filter:drop-shadow(0 0 2px rgba(0,0,0,.8))}
 .tn-anel.tn-vermelho{stroke:#ff3b3b}.tn-anel.tn-azul{stroke:#2f7de1}.tn-anel.tn-verde{stroke:#22b14c}
+
+.as-rec{display:flex; flex-wrap:wrap; gap:4px; margin-top:6px}
+.as-rec span{background:#1a1a1a; color:#ffd400; font-weight:700; font-size:12px; padding:2px 8px; border-radius:10px; white-space:nowrap}
+.tb-pas{order:5; flex-basis:100%; display:flex; flex-wrap:wrap; gap:4px 6px; margin-top:2px}
+.tb-pas span{background:#1d1d1d; border:1px solid #444; color:#eee; font-size:12px; font-weight:700; padding:2px 7px; border-radius:10px}
+.tb-pas span.r{color:#ffd400; border-color:#6b5a00}
+.tb-pas span.p{border-style:dashed; border-color:#7b5cc4}
+.tb-pas span.e{border-color:#555; color:#ddd}
+.tb-pas span i{font-style:normal; font-weight:400; color:#bbb}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Amatic+SC&family=Audiowide&family=Black+Ops+One&family=Bungee&family=Butcherman&family=Caveat+Brush&family=Cherry+Swash&family=Cinzel:wght@400;700&family=Cinzel+Decorative&family=Creepster&family=Eater&family=Exo+2:wght@400;700&family=Fascinate&family=Fredericka+the+Great&family=Grenze+Gotisch&family=Limelight&family=Lobster&family=Lora:wght@400;700&family=Marcellus+SC&family=MedievalSharp&family=Metal+Mania&family=Michroma&family=Monoton&family=New+Rocker&family=Nosifer&family=Orbitron&family=Oswald:wght@400;700&family=Pacifico&family=Pirata+One&family=Playfair+Display:ital,wght@0,400;0,700;1,900&family=Racing+Sans+One&family=Righteous&family=Rubik+Beastly&family=Rubik+Bubbles&family=Rubik+Burned&family=Rubik+Glitch&family=Rubik+Moonrocks&family=Rubik+Wet+Paint&family=Russo+One&family=Rye&family=Saira+Stencil+One&family=Sancreek&family=Special+Elite&family=Teko:wght@400;700&family=Tilt+Warp&family=Uncial+Antiqua&family=UnifrakturMaguntia&family=Zen+Dots&display=swap" rel="stylesheet"><style>
 /* ═══ FICHA COM IMAGEM + PÁGINA DE HISTÓRIA ═══ */
@@ -6348,6 +6357,20 @@ body.mn-calmo .cp-po{display:none}
     if (c.k === 'agentecaos') add('Pele de Rocha', 'sofre no máximo 10 de dano por ataque');
     if (c.k === 'maleavel') add('De Longe!', 'Ataque Básico de qualquer distância (−1 dado por casa além da 1ª)');
     if (c.esc) L.push([c.k === 'cavalo' ? 'Corpo Inquebrável' : 'Escudo', '−' + c.esc + ' de dano no próximo ataque que sofrer']);
+    else if (c.k === 'cavalo') add('Corpo Inquebrável', 'já reduziu um ataque: volta com −1 no próximo turno dele e −3 na próxima rodada');
+    if (c.k === 'cavalo' && (c.cicloD || (c.pvFim != null && c.pv < c.pvFim)) && c.pv < c.max) add('Ciclo de Sofrimento', 'recupera 1 PV no início do próximo turno dele');
+    if (c.k === 'invicto') add('Não Toleramos Perdedores', c.ntUsado ? 'já usada na partida' : 'pronta: na 1ª vez que chegar a 0 PV, volta com 10 PV');
+    if (c.k === 'magnus') add('Aquilo que Vive em Mim', c.monstroUsado ? 'já usada na partida' : 'pronta: ao chegar a 0 PV vira o Monstro de Sangue');
+    if (c.k === 'promessa') add('Voto de Proteção', c.votoR === S.rodada ? 'já usado nesta rodada' : 'disponível nesta rodada');
+    if (c.k === 'betterfly') add('Antenas em Alerta', c.antR === S.rodada ? 'já usada nesta rodada' : 'pronta nesta rodada');
+    if (c.k === 'ceifadora' && c.traje && TRAJE[c.traje]) add('Traje Ceifador', TRAJE[c.traje][0] + ': ' + TRAJE[c.traje][2]);
+    if (c.k === 'fundadora' && c.otim) { const o = Object.entries(c.otim).filter(([r, v]) => v && porRef(r) && !porRef(r).elim); if (o.length) add('Otimização', o.map(([r, v]) => '+' + v + ' dado contra ' + CH[porRef(r).k].nome).join(', ')); }
+    if (ESCP[c.k] && c.escP && porRef(c.escP)) add(ESCP[c.k][0], 'escolhido: ' + CH[porRef(c.escP).k].nome);
+    if (c.k === 'juiza' && ehAtivo(c) && !c.moveuT) add('Bom e Velho Três Oitão', '+1 dado no tiro (ainda não se moveu neste turno)');
+    if (geloB(c)) add('Gëlo Entogan, “voz entogana”', 'a próxima habilidade ou palavra diferente tem +1 dado e +1 casa de alcance');
+    if (c.k === 'profanacao' && c.natU && c.natU.tk === (S.tk || 0)) add('Amálgama Corrompida', 'a próxima habilidade ' + (c.natU.n === 'Alada' ? 'de Molusco' : 'de Alada') + ' causa +1 de dano');
+    if (cupFx(c)) add('Amor nas Alturas', '+' + cupFx(c) + (cupFx(c) > 1 ? ' casas' : ' casa') + ' (personagens sob efeito dele)');
+    if (c.k === 'manilhas') add('Mão Completa', ['copas', 'espadilha', 'pica', 'zap'].filter(k => robVivo(c, k)).map(k => ROBN[k]).join(', ') + ' em jogo');
     S.times[1 - tj].forEach(x => { if (x.k === 'eclipse' && !x.elim && entreDois(x).includes(c.pos)) L.push(['Entre Breu e Fresta', '−' + ((x.efs || []).some(e => e.nome === 'Meia-Noite: Sombra Esticada') ? 2 : 1) + ' casa']); });
     { const z = tintaEm(c); if (z && (z.cor === 'vermelho' || z.cor === 'azul')) L.push(['Tinta ' + z.cor, z.cor === 'vermelho' ? '+1 de dano' : '+1 na Defesa']); }
     if (c.pos) { const dm = dominioEm(c.pos); if (dm) L.push(['Domínio do Superior', dm.dono === tj ? '+1 casa' : '−1 casa']); }
@@ -6355,6 +6378,12 @@ body.mn-calmo .cp-po{display:none}
     if (S.cen && CEN[S.cen].helper === 'mutacao' && S.ce && S.ce.mut != null) L.push(['Mutação: ' + MUTA[S.ce.mut][0], MUTA[S.ce.mut][3]]);
     return L;
   }
+  function recChips(c){ const o = []; if (c.elim) return o;
+    (RECURSOS[c.k] || []).forEach(([n, mx]) => { if (c.k === 'genio' && n === 'Armadura') return; o.push((c.k === 'ritmista' && n === 'Compassos' ? 'Compassos (' + ESTAGIOS[estR(c)] + ')' : n) + ' ' + rec(c, n) + (mx < 60 ? '/' + mx : '')); });
+    if (divDe(c)) o.push('💰 ' + divDe(c) + (divDe(c) > 1 ? ' Dívidas' : ' Dívida'));
+    if (c.tat) o.push('🖋️ ' + c.tat + (c.tat2 ? ' + ' + c.tat2 : '') + (c.tatR ? ' ★' : ''));
+    if (c.estado && c.estado.nome) o.push('✦ ' + c.estado.nome);
+    return o; }
   function recursosCard(j, i, c){
     const id = j + ',' + i, rs = RECURSOS[c.k] || [];
     let h = '';
@@ -7312,6 +7341,7 @@ body.mn-calmo .cp-po{display:none}
     } else if (sc) {
       const ch = CH[sc.k], id = selTok.join(',');
       info = '<div class="tb-info" style="--tc:var(--j' + selTok[0] + ')"><span class="tb-ic">' + icoH(sc.k, sc) + '</span><div><b>' + ch.nome + '</b><small>' + sc.pv + '/' + sc.max + ' PV · ' + (sc.pos ? 'em ' + sc.pos : 'fora do tabuleiro') + ' · deslocamento ' + desl + (sc.imo ? ' · IMÓVEL' : '') + '</small><small>' + (sc.pos ? 'Toque numa casa para mover. Os números mostram a distância até os outros.' : 'Toque numa casa para posicionar.') + '</small></div>' +
+        (() => { const ps = recChips(sc).map(x => '<span class="r">' + esc(x) + '</span>').concat(pasInfo(sc).map(([n, t]) => '<span class="p">✦ ' + esc(n) + ' <i>' + esc(t) + '</i></span>'), (sc.efs || []).map(e => '<span class="e">' + esc(e.nome) + (e.faz ? ' <i>' + esc(e.faz) + '</i>' : '') + '</span>')); return ps.length ? '<div class="tb-pas">' + ps.join('') + '</div>' : ''; })() +
         '<div class="tb-bt"><button class="icon-btn" data-tbrolar="' + id + '" title="Rolar">🎲</button><button class="icon-btn" data-ficha="' + sc.k + '" title="Ficha">📄</button>' + (sc.pos ? '<button class="icon-btn" data-tbtirar="' + id + '" title="Tirar do tabuleiro">⤓</button>' : '') + '<button class="icon-btn" data-tbsoltar title="Soltar">✕</button></div></div>';
       { const [tj, ti] = selTok, at = S.ativo && S.ativo[0] === tj && S.ativo[1] === ti;
         const pode = !sc.elim && !sc.agiu && !S.ativo && (S.vez === tj || S.vez === null || !disponiveis(S.vez).length);
@@ -7627,7 +7657,7 @@ body.mn-calmo .cp-po{display:none}
     if (r.m && r.m.cel && CELL[r.m.cel]) { caminhoAtk(c.pos, r.m.cel).forEach(id => cells.push(id)); cells.push(r.m.cel); }
     if (r.m && r.m.faixa) r.m.faixa.forEach(id => cells.push(id));
     const z = doms.find(q => cells.includes(q.cell)); if (!z) return;
-    const n = Math.max(1, aptE(sup, 3) + mod(sup, 'dd')), def = clamp(defesas(c)[3], 2, 10), v = rolarD10(n), ok = Math.max(...v) >= def; regAuto({ q: sup, t: 'Domínio em ' + z.cell, apt: 3, d: v, al: [{ t: c, def, ok }], pop: false });
+    const n = Math.max(1, aptE(sup, 3) + mod(sup, 'dd')), def = clamp(defesas(c)[3], 2, 10), v = rolarD10(n), ok = Math.max(...v) >= def; regAuto({ q: sup, t: 'Domínio em ' + z.cell, apt: 3, d: v, al: [{ t: c, def, ok }], sim: 'ataque impedido pelo Domínio', nao: 'o ataque segue' });
     reacApos = reacApos || { notas: [], defl: null };
     reacApos.notas.push('🌌 Domínio em ' + z.cell + ': Superior testa Astúcia (' + v.join(', ') + ' contra Defesa ' + def + ')' + (ok ? ': o ataque não acontece e as ações são perdidas' : ': o ataque segue') + '. A casa deixa de ser Domínio.');
     reacApos.domTira = z.id;
@@ -7999,7 +8029,7 @@ body.mn-calmo .cp-po{display:none}
     if (h0.n === 'Fenda Espacial') return { tipo: 'casa', casas: CELLS.filter(x => livre(x.id) && !bloqueada(x.id)).map(x => x.id), fendaS: true };
     if (h0.n === 'Fechar o Braço') return { tipo: 'peca', alvos: pecas(() => true) };
     if (h0.n === 'Inferioridade' || h0.n === 'Revelação') return { tipo: 'todos', alvos: pecas((j, i, x) => j !== aj && x.pos && !temEf(x, 'intocavel') && (S.est || []).some(z => z.tipo === 'Domínio' && z.dono === aj && z.cell === x.pos)) };
-    if (h0.n === 'Ascensão') return { tipo: 'peca', alvos: pecas((j, i, x) => x !== c && x.pos && !(j !== aj && temEf(x, 'intocavel')) && (S.est || []).some(z => z.tipo === 'Domínio' && z.dono === aj && z.cell === x.pos)) };
+    if (h0.n === 'Ascensão') return { tipo: 'peca', alvos: pecas((j, i, x) => x !== c && x.pos && !(j !== aj && temEf(x, 'intocavel')) && (S.est || []).some(z => z.tipo === 'Domínio' && z.dono === aj && z.cell === x.pos) && (S.est || []).some(z => z.tipo === 'Domínio' && z.dono === aj && z.cell && z.cell !== x.pos && dist(z.cell, x.pos) <= 3 && !ocupante(z.cell) && !obstaculo(z.cell))) };
     if (h0.n === 'Atração Forçada') return { tipo: 'peca', alvos: pecas((j, i, x) => x.pos && !(j !== aj && temEf(x, 'intocavel')) && (S.est || []).some(z => z.tipo === 'Aparato' && z.em === refDe(x))) };
     if (h0.n === 'Polo Magnético') { const A = poloCaminho(c, true, ap), R = poloCaminho(c, false, ap), set = new Set(A.hit.concat(R.hit)); return { tipo: 'todos', alvos: pecas((j, i, x) => j !== aj && x.pos && set.has(x.pos) && !temEf(x, 'intocavel')) }; }
     if (h0.n === 'Misericórdia Divina') return { tipo: 'todos', alvos: pecas((j, i, x) => j !== aj && !temEf(x, 'intocavel') && (!c.pos || (x.pos && dP(c.pos, x) <= 1))) };
@@ -8007,7 +8037,8 @@ body.mn-calmo .cp-po{display:none}
     if (!h0._nev && temEf(c, 'alcMax') && n > 2) return alvosDe(Object.assign({}, h0, { _nev: true, a: h0.a.replace(/\d+/, '2') }), false);
     if (c.k === 'assobio' && h.n === 'Bico de Aço') return { tipo: 'bico' };
     const pz = !!c.possPor, ok0 = (j) => ld === 'qualquer' || (ld === 'inimigo' ? (j !== aj || pz) : j === aj);
-    const hpx = h.t.includes('ATAQUE') && hipnoEf(c), apx = (c.efs || []).find(e => e.apaix), ok = (j, i) => ok0(j) && !(hpx && i !== undefined && S.times[j][i] !== c && refDe(S.times[j][i]) !== hpx.hipnoA && (j !== aj || ld === 'qualquer')) && !(i !== undefined && bloqMira(c, S.times[j][i], h.t.includes('ATAQUE'))) && !(j !== aj && i !== undefined && temEf(S.times[j][i], 'intocavel')) && !(pz && i !== undefined && S.times[j][i] === c) && !(apx && i !== undefined && h.t.includes('PENALIDADE') && refDe(S.times[j][i]) === apx.apaix);
+    const XF = { 'Penhora': x => divDe(x) > 0, 'Cobrança': x => divDe(x) > 0, 'Entrega Expressa': x => !x.item }[h0.n];
+    const hpx = h.t.includes('ATAQUE') && hipnoEf(c), apx = (c.efs || []).find(e => e.apaix), ok = (j, i) => ok0(j) && !(XF && i !== undefined && !XF(S.times[j][i])) && !(hpx && i !== undefined && S.times[j][i] !== c && refDe(S.times[j][i]) !== hpx.hipnoA && (j !== aj || ld === 'qualquer')) && !(i !== undefined && bloqMira(c, S.times[j][i], h.t.includes('ATAQUE'))) && !(j !== aj && i !== undefined && temEf(S.times[j][i], 'intocavel')) && !(pz && i !== undefined && S.times[j][i] === c) && !(apx && i !== undefined && h.t.includes('PENALIDADE') && refDe(S.times[j][i]) === apx.apaix);
     const temPos = !!c.pos;
     if (ta === 'PESSOAL' || AURA_APAR.includes(h.n)) return { tipo: 'nenhum' };
     if (ta === 'TODO') return { tipo: 'todos', area: CELLS.map(x => x.id), alvos: pecas((j, i, x) => ok(j, i) && !(j === aj && x === c && ld !== 'aliado')) };
@@ -8141,7 +8172,12 @@ body.mn-calmo .cp-po{display:none}
     if (sup) { if (c.sup) return 'já usada na partida'; if (c.med) return 'Medidor já gasto nesta rodada'; if (S.med[j] < 3) return 'precisa de 3 de Medidor'; }
     if ((c.k === 'assobio' || h.simul) && h.n === 'Bico de Aço' && !passarosDe(j).length) return 'precisa de um Pássaro no tabuleiro';
     const a = alvosDe(h);
-    if (c.pos && a.tipo === 'peca' && !a.alvos.length) return h.n === 'Ascensão' ? 'ninguém numa casa de Domínio' : h.n === 'Atração Forçada' ? 'ninguém está com um Aparato' : 'nenhum alvo no alcance';
+    if (h.n === 'Campo Magnético' && !(S.est || []).some(z => z.tipo === 'Aparato' && z.dono === j && z.cell && !z.em)) return 'precisa de um Aparato no chão';
+    if (h.n === 'Polos Invertidos' && !(S.est || []).some(z => z.tipo === 'Aparato' && z.dono === j)) return 'precisa de um Aparato em jogo';
+    if (h.n === 'Troca de Lugar' && !(S.est || []).some(z => z.tipo === 'Cópia' && z.dono === j && z.cell)) return 'precisa de uma Cópia no tabuleiro';
+    if (h.n === 'Enrolar as Faixas' && !rec(c, 'Raio do Pavor')) return 'todas as Faixas já estão no lugar';
+    if (c.pos && a.tipo === 'peca' && !a.alvos.length) return h.n === 'Ascensão' ? 'ninguém numa casa de Domínio com outra casa de Domínio livre a até 3 casas' : h.n === 'Atração Forçada' ? 'ninguém está com um Aparato' : (h.n === 'Penhora' || h.n === 'Cobrança') ? 'nenhum inimigo com Dívida no alcance' : h.n === 'Entrega Expressa' ? 'todos no alcance já carregam um Item' : 'nenhum alvo no alcance';
+    if (h.n === 'Tinta Gêmea' && c.pos && a.alvos.length < 2) return 'precisa de 2 personagens tatuados a até 3 casas';
     if (h.n === 'Transmutação' && c.pos && !a.casas.length) return 'precisa estar adjacente a um Obstáculo ou a uma Estrutura inimiga';
     if ((h.n === 'Barricada' || h.n === 'Torreta') && c.pos && !a.casas.length) return 'nenhuma casa vazia a até 2 casas';
     if ((h.n === 'Inferioridade' || h.n === 'Revelação') && !a.alvos.length) return 'nenhum inimigo numa casa de Domínio';
@@ -8242,6 +8278,7 @@ body.mn-calmo .cp-po{display:none}
     let h = '<div class="ac-stat">' +
       '<div class="as-pv"><b>' + c.pv + '<small>/' + c.max + ' PV</small></b><span class="as-bar"><i class="' + (pct <= 30 ? 'bai' : pct <= 60 ? 'med' : '') + '" style="width:' + pct + '%"></i></span>' + (tags.length ? '<span class="as-tags">' + tags.join(' · ') + '</span>' : '') + '</div>' +
       '<div class="as-def">' + dfs.map((v, a) => '<span' + (a === ai ? ' class="on"' : '') + '><b>' + v + '</b><small>DEF vs ' + AP[a] + '</small></span>').join('') + '</div>' +
+      (recChips(c).length ? '<div class="as-rec">' + recChips(c).map(x => '<span>' + esc(x) + '</span>').join('') + '</div>' : '') +
       (efs ? '<ul class="as-efs">' + efs + '</ul>' : '') + '</div>';
     const ini = S.times[1 - j].map((t, ti) => [t, ti]).filter(([t]) => !t.elim);
     if (ini.length) h += '<div class="ac-alvos"><small>DEFESA DOS INIMIGOS <em>(contra ' + AP[ai] + ' em destaque)</em></small>' + ini.map(([t]) => { const d = defesas(t);
