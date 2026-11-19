@@ -3056,7 +3056,7 @@ body.mn-calmo .cp-po{display:none}
         <dt>Dano Psíquico</dt>
         <dd>Dano que atinge a mente. Não é reduzido por nenhum efeito que reduz dano e não ativa reações de contato.</dd>
         <dt>Imóvel</dt>
-        <dd>Não pode se mover por conta própria: nem com Mover, nem com habilidades que o desloquem. Ainda pode atacar, usar outras habilidades e ser empurrado, puxado ou arrastado.</dd>
+        <dd>Não pode se mover por conta própria: nem com Mover, nem com habilidades que só servem para deslocá-lo. Uma habilidade que o leva até o alvo para atacar ou penalizar ainda pode ser usada num alvo adjacente, sem sair do lugar, e habilidades que movem outro personagem funcionam normalmente. Ele também ainda pode atacar e ser empurrado, puxado ou arrastado.</dd>
         <dt>Perder ação / ganhar ação</dt>
         <dd>Altera as ações do próximo turno do personagem. O turno sempre tem de 1 a 5 ações.</dd>
         <dt>Marcado</dt>
@@ -6758,6 +6758,19 @@ body.mn-calmo .cp-po{display:none}
       } else t.forEach(c => { c.elim = false; c.pv = nv; });
     });
   }
+  function acabarCriados(c){
+    const nm = CH[c.k].nome, ref = refDe(c), j = timeDe(c), quem = [];
+    S.times.flat().forEach(x => { if (x === c || x.elim) return; let n = tirarEfs(x, e => e.autor === nm);
+      if (x.dcn && x.dcA === ref) { x.dcn = 0; x.dcv = 0; n++; }
+      if (x.imo && x.imoA === ref && !(x.efs || []).some(e => e.mods && e.mods.imo)) { x.imo = false; n++; }
+      if (n) quem.push(CH[x.k].nome); });
+    const ch = CH[c.k], txt = [].concat(ch.habs || [], ch.supH ? [ch.supH] : []).map(h => h.n + ' ' + limpo(h.d || '') + ' ' + limpo(h.p || '')).join(' ');
+    const outros = S.times[j].filter(x => x !== c && !x.elim).map(x => { const h2 = CH[x.k]; return [].concat(h2.habs || [], h2.supH ? [h2.supH] : []).map(h => h.n + ' ' + limpo(h.d || '')).join(' '); }).join(' ');
+    const meu = z => z.autor === ref || z.quem === ref || (z.autorNome && z.autorNome === nm) || (z.autor === undefined && z.autorNome === undefined && z.dono === j && z.tipo && !/Lápide|Portal|Inutilizada/.test(z.tipo) && txt.indexOf(z.tipo) >= 0 && outros.indexOf(z.tipo) < 0);
+    const est = (S.est || []).filter(meu);
+    if (est.length) S.est = S.est.filter(z => !est.includes(z));
+    if (quem.length || est.length) log('✖ ' + nm + ' saiu: ' + [quem.length ? 'os efeitos dele acabaram em ' + quem.join(', ') : '', est.length ? est.length + (est.length > 1 ? ' Estruturas dele somem' : ' Estrutura dele some') : ''].filter(Boolean).join(' e ') + '.');
+  }
   function eliminar(j, i){
     const c = S.times[j][i];
     if (S.cen === 'ruptura') setTimeout(() => { if (!c.elim) return; S.times.flat().forEach(x => { if (x.duelo === c.k) { x.duelo = null; log('⚔ ' + CH[x.k].nome + ' ficou sem duelante e volta a lutar normalmente.'); } }); c.duelo = null; salvar(); render(); }, 0);
@@ -6787,6 +6800,7 @@ body.mn-calmo .cp-po{display:none}
     if (c.item) { const u = S.ultAtk && S.ultAtk.t === refDe(c) && S.ultAtk.a && porRef(S.ultAtk.a); if (u && !u.elim && timeDe(u) !== j && !u.item) { setItem(u, c.item); log('🎒 ' + CH[u.k].nome + ' pegou o Item de ' + CH[c.k].nome + ' (' + c.item + ').'); } setItem(c, null); }
     if (c.contra) setContra(c, null);
     c.elim = true; c.pv = 0;
+    acabarCriados(c);
     if (S.cen === 'cratera') { const u = S.ultAtk && S.ultAtk.t === j + ',' + i && S.ultAtk.a && porRef(S.ultAtk.a); if (u && !u.elim && timeDe(u) !== j) { const cu = Math.max(0, Math.min(10, u.max - u.pv)); u.pv += cu; log('🏆 Arena: ' + CH[u.k].nome + ' eliminou ' + CH[c.k].nome + ' e recupera ' + cu + ' PV.'); } }
     caronas(c).forEach(x => { x.carona = null; const v = c.pos && vizinhas(c.pos).find(livre); x.pos = v || c.pos; });
     if (c.carona) c.carona = null;
@@ -10532,7 +10546,7 @@ body.mn-calmo .cp-po{display:none}
           if (ef.k === 'dano') { let vv = ef.v; if (temEf(c, 'zeraDano')) { vv = 0; msg.push('Supressão Total: dano vira 0'); } else if (temEf(c, 'meioDano')) vv = Math.floor(vv / 2); const hk = r.basico ? null : CH[c.k].habs.concat(CH[c.k].supH ? [CH[c.k].supH] : []).find(x => x.n === r.nome), golpe = r.ataque && (r.basico ? !!(c.pos && t.pos && dP(c.pos, t) === 1) : !!(hk && /Golpe/.test(hk.k || ''))); const q = sofrerDano(t, vv, { psi: ef.psi, ataque: r.ataque, basico: r.basico, golpe, atk: c }); if (golpe && t.k === 'kael' && q.real > 0 && c !== t && !c.elim) { const qb = sofrerDano(c, 1, { blind: true }); if (qb.real) msg.push('Blindagem do Guardião: ' + CH[c.k].nome + ' −' + qb.real + ' PV'); } if (c.k === 'sable' && r.ataque && q.real > 0 && !t.elim && t !== c && refDe(t)[0] !== refDe(c)[0] && (c.efs || []).some(e => e.venDc)) { if (t.k === 'ignifrost') msg.push('Ignifrost é imune a Dano Contínuo'); else { t.dcv = Math.max(t.dcv || 0, 2); t.dcn = Math.max(t.dcn || 0, 2); msg.push('🦂 Veneno: ' + CH[t.k].nome + ' com Dano Contínuo 2 por 2 rodadas'); } } if (r.nome === 'Mordida Vampírica' && c.k === 'duque' && q.real > 0 && !c.elim) { const cb = (t.efs || []).some(e => e.nome === 'Soro Experimental'), g = Math.min(c.max - c.pv, Math.max(0, q.real + (cb ? 2 : 0) - (c.cr || 0))); c.pv += g; msg.push('🦇 Duque +' + g + ' PV' + (cb ? ' (Cobaia +2)' : '')); } if (S.cen === 'mansao' && golpe && q.real > 0 && !c.mansaoT && !c.elim && c.pv < c.max) { c.mansaoT = true; c.pv += 1; msg.push('🍷 ' + CH[c.k].nome + ' +1 PV (Mansão)'); } msg.push(CH[t.k].nome + ' −' + q.real + ' PV' + (q.nota.length ? ' (' + q.nota.join(', ') + ')' : '')); }
           if (ef.k === 'cura' && temEf(t, 'nuInv')) { const q = sofrerDano(t, ef.v, {}); msg.push('Nu: a cura em ' + CH[t.k].nome + ' virou ' + q.real + ' de dano'); return; }
           if (ef.k === 'cura') { const cv = Math.max(0, (contagiado(t) ? ef.v - 2 : ef.v) - (t.cr || 0)); t.pv = Math.min(t.max, t.pv + cv); msg.push(CH[t.k].nome + ' +' + cv + ' PV' + (cv < ef.v ? ' (cura reduzida)' : '')); }
-          if (ef.k === 'dc') { if (t.k === 'ignifrost') msg.push('Ignifrost é imune a Dano Contínuo'); else { t.dcv = Math.max(t.dcv, ef.v[0]); t.dcn = Math.max(t.dcn, ef.v[1]); } }
+          if (ef.k === 'dc') { if (t.k === 'ignifrost') msg.push('Ignifrost é imune a Dano Contínuo'); else { t.dcv = Math.max(t.dcv, ef.v[0]); t.dcn = Math.max(t.dcn, ef.v[1]); t.dcA = refDe(c); } }
           if (ef.k === 'def') t.df = clamp(t.df + ef.v, -99, 99);
           if (ef.k === 'dnAlvo') t.dn = clamp(t.dn + ef.v, -99, 99);
           if (ef.k === 'red') t.red = clamp((t.red || 0) + ef.v, 0, 9);
@@ -10540,7 +10554,7 @@ body.mn-calmo .cp-po{display:none}
           if (ef.k === 'cr') t.cr = clamp((t.cr || 0) + ef.v, 0, 9);
           if (ef.k === 'esc') t.esc = Math.max(t.esc || 0, ef.v);
           if (ef.k === 'acao') { if (ef.v < 0 && estrada(t)) msg.push('Além da Estrada: ' + CH[t.k].nome + ' não perde ação'); else t.ab = clamp(t.ab + ef.v, -4, 2); }
-          if (ef.k === 'imo') t.imo = true;
+          if (ef.k === 'imo') { t.imo = true; t.imoA = refDe(c); }
           if (ef.k === 'contagio') {
             const velho = (t.efs || []).find(e => e.nome === 'Toque Pestilente' && e.mods && e.mods.df);
             if (velho) Object.assign(velho, durTurnos(t, 2));
