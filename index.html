@@ -2084,6 +2084,10 @@ body.mn-calmo .dr-palco .pk,body.mn-calmo .dr-palco .pk img{transition:none;anim
 .fx-sup .frase::after{content:"”";font-family:Georgia,serif;font-weight:700;color:var(--ac);font-size:66px;vertical-align:-30px;margin-left:4px;text-shadow:3px 3px 0 #000}
 @keyframes supFrase{to{opacity:1;transform:none}}
 .fx-sup.com-frase{animation-delay:3.6s}
+
+.es-selo circle.tn-vermelho{fill:#ff5a5a}.es-selo circle.tn-azul{fill:#4d94ff}.es-selo circle.tn-verde{fill:#38c95a}
+.tn-anel{fill:none;stroke-width:5;stroke-dasharray:7 4;pointer-events:none;filter:drop-shadow(0 0 2px rgba(0,0,0,.8))}
+.tn-anel.tn-vermelho{stroke:#ff3b3b}.tn-anel.tn-azul{stroke:#2f7de1}.tn-anel.tn-verde{stroke:#22b14c}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Amatic+SC&family=Audiowide&family=Black+Ops+One&family=Bungee&family=Butcherman&family=Caveat+Brush&family=Cherry+Swash&family=Cinzel:wght@400;700&family=Cinzel+Decorative&family=Creepster&family=Eater&family=Exo+2:wght@400;700&family=Fascinate&family=Fredericka+the+Great&family=Grenze+Gotisch&family=Limelight&family=Lobster&family=Lora:wght@400;700&family=Marcellus+SC&family=MedievalSharp&family=Metal+Mania&family=Michroma&family=Monoton&family=New+Rocker&family=Nosifer&family=Orbitron&family=Oswald:wght@400;700&family=Pacifico&family=Pirata+One&family=Playfair+Display:ital,wght@0,400;0,700;1,900&family=Racing+Sans+One&family=Righteous&family=Rubik+Beastly&family=Rubik+Bubbles&family=Rubik+Burned&family=Rubik+Glitch&family=Rubik+Moonrocks&family=Rubik+Wet+Paint&family=Russo+One&family=Rye&family=Saira+Stencil+One&family=Sancreek&family=Special+Elite&family=Teko:wght@400;700&family=Tilt+Warp&family=Uncial+Antiqua&family=UnifrakturMaguntia&family=Zen+Dots&display=swap" rel="stylesheet"><style>
 /* ═══ FICHA COM IMAGEM + PÁGINA DE HISTÓRIA ═══ */
@@ -6228,7 +6232,7 @@ body.mn-calmo .cp-po{display:none}
     S.est = S.est || [];
     if (md.n > 0 || md.cells.includes(id)) S.est = S.est.filter(y => !(y.tipo === 'Tinta' && y.cell === id && y.dono !== aj));
     const z = S.est.find(y => y.tipo === 'Tinta' && y.cell === id && y.dono === aj);
-    if (z && md.cells.includes(id)) { z.cor = CORES[(CORES.indexOf(z.cor) + 1) % 3]; z.info = 'Tinta ' + z.cor + ': ' + CORTXT[z.cor]; return true; }
+    if (z && md.cells.includes(id)) { if (z.cor === 'verde') { S.est = S.est.filter(y => y !== z); md.cells = md.cells.filter(x => x !== id); md.n++; md.apagou = id; return true; } z.cor = CORES[(CORES.indexOf(z.cor) + 1) % 3]; z.info = 'Tinta ' + z.cor + ': ' + CORTXT[z.cor]; return true; }
     if (md.n <= 0) { toast('🎨 Já pintou todas as casas. Toque numa casa pintada agora para trocar a cor, ou em PRONTO', 2600); return false; }
     md.n--; md.cells.push(id);
     const exp = { t: 'fim', ref: md.quem, pula: (ehAtivo(aq) ? 1 : 0) + (md.aprim ? 1 : 0) }, acaba = 'no fim do próximo turno de ' + CH[aq.k].nome + (md.aprim ? ' (+1 rodada)' : '');
@@ -7134,6 +7138,14 @@ body.mn-calmo .cp-po{display:none}
     }
     return out;
   }
+  // caminho de um ataque: as casas da linha; quando a linha passa exatamente entre duas casas, conta as duas
+  function caminhoAtk(a, b){
+    if (!CELL[a] || !CELL[b]) return []; const A = CELL[a], B = CELL[b], d = dist(a, b), out = [];
+    [1e-6, -1e-6].forEach(e => { for (let k = 1; k < d; k++) { const t = k / d, x = A.q + (B.q - A.q) * t + e, z = A.r + (B.r - A.r) * t + 2 * e, y = -x - z;
+      let rx = Math.round(x), ry = Math.round(y), rz = Math.round(z); const dx = Math.abs(rx - x), dy = Math.abs(ry - y), dz = Math.abs(rz - z);
+      if (dx > dy && dx > dz) rx = -ry - rz; else if (dy <= dz) rz = -rx - ry; const id = AX[rx + ',' + rz]; if (id && !out.includes(id)) out.push(id); } });
+    return out;
+  }
   function linhaHex(a, b){
     if (!CELL[a] || !CELL[b]) return []; const A = CELL[a], B = CELL[b], d = dist(a, b), out = [];
     for (let k = 1; k < d; k++) { const t = k / d, e = 1e-6, x = A.q + (B.q - A.q) * t + e, z = A.r + (B.r - A.r) * t + 2 * e, y = -x - z;
@@ -7266,7 +7278,8 @@ body.mn-calmo .cp-po{display:none}
       if (c.elim || !c.pos || !CELL[c.pos] || !!c.carona !== passo) return;
       if (!c.carona) [c.pos].concat(c.k === 'eclipse' && c.pos2 ? [c.pos2] : []).forEach(cel => { const L = estNa(cel); if (!L.length || !CELL[cel]) return; const q = CELL[cel];
         L.slice(0, 3).forEach((e, n) => { const x = q.x + HS * .72, y = q.y - HS * .05 + n * 17;
-          selos += '<g class="es-selo j' + e.dono + (estSel === e.id ? ' sel' : '') + '" data-est="' + e.id + '" transform="translate(' + x.toFixed(1) + ',' + y.toFixed(1) + ')"><title>' + esc(e.tipo) + '</title><circle r="9.5"/><text y="4.5">' + icEst(e) + '</text></g>'; }); });
+          if (e.tipo === 'Tinta' && e.cor && n === L.findIndex(y => y.tipo === 'Tinta')) selos += '<circle class="tn-anel tn-' + e.cor + '" cx="' + q.x.toFixed(1) + '" cy="' + q.y.toFixed(1) + '" r="' + (HS * .9).toFixed(1) + '"/>';
+          selos += '<g class="es-selo j' + e.dono + (estSel === e.id ? ' sel' : '') + '" data-est="' + e.id + '" transform="translate(' + x.toFixed(1) + ',' + y.toFixed(1) + ')"><title>' + esc(e.tipo + (e.cor ? ' ' + e.cor : '')) + '</title><circle r="9.5"' + (e.tipo === 'Tinta' && e.cor ? ' class="tn-' + e.cor + '"' : '') + '/><text y="4.5">' + icEst(e) + '</text></g>'; }); });
       const p = CELL[c.pos], ch = CH[c.k];
       const sel = selTok && selTok[0] === j && selTok[1] === i;
       const at = S.ativo && S.ativo[0] === j && S.ativo[1] === i;
@@ -7607,7 +7620,9 @@ body.mn-calmo .cp-po{display:none}
     const sup = S.times[1 - ja].find(x => x.k === 'superior' && !x.elim); if (!sup) return;
     const doms = (S.est || []).filter(z => z.tipo === 'Domínio' && z.dono === 1 - ja && z.cell); if (!doms.length) return;
     const alvos = r.alvoB ? [r.alvoB] : ((r.m && r.m.sel) || []), cells = [c.pos];
-    alvos.forEach(a => { const t = S.times[a[0]][a[1]]; if (t && t.pos && a[0] !== ja) { linhaHex(c.pos, t.pos).forEach(id => cells.push(id)); cells.push(t.pos); } });
+    alvos.forEach(a => { const t = S.times[a[0]][a[1]]; if (t && t.pos && a[0] !== ja) { caminhoAtk(c.pos, t.pos).forEach(id => cells.push(id)); cells.push(t.pos); } });
+    if (r.m && r.m.cel && CELL[r.m.cel]) { caminhoAtk(c.pos, r.m.cel).forEach(id => cells.push(id)); cells.push(r.m.cel); }
+    if (r.m && r.m.faixa) r.m.faixa.forEach(id => cells.push(id));
     const z = doms.find(q => cells.includes(q.cell)); if (!z) return;
     const n = Math.max(1, aptE(sup, 3) + mod(sup, 'dd')), def = clamp(defesas(c)[3], 2, 10), v = rolarD10(n), ok = Math.max(...v) >= def; regAuto({ q: sup, t: 'Domínio em ' + z.cell, apt: 3, d: v, al: [{ t: c, def, ok }], pop: false });
     reacApos = reacApos || { notas: [], defl: null };
@@ -7876,6 +7891,7 @@ body.mn-calmo .cp-po{display:none}
   }
   // para onde o personagem vai antes do teste (lido da nota ↪ da ficha)
   function destinoPre(c, h, m, r, mTxt, alvos){
+    if (c.imo && h.n !== 'Salto no Espaço') return null;
     const aj = S.ativo[0], hh = r.aprim ? alcAprim(h) : h, ta = tipoAlc(hh);
     if (ta === 'LINHA' && m.dir !== undefined) {
       const cs = alvosDe(h, r.aprim).casas.filter(([, di]) => di === m.dir).map(([id]) => id), ate1 = /até o primeiro inimigo/i.test(mTxt);
@@ -7956,7 +7972,7 @@ body.mn-calmo .cp-po{display:none}
   function alvosDe(h0, ap){
     if (ap === undefined) ap = aprimAtivo(h0);
     const h = ap ? alcAprim(h0) : h0;
-    const [aj] = S.ativo, c = ativoC(), alcB = /^(ALVO|ALCANCE|LINHA)/.test(h.a) && ((c.k === 'genio' && c.pv * 2 <= c.max && !pOff(c, 'Protocolo Pressão')) ? 1 : 0) + (c.traje === 'visor' && !pOff(c, 'Traje Ceifador') ? 1 : 0) + (geloB(c) && !h0.firme ? 1 : 0), n0 = alcB + temEf(c, 'alcTodo') && h.a !== 'PESSOAL' ? 99 : h.a === 'ADJACENTE' ? 1 : h0.n === 'Bote' && /Ágil|Quimera/.test(formaDe(c)) ? 4 : (h0.n === 'Instinto' && /Rapina|Quimera/.test(formaDe(c)) ? 6 : alcN(h)), n = h0._nev ? Math.min(2, n0) : n0, ta = tipoAlc(h), ld = lado(h);
+    const [aj] = S.ativo, c = ativoC(), alcB = /^(ALVO|ALCANCE|LINHA)/.test(h.a) && ((c.k === 'genio' && c.pv * 2 <= c.max && !pOff(c, 'Protocolo Pressão')) ? 1 : 0) + (c.traje === 'visor' && !pOff(c, 'Traje Ceifador') ? 1 : 0) + (geloB(c) && !h0.firme ? 1 : 0), n0 = alcB + temEf(c, 'alcTodo') && h.a !== 'PESSOAL' ? 99 : h.a === 'ADJACENTE' ? 1 : h0.n === 'Bote' && /Ágil|Quimera/.test(formaDe(c)) ? 4 : (h0.n === 'Instinto' && /Rapina|Quimera/.test(formaDe(c)) ? 6 : alcN(h)), n = (c.imo && IMO_ADJ.includes(h0.n)) ? 1 : h0._nev ? Math.min(2, n0) : n0, ta = tipoAlc(h), ld = lado(h);
     if (/ENTRE OS DOIS/.test(h0.a)) { const L = entreDois(c); return { tipo: 'todos', alvos: pecas((j, i, x) => j !== aj && x.pos && L.includes(x.pos) && !temEf(x, 'intocavel')) }; }
     if (h0.n === 'Passagem da Morte') return { tipo: 'casa', casas: CELLS.map(x => x.id), faixa: true };
     if (h0.n === 'Meia-Noite') return { tipo: 'casa', casas: CELLS.filter(x => !bloqueada(x.id) && !obstaculo(x.id) && (!ocupante(x.id) || S.times[ocupante(x.id)[0]][ocupante(x.id)[1]] === c)).map(x => x.id), meia: true };
@@ -8079,6 +8095,8 @@ body.mn-calmo .cp-po{display:none}
       S.est = (S.est || []).filter(z => z.id !== o.mk); if (!(S.est || []).some(z => z.id === o.e.id)) S.est.push(o.e); log('🔧 ' + (o.e.hab ? o.e.hab + ' (' + o.e.tipo + ')' : o.e.tipo) + ' em ' + o.e.cell + ' voltou a funcionar.'); return false; });
   }
   const MOVE_SI = ['Avanço Imparável', 'Bote', 'Cavalgar Destrutivo', 'Marca da Brasa', 'Xeque-Mate', 'Choque Térmico', 'Rasante', 'Velejando em Alto-Mar', 'Torpedo Profundo', 'Descarregando a Bagagem', 'Revoada', 'Avanço Temerário', 'Golpe Flutuante', 'Passo de Combate', 'Passo do Trovão', 'Sumir no Mato', 'Polo Magnético', 'Reverter o Tempo', 'Mão Leve', 'Sessão Rápida', 'Meia-Noite'];
+  // com Imóvel, estas funcionam só contra quem já está adjacente (o personagem não sai do lugar)
+  const IMO_ADJ = ['Avanço Imparável', 'Bote', 'Cavalgar Destrutivo', 'Marca da Brasa', 'Xeque-Mate', 'Choque Térmico', 'Rasante', 'Descarregando a Bagagem', 'Avanço Temerário', 'Golpe Flutuante', 'Mão Leve', 'Reverter o Tempo', 'Sessão Rápida'];
   const FORMA_H = { 'Bote': ['Colosso', 'Ágil'], 'Garras': ['Ágil', 'Rapina'], 'Instinto': ['Rapina', 'Colosso'] };
   const formaDe = c => (c.estado && c.estado.nome) || '';
   function entrarForma(c, nome){
@@ -8097,7 +8115,7 @@ body.mn-calmo .cp-po{display:none}
     if (h.n === 'Mala Despachada' && malaDe(c)) return 'a Mala já está no chão: pegue-a de volta antes de despachar de novo';
     if (h.n === 'Descarregando a Bagagem' && malaDe(c)) return 'a Mala está no chão: fique ao lado dela e toque em PEGAR A MALA';
     if (h.n === 'Interceptação' && c.interBloq) return 'Interceptação já foi ativada: volta no próximo turno do D.R.I.V.E.';
-    if (c.imo && MOVE_SI.includes(h.n)) return 'Imóvel: não pode usar habilidade que move o personagem';
+    if (c.imo && MOVE_SI.includes(h.n) && !IMO_ADJ.includes(h.n) && h.n !== 'Passo de Combate' && !(h.n === 'Revoada' && c.k === 'assobio')) return 'Imóvel: não pode usar habilidade que só move o personagem';
     if (pazAtiva() && h.t.includes('ATAQUE')) return 'Eu Vim em Paz: ninguém pode atacar';
     if (temEf(c, 'juramento')) return 'Ninguém Encosta Neles: Promessa não age';
     if (!sup && temEf(c, 'nohab')) return (c.efs.find(e => e.nohab) || {}).nome + ': sem habilidades ativas';
@@ -8241,7 +8259,7 @@ body.mn-calmo .cp-po{display:none}
     const c = ativoC(), desl = (modo && modo.desl) || (c ? deslDe(c) : 2);
     if (modo.t === 'tat') { const x = modo.alvo ? S.times[modo.alvo[0]][modo.alvo[1]] : null; return '<div class="ac-modo"><span>🖋️ ' + (x ? 'Tatuagem ' + (modo.avessa ? 'Avessa ' : '') + 'de ' + CH[x.k].nome + (modo.reforcada ? ' (Reforçada)' : '') : 'Tatuagem do desenho em ' + modo.estCell) + ':</span>' + Object.keys(AVESSA).map(k => '<button class="btn-amarelo sm" data-tatesc="' + k + '">' + (modo.avessa ? AVESSA[k] : k) + '</button>').join('') + '<button class="btn-ghost sm" data-cancelar>✕ PULAR</button></div>'; }
     const nomeM = modo.t === 'mover' ? '👣 ' + (modo.gratis ? 'MOVER GRÁTIS (' + modo.gratis + ')' : 'MOVER') + ': toque numa casa amarela (até ' + desl + ' casas' + (!modo.desl && c && c.k !== 'eclipse' && !temEf(c, 'moverTodo') ? ': ' + deslTxt(c) : '') + ')' : modo.t === 'basico' ? '👊 ATAQUE BÁSICO: toque num inimigo ' + (c && c.compr ? 'em linha reta a até 3 casas (Compressão Atômica)' : 'adjacente') :
-      modo.t === 'chute' ? '🧳 CHUTAR: toque na casa ao lado da Mala para a direção do chute' : modo.t === 'bomba' ? '🌋 DETONAR: toque na Bomba que vai explodir' : modo.t === 'tiraBomba' ? '🌋 Kazan tem 3 Bombas: toque na que vai sumir' : modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo + (modo.resta ? ' (faltam até ' + modo.resta + (modo.alc ? ', a até ' + modo.alc + ' casas' + (modo.tipo === 'Domínio' ? ' do Superior' : '') : '') + ')' : '') : (modo.t === 'empDir' || modo.t === 'arremesso' || modo.t === 'teleporte' || modo.t === 'troca' || modo.t === 'copPasso' || modo.t === 'guardaFora' || modo.t === 'atrFora' || (modo.t === 'mover' && modo.tit)) ? modo.tit : modo.t === 'pincel' ? '🎨 PINCELADA: toque para pintar (vermelho), toque de novo para trocar a cor (azul, verde) · faltam ' + modo.n + ' casa(s)' : modo.t === 'brasaLinha' ? '🔥 BRASA: toque numa casa ao lado de Kazan; a Linha 3 de Casas Infernais sai nessa direção (faltam ' + modo.n + ')' : modo.t === 'ceus' ? '☁️ CÉUS: toque na casa ao lado do alvo na direção do empurrão (3 casas)' : modo.t === 'copiaAtk' ? '👥 CÓPIAS ATACAM: toque num inimigo adjacente a uma Cópia livre' : modo.t === 'atkEst' ? '🎯 ATACAR ESTRUTURA: toque na casa da estrutura' : modo.t === 'drone' ? '🛸 MOVER DRONE: ' + (modo.de ? 'toque em quem recebe o Drone (até 3 casas; inimigo = Interceptor Tático, 1 ação)' : 'toque em quem está com o Drone') : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
+      modo.t === 'chute' ? '🧳 CHUTAR: toque na casa ao lado da Mala para a direção do chute' : modo.t === 'bomba' ? '🌋 DETONAR: toque na Bomba que vai explodir' : modo.t === 'tiraBomba' ? '🌋 Kazan tem 3 Bombas: toque na que vai sumir' : modo.t === 'estrutura' ? '🏗️ Toque numa casa para colocar: ' + modo.tipo + (modo.resta ? ' (faltam até ' + modo.resta + (modo.alc ? ', a até ' + modo.alc + ' casas' + (modo.tipo === 'Domínio' ? ' do Superior' : '') : '') + ')' : '') : (modo.t === 'empDir' || modo.t === 'arremesso' || modo.t === 'teleporte' || modo.t === 'troca' || modo.t === 'copPasso' || modo.t === 'guardaFora' || modo.t === 'atrFora' || (modo.t === 'mover' && modo.tit)) ? modo.tit : modo.t === 'pincel' ? '🎨 PINCELADA: toque para pintar (vermelho), toque de novo para trocar a cor (azul, verde); o 4º toque apaga e devolve a casa · faltam ' + modo.n + ' casa(s)' : modo.t === 'brasaLinha' ? '🔥 BRASA: toque numa casa ao lado de Kazan; a Linha 3 de Casas Infernais sai nessa direção (faltam ' + modo.n + ')' : modo.t === 'ceus' ? '☁️ CÉUS: toque na casa ao lado do alvo na direção do empurrão (3 casas)' : modo.t === 'copiaAtk' ? '👥 CÓPIAS ATACAM: toque num inimigo adjacente a uma Cópia livre' : modo.t === 'atkEst' ? '🎯 ATACAR ESTRUTURA: toque na casa da estrutura' : modo.t === 'drone' ? '🛸 MOVER DRONE: ' + (modo.de ? 'toque em quem recebe o Drone (até 3 casas; inimigo = Interceptor Tático, 1 ação)' : 'toque em quem está com o Drone') : modo.t === 'carona' ? '🚗 SOBE AÍ: toque no aliado adjacente' : modo.t === 'descer' ? '⬇️ DESCER: toque numa casa amarela' : '✨ ' + modo.h.n.toUpperCase() + ': ' + textoModo(modo);
     const conf = modo.t === 'hab' && (modo.alvosInfo.tipo === 'todos' || modo.alvosInfo.tipo === 'linha') && (modo.dir !== undefined || modo.alvosInfo.tipo === 'todos');
     return '<div class="ac-modo"><span>' + nomeM + '</span>' + listaAlvos(c) + ((modo.t === 'estrutura' && modo.resta) || modo.t === 'pincel' ? '<button class="btn-amarelo sm" data-cancelar>✓ PRONTO</button>' : '') + (conf ? '<button class="btn-amarelo sm" data-confirmar>USAR ▶</button>' : '') + '<button class="btn-ghost sm" data-cancelar>✕ CANCELAR</button></div>';
   }
@@ -8508,7 +8526,7 @@ body.mn-calmo .cp-po{display:none}
       const id = cellId || (tok && S.times[+tok[0]][+tok[2]].pos); if (!id) return true;
       const md = modo; let ok = false;
       { const [qj, qi] = md.quem.split(',').map(Number), q = S.times[qj][qi]; if (!q.pos || dist(q.pos, id) > 3) { toast('🎨 Só casas a até 3 de ' + CH[q.k].nome, 2000); return true; } if (!md.cells.includes(id) && md.n <= 0) { toast('🎨 Já pintou todas as casas. Toque numa casa pintada agora para trocar a cor, ou em PRONTO', 2600); return true; } }
-      mudar(() => { ok = pintarCasa(md, id); }, () => { const z = (S.est || []).find(y => y.tipo === 'Tinta' && y.cell === id); return z ? '🎨 Pincelada: ' + id + ' pintada de ' + z.cor + ' (' + CORTXT[z.cor] + ').' : '🎨 Pincelada.'; });
+      mudar(() => { ok = pintarCasa(md, id); }, () => { const z = (S.est || []).find(y => y.tipo === 'Tinta' && y.cell === id); return z ? '🎨 Pincelada: ' + id + ' pintada de ' + z.cor + ' (' + CORTXT[z.cor] + ').' : '🎨 Pincelada: ' + id + ' apagada (pode pintar outra casa).'; });
       modo = md; rBoard(); rPainel();
       return true;
     }
@@ -9234,7 +9252,6 @@ body.mn-calmo .cp-po{display:none}
   function resolverHab(){
     { const c0 = ativoC(), eh = c0 && (c0.efs || []).find(e => e.hipnoA); if (eh && modo && modo.h && (modo.h.t || []).includes('ATAQUE') && !(modo.sel || []).some(a => refDe(S.times[a[0]][a[1]]) === eh.hipnoA)) { const al = porRef(eh.hipnoA); toast('💘 Hipnotizado: o ataque tem de acertar ' + (al ? CH[al.k].nome : 'quem o Cupido escolheu'), 2400); modo = null; rBoard(); rPainel(); return; } }
     const m = modo; modo = null;
-    if (m && m.sup && m.h && window.VSFX && VSFX.sup) VSFX.sup(ativoC(), m.h.n);
     const c = ativoC(), ch = CH[c.k], h = m.h.n === 'Bomba de Magma' || (m.h.n === 'Transmutação' && !(m.sel || []).length) || (m.h.n === 'Contraprova' && (m.sel || []).length && m.sel[0][0] === S.ativo[0]) ? Object.assign({}, m.h, { x: -1 }) : (m.h.n === 'Ascensão' && (m.sel || []).some(a => a[0] !== S.ativo[0])) ? Object.assign({}, m.h, { x: 3 }) : m.h;
     let ops = opcoes(h);
     if (h.n === 'Até que a Morte nos Separe') ops = null;
@@ -9437,7 +9454,7 @@ body.mn-calmo .cp-po{display:none}
       case 'Pincelada': {
         linhasR.splice(0);
         const nMax = r.aprim ? 5 : 3, cel = r.m && r.m.cel;
-        extras.push(supFx('Pintar até ' + nMax + ' casas a até 3 de ' + nm + (cel ? ' (começa por ' + cel + ')' : '') + ': cada toque pinta de vermelho (+1 de dano), o 2º toque troca para azul (+1 na Defesa) e o 3º para verde (2 PV no início do turno). Dura até o fim do próximo turno de ' + nm + (r.aprim ? ' +1 rodada' : ''), () => setTimeout(() => { const md = { t: 'pincel', n: nMax, cells: [], aprim: !!r.aprim, quem: cref }; if (cel) mudar(() => { pintarCasa(md, cel); }, '🎨 Pincelada: ' + cel + ' pintada de vermelho (+1 de dano).'); iniciarModo(md); toast('🎨 Toque nas casas para pintar; toque de novo para trocar a cor', 3000); }, 120)));
+        extras.push(supFx('Pintar até ' + nMax + ' casas a até 3 de ' + nm + (cel ? ' (começa por ' + cel + ')' : '') + ': cada toque pinta de vermelho (+1 de dano), o 2º toque troca para azul (+1 na Defesa) e o 3º para verde (2 PV no início do turno). Dura até o fim do próximo turno de ' + nm + (r.aprim ? ' +1 rodada' : ''), () => setTimeout(() => { const md = { t: 'pincel', n: nMax, cells: [], aprim: !!r.aprim, quem: cref }; if (cel) mudar(() => { pintarCasa(md, cel); }, '🎨 Pincelada: ' + cel + ' pintada de vermelho (+1 de dano).'); iniciarModo(md); toast('🎨 Toque nas casas para pintar; toque de novo para trocar a cor; o 4º toque apaga a casa', 3200); }, 120)));
         break; }
       case 'Miasma':
         linhasR.forEach(l => { if (!ini(l)) { l.ef = []; return; } l.ef = [];
@@ -10600,7 +10617,7 @@ body.mn-calmo .cp-po{display:none}
     if (r.reacT) aplicarReac(r);
     if (r.pend && !r.rolado) {
       const opsP = r.ops ? '<div class="rs-ops"><b>' + (r.multi ? (r.nome === 'Armadilha de Caça' ? 'ESCOLHA AS 2 ARMADILHAS (1 marcada = duas iguais)' : 'ESCOLHA OS EFEITOS ANTES DE ROLAR (aprimorado: pode marcar os dois)') : 'ESCOLHA O EFEITO ANTES DE ROLAR') + '</b>' + r.ops.map((o, i) => '<button data-op="' + i + '" class="' + (r.opSel.includes(i) ? 'on' : '') + '"><strong>' + o.nome + '</strong><small>' + o.txt + '</small></button>').join('') + '</div>' : '';
-      $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>' + r.titulo + '</h3><button class="modal-x" data-fecha title="Fechar sem usar">✕</button></div><div class="dd-corpo"><p class="rs-sub">' + r.sub + '</p>' +
+      $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>' + r.titulo + '</h3>' + (r.rolado ? '' : '<button class="modal-x" data-fecha title="Fechar sem usar">✕</button>') + '</div><div class="dd-corpo"><p class="rs-sub">' + r.sub + '</p>' +
         (r.notas.length ? '<p class="rs-nota">' + r.notas.join(' · ') + '</p>' : '') + opsP + reacHtml(r) +
         (r.desc ? '<details class="rs-desc"><summary>O que a ficha diz</summary><p>' + r.desc + '</p></details>' : '') +
         '<p class="rs-nota">' + (r.ops ? 'Escolha o efeito e role os dados.' : 'Confira e role os dados.') + ' Fechar agora não gasta nada.</p>' +
@@ -10620,7 +10637,7 @@ body.mn-calmo .cp-po{display:none}
     if (r.semAlvo) lin += '<p class="rs-nota">Nenhum personagem foi atingido.</p>';
     if (r.pre && r.pre.length) lin = '<div class="rs-ef extra">' + r.pre.map((e, ei) => '<label><input type="checkbox" data-pre="' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + '</label>').join('') + '</div>' + lin;
     if (r.extras && r.extras.length) lin += '<div class="rs-ef extra">' + r.extras.map((e, ei) => '<label><input type="checkbox" data-ex="' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + '</label>').join('') + '</div>';
-    $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>' + r.titulo + '</h3><button class="modal-x" data-fecha title="Fechar sem usar">✕</button></div><div class="dd-corpo"><p class="rs-sub">' + r.sub + '</p>' +
+    $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>' + r.titulo + '</h3>' + (r.rolado ? '' : '<button class="modal-x" data-fecha title="Fechar sem usar">✕</button>') + '</div><div class="dd-corpo"><p class="rs-sub">' + r.sub + '</p>' +
       (r.notas.length ? '<p class="rs-nota">' + r.notas.join(' · ') + '</p>' : '') + dadosH + opsH + lin + prevHtml(r) +
       (r.desc ? '<details class="rs-desc"' + (r.linhas.some(l => l.ok && !l.ef.length) || (!r.linhas.length && !r.extras.length) ? ' open' : '') + '><summary>O que a ficha diz</summary><p>' + r.desc + '</p></details>' : '') +
       '<p class="rs-nota">Marque o que vale e aplique. Empurrões, puxões e avanços são feitos no tabuleiro sozinhos. O que não estiver na lista, ajuste direto no tabuleiro ou na ficha.</p>' +
@@ -10635,6 +10652,7 @@ body.mn-calmo .cp-po{display:none}
     if (x.dataset.ef || x.dataset.ex || x.dataset.pre) { const o = $('#rsPrev'), n = prevHtml(res); if (o) o.outerHTML = n || '<div id="rsPrev"></div>'; else if (n) { const a = $('#mAcaoCaixa .rs-desc') || $('#rsAplicar').parentNode; a.insertAdjacentHTML('beforebegin', n); } }
   });
   $('#mAcao').addEventListener('click', e => {
+    if (e.target.closest('.modal-x[data-fecha]')) { SFX.p('voltar'); setTimeout(() => { if (!modo) { rPainel(); rBoard(); } }, 0); }
     { const rb = e.target.closest('[data-reac]'); if (rb) { cliqueReac(rb.dataset.reac); return; } }
     { const sb = e.target.closest('[data-simul]'); if (sb) { const h0 = simLista[+sb.dataset.simul]; fechar('mAcao'); if (h0) iniciarSimul(h0); return; } }
     if (e.target.id === 'rsRolar') { const r0 = res; if (r0.pend && !r0.rolado && !r0.esperaAmostra) { const vai = () => { r0.esperaAmostra = false; if (r0.rolado) return; r0.rolado = true; prepReac(r0); ilusaoTeste(r0); dominioTeste(r0); r0.pend(r0); if (res === r0) mostrarResultado(r0); }; const q = r0.amostraQ && !r0.amostraFeita ? (r0.amostraFeita = true, r0.amostraQ()) : null; if (q) { r0.esperaAmostra = true; q.then(vai); } else vai(); } return; }
@@ -10650,6 +10668,7 @@ body.mn-calmo .cp-po{display:none}
     if (e.target.id !== 'rsAplicar') return;
     fechar('mAcao');
     const r = res, c = r.atkRef ? S.times[r.atkRef[0]][r.atkRef[1]] : ativoC(), [aj] = r.atkRef || S.ativo;
+    if (r.sup && c && window.VSFX && VSFX.sup) VSFX.sup(c, r.nome);
     const msg = [];
     comRng(r, () => mudar(() => corpoAplicar(r, c, aj, msg), () => (r.nome ? (r.sup ? '★ ' : '✨ ') + CH[c.k].nome + ' usou ' + r.nome : '👊 ' + CH[c.k].nome + ' fez um Ataque Básico') + (msg.length ? ': ' + msg.join(', ') : '') + '.'));
     if (ETP && ETP.on()) ETP.resultado(r, c, aj, msg);
@@ -10820,11 +10839,15 @@ body.mn-calmo .cp-po{display:none}
       const at = foto();
       if (!at || S.fase !== 'partida') { ant = at; return; }
       const a0 = ant; ant = at;
+      if (a0 && !pular && a0.sig === at.sig) { let dm = 0, el = false, cu = false;
+        for (const key in at.t) { const x = at.t[key], y = a0.t[key]; if (!y) continue; if (x.pv < y.pv) dm = Math.max(dm, y.pv - Math.max(0, x.pv)); if (x.elim && !y.elim) el = true; if (x.pv > y.pv && !x.elim) cu = true; }
+        if (at.rodada > a0.rodada) SFX.p('medidor', 250);
+        if (dm) SFX.dano(dm, 160); if (el) SFX.p('eliminacao', 420); if (cu) SFX.p('cura', 120); }
       if (!a0 || pular || a0.sig !== at.sig || calmo()) { pular = false; return; }
       const svg = svgEl();
       let t0 = 0;
       // rodada nova e turno novo
-      if (at.rodada > a0.rodada) { rodada(at.rodada, 0); t0 = 1150; SFX.p('medidor', 250); }
+      if (at.rodada > a0.rodada) { rodada(at.rodada, 0); t0 = 1150; }
       if (at.ativo && at.ativo !== a0.ativo) {
         const [j, i] = at.ativo.split(',').map(Number), c = S.times[j][i];
         faixa(c, j, CH[c.k].nome, 'VEZ DE ' + S.nomes[j].toUpperCase(), t0);
@@ -10842,7 +10865,7 @@ body.mn-calmo .cp-po{display:none}
       }
       // dano, cura e eliminação
       const atk = at.ativo, A = atk && at.t[atk], gA = atk && tokG(svg, atk);
-      let n = 0, lunge = false, somD = false, somC = false;
+      let n = 0, lunge = false;
       for (const key in at.t) {
         const x = at.t[key], y = a0.t[key];
         const cell = x.pos || y.pos;
@@ -10858,7 +10881,7 @@ body.mn-calmo .cp-po{display:none}
           if (cell && CELL[cell]) {
             setTimeout(() => { const s2 = svgEl(); if (!s2) return; svgAdd(s2, 'circle', { class: 'fx-anel', cx: CELL[cell].x, cy: CELL[cell].y, r: HS * .8 }, 500); const g = tokG(s2, key); if (g) { g.classList.remove('fx-hit'); void g.getBBox(); g.classList.add('fx-hit'); setTimeout(() => g.classList.remove('fx-hit'), 450); } }, delay);
             const v = y.pv - Math.max(0, x.pv);
-            if (v > 0) { numero(svg, cell, v, false, delay); if (!somD) { somD = true; SFX.dano(v, delay); } }
+            if (v > 0) numero(svg, cell, v, false, delay);
           }
           if (x.elim && !y.elim && cell && CELL[cell]) {
             const [j, i] = key.split(',').map(Number), c = S.times[j][i], p = ponto(svg, CELL[cell].x, CELL[cell].y);
@@ -10866,11 +10889,11 @@ body.mn-calmo .cp-po{display:none}
               const d = HS * 1.6 * p.k, em = embC(c);
               poe('<i style="--ac:' + CH[c.k].ac + (em ? ';background-image:url(' + em + ')' : '') + '"></i><b>K.O.!</b>', 'fx-ko', p.x, p.y, 1300, { '--d': d + 'px' });
             }, delay + 120);
-            faixa(c, j, CH[c.k].nome + ' CAIU!', 'ELIMINADO', delay + 900); SFX.p('eliminacao', delay + 120);
+            faixa(c, j, CH[c.k].nome + ' CAIU!', 'ELIMINADO', delay + 900);
           }
         } else if (x.pv > y.pv && !x.elim && cell && CELL[cell]) {
           const delay = tMov + 80;
-          numero(svg, cell, x.pv - y.pv, true, delay); if (!somC) { somC = true; SFX.p('cura', delay); }
+          numero(svg, cell, x.pv - y.pv, true, delay);
           setTimeout(() => { const s2 = svgEl(), g = s2 && tokG(s2, key); if (g) { g.classList.add('fx-cura'); setTimeout(() => g.classList.remove('fx-cura'), 950); } }, delay);
         }
       }
