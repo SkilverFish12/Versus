@@ -1833,7 +1833,8 @@
   body.justo .cc-f .btn-med, body.justo [data-tbtirar], body.justo [data-estdel], body.justo #ptAcao [data-ac="estrutura"], body.justo [data-ac2], body.justo .rec .mini-btn,
   body.justo .acoes-turno span, body.justo #mDado [data-aplicar], body.justo [data-efx]:not(.efx-man){display:none!important}
   body.justo .st:not(.nz):not(.neg), body.justo .tg-linha .tg:not(.on){display:none}
-  body.justo .tg-linha .tg, body.justo .med-pips i, body.justo [data-acao], body.justo [data-acao2], body.justo .rs-ef input[data-ef]{pointer-events:none; cursor:default}
+  body.justo .tg-linha .tg, body.justo .med-pips i, body.justo [data-acao], body.justo [data-acao2], body.justo .rs-ef input[data-ef]:not(.ef-esc){pointer-events:none; cursor:default}
+  .rs-ef label.ef-esc-l{cursor:pointer} body.justo .rs-ef label.ef-esc-l{outline:2px dashed #e8000d; outline-offset:2px; border-radius:4px}
   body.justo .pt-rodada::after{content:'🔒'; margin-left:6px; font-size:.8em}
 
   .apts{display:flex; align-items:center; gap:5px; margin-top:9px; flex-wrap:wrap}
@@ -5766,7 +5767,7 @@ body.mn-calmo .cp-po{display:none}
   function log(t){ S.log.push({ r: S.rodada, t }); if (S.log.length > 2000) S.log.shift(); }
   // ── Modo justo (dentro do Turno guiado) ──
   function justoOn(){ return !!S && S.fase === 'partida' && S.auto !== false && S.justo !== false && !window.TUT_ON; }
-  const JUSTO_BLQ = '[data-pv],[data-pvv],[data-pvin],[data-st],[data-tg],[data-limpar],[data-efnovo],[data-medd],[data-med],[data-acao],[data-acao2],[data-gasto],[data-tbtirar],[data-estdel],#ptAcao [data-ac="estrutura"],[data-ac2],[data-tat],[data-tatr],[data-div],[data-rec],#mDado [data-aplicar],.rs-ef input[data-ef]';
+  const JUSTO_BLQ = '[data-pv],[data-pvv],[data-pvin],[data-st],[data-tg],[data-limpar],[data-efnovo],[data-medd],[data-med],[data-acao],[data-acao2],[data-gasto],[data-tbtirar],[data-estdel],#ptAcao [data-ac="estrutura"],[data-ac2],[data-tat],[data-tatr],[data-div],[data-rec],#mDado [data-aplicar],.rs-ef input[data-ef]:not(.ef-esc)';
   function justoPorta(e){
     if (!justoOn() || !e.target || !e.target.closest) return;
     let b = e.target.closest(JUSTO_BLQ);
@@ -8513,7 +8514,7 @@ body.mn-calmo .cp-po{display:none}
     if (sup && temEf(c, 'nomed')) return 'não pode gastar Medidor agora';
     if (sup && h.n === 'Rebobinar' && !c.rebAnt) return 'não pode no primeiro turno dela';
     if (sup && h.n === 'Plano Fantasma' && S.times[1 - j].filter(x => !x.elim).length <= 1) return 'resta só 1 inimigo';
-    { const bq = (c.efs || []).find(e => e.bloq === h.n); if (bq) return 'Bloqueio Mental: bloqueada neste turno'; }
+    { const bq = (c.efs || []).find(e => e.bloq && (e.bloq === h.n || e.bloq === h.base)); if (bq) return 'Bloqueio Mental: ' + bq.bloq + ' bloqueada neste turno'; }
     if (custoH(c, h) > restam(c) && !(kP(c) === 'reator' && ((pagarCargas && rec(c, 'Cargas') >= 2 && h.n !== 'Blindagem Nuclear') || (h.n === 'Blindagem Nuclear' && rec(c, 'Cargas') >= 1)))) return 'ações insuficientes';
     if (h.base === 'Jogo de Mão') { if (!robVivo(c, ROBK[h.n])) return ROBN[ROBK[h.n]] + ' foi descartado'; if ((c.usadas || []).includes(h.n)) return ROBN[ROBK[h.n]] + ' já atacou neste turno'; }
     else if (h.base === 'Mugë, “magia”') { const us = c.usadas || []; if (us.some(x => / Firme$/.test(x))) return 'já disse uma Palavra Firme neste turno'; if (h.firme && us.includes(h.base)) return 'a Palavra Firme tem de ser a única palavra do turno'; if (us.includes(h.n)) return 'esta palavra já foi dita neste turno'; if (us.filter(x => x === h.base).length >= 2) return 'já disse 2 palavras neste turno'; }
@@ -10299,8 +10300,8 @@ body.mn-calmo .cp-po{display:none}
       case 'Bloqueio Mental':
         linhasR.forEach(l => { if (!ini(l)) return; l.ef = []; if (!l.ok) return; const t = T(l.alvo), cht = CH[t.k];
           const hs = (cht.habs || []).concat(cht.supH ? [cht.supH] : []);
-          let prim = true; hs.forEach(hb => { const pas = hb.c === 0 && !hb.a && hb !== cht.supH; const on = !pas && prim; if (on) prim = false;
-            l.ef.push(supFx('bloquear ' + hb.n + (pas ? ' (passiva: desligada até o início do próximo turno de ' + nm + ')' : ' (não pode ser usada no próximo turno dele)'), t2 => novoEf(t2, { nome: 'Bloqueio Mental: ' + hb.n, autor: nm, faz: pas ? 'passiva ' + hb.n + ' desligada' : hb.n + ' não pode ser usada', acaba: pas ? txtIni : txtFim(t2), exp: pas ? iniT : fimP(t2), mods: {}, bloq: pas ? null : hb.n, bloqP: pas ? hb.n : null }), on)); }); });
+          let prim = r.aprim ? 2 : 1; hs.forEach(hb => { const pas = hb.c === 0 && !hb.a && hb !== cht.supH; const on = !pas && prim > 0; if (on) prim--;
+            l.ef.push(Object.assign(supFx('bloquear ' + hb.n + (pas ? ' (passiva: desligada até o início do próximo turno de ' + nm + ')' : ' (não pode ser usada no próximo turno dele)'), t2 => novoEf(t2, { nome: 'Bloqueio Mental: ' + hb.n, autor: nm, faz: pas ? 'passiva ' + hb.n + ' desligada' : hb.n + ' não pode ser usada', acaba: pas ? txtIni : txtFim(t2), exp: pas ? iniT : fimP(t2), mods: {}, bloq: pas ? null : hb.n, bloqP: pas ? hb.n : null }), on), { esc: true, grp: 'bloq', max: r.aprim ? 2 : 1 })); }); });
         break;
       case 'Pensamento Intrusivo':
         linhasR.forEach(l => { if (!ini(l)) return; const dn = l.ef.find(e => e.k === 'dano'), v = dn ? dn.v : 4; l.ef = l.ef.filter(e => e.k !== 'dano'); if (!l.ok) return;
@@ -11114,7 +11115,7 @@ body.mn-calmo .cp-po{display:none}
     let lin = r.linhas.map((l, li) => {
       const t = S.times[l.alvo[0]][l.alvo[1]];
       return '<div class="rs-alvo ' + (l.ok ? 'ok' : 'no') + '"><div class="rs-h"><span>' + CH[t.k].icon + '</span><b>' + CH[t.k].nome + '</b><em>' + l.txt + '</em></div>' +
-        (l.ef.length ? '<div class="rs-ef">' + l.ef.map((e, ei) => '<label><input type="checkbox" data-ef="' + li + ',' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + (e.k === 'dano' && !e.psi && (t.red || t.esc) ? ' <i class="rs-red">(' + [t.red ? 'redução ' + t.red : '', t.esc ? 'escudo ' + t.esc : ''].filter(Boolean).join(', ') + ')</i>' : '') + '</label>').join('') + '</div>' : '') + '</div>';
+        (l.ef.length ? '<div class="rs-ef">' + l.ef.map(e => { if (e.esc === undefined) e.esc = !e.on; return e; }).map((e, ei) => '<label' + (e.esc ? ' class="ef-esc-l"' : '') + '><input type="checkbox"' + (e.esc ? ' class="ef-esc"' : '') + ' data-ef="' + li + ',' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + (e.k === 'dano' && !e.psi && (t.red || t.esc) ? ' <i class="rs-red">(' + [t.red ? 'redução ' + t.red : '', t.esc ? 'escudo ' + t.esc : ''].filter(Boolean).join(', ') + ')</i>' : '') + '</label>').join('') + '</div>' : '') + '</div>';
     }).join('');
     if (r.semAlvo) lin += '<p class="rs-nota">Nenhum personagem foi atingido.</p>';
     if (r.pre && r.pre.length) lin = '<div class="rs-ef extra">' + r.pre.map((e, ei) => '<label><input type="checkbox" data-pre="' + ei + '"' + (e.on ? ' checked' : '') + '> ' + e.txt + '</label>').join('') + '</div>' + lin;
@@ -11128,7 +11129,8 @@ body.mn-calmo .cp-po{display:none}
   }
   $('#mAcao').addEventListener('change', e => {
     const x = e.target;
-    if (x.dataset.ef) { const [li, ei] = x.dataset.ef.split(',').map(Number); res.linhas[li].ef[ei].on = x.checked; }
+    if (x.dataset.ef) { const [li, ei] = x.dataset.ef.split(',').map(Number), L = res.linhas[li].ef, ef = L[ei]; ef.on = x.checked;
+      if (ef.grp && x.checked) { const outros = L.filter(q => q !== ef && q.grp === ef.grp && q.on); while (outros.length >= (ef.max || 1)) { outros.shift().on = false; } document.querySelectorAll('#mAcao input[data-ef]').forEach(i => { const [a, b] = i.dataset.ef.split(',').map(Number); if (a === li) i.checked = !!L[b].on; }); } }
     if (x.dataset.ex) res.extras[+x.dataset.ex].on = x.checked;
     if (x.dataset.pre) res.pre[+x.dataset.pre].on = x.checked;
     if (x.dataset.ef || x.dataset.ex || x.dataset.pre) { const o = $('#rsPrev'), n = prevHtml(res); if (o) o.outerHTML = n || '<div id="rsPrev"></div>'; else if (n) { const a = $('#mAcaoCaixa .rs-desc') || $('#rsAplicar').parentNode; a.insertAdjacentHTML('beforebegin', n); } }
