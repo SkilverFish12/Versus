@@ -4754,7 +4754,7 @@ body.mn-calmo .cp-po{display:none}
     const ch = CH[c.k];
     const cdf = (S.cen === 'centro' && c.pos && c.pos !== 'F6' && dist(c.pos, 'F6') === 1) ? 1 : 0;
     if (temEf(c, 'tekox') || (S.cen === 'entogo' && S.fase === 'partida' && S.rodada % 2 === 0)) { const mn = Math.min(...[0, 1, 2, 3].map(a => aptE(c, a))); return [0, 1, 2, 3].map(() => clamp(5 + mn + mod(c, 'df') + cdf, 2, 10)); }
-    return [0, 1, 2, 3].map(a => clamp(5 + aptE(c, RES[a]) + mod(c, 'df') + cdf, 2, 10));
+    return [0, 1, 2, 3].map(a => clamp(5 + aptE(c, RES[a]) + mod(c, 'df') + cdf - (RES[a] === 2 && olhoPZ(c) ? penDe(c, 'df') + Math.min(0, contraMod(c, 'df')) : 0), 2, 10));
   }
   const atkIdx = ch => ({ FIS: 0, DES: 1, VIS: 2, AST: 3 })[ch.atk] ?? 1;
   // bolinhas de ação clicáveis (barra de cima e painel do turno)
@@ -5341,6 +5341,8 @@ body.mn-calmo .cp-po{display:none}
   const defAstBase = c => clamp(5 + aptE(c, RES[3]) + (c.df || 0), 2, 10);
   const imuP = c => !!(c && (c.efs || []).some(e => e.imuPen));
   const ehPenV = (k, v) => (k === 'dr' || k === 'cr') ? v > 0 : v < 0;
+  const olhoPZ = c => !!c && kP(c) === 'saltadora' && !pOff(c, 'Olho do Ponto Zero');
+  const penDe = (c, k) => (c.efs || []).reduce((s, e) => s + ((e.mods && !e.mods.est && !e.mods.cop && e.autor !== CH[c.k].nome && e.mods[k] < 0) ? e.mods[k] : 0), 0);
   const semPenV = (c, k, v) => imuP(c) && ehPenV(k, v) ? 0 : v;
   function auraMod(c, k){ return semPenV(c, k, auraMod0(c, k)); }
   function auraMod0(c, k){ return aurasEm(c).reduce((v, [, a, ali]) => { const g = ali ? (a.brotAp && !(a.usados || []).includes(refDe(c)) && k === 'df' ? { df: 2 } : a.ali) : (a.meio && a.rmax !== undefined && defAstBase(c) > a.rmax) ? a.meio : a.ini; return v + ((g && g[k]) || 0); }, 0); }
@@ -6465,7 +6467,7 @@ body.mn-calmo .cp-po{display:none}
       if (dx > dy && dx > dz) rx = -ry - rz; else if (dy <= dz) rz = -rx - ry; const id = AX[rx + ',' + rz]; if (id && fecha(id)) return true; } return false; });
   }
   function alvoBasico(c, j, x){
-    const aj = S.ativo[0], alc = kP(c) === 'maleavel' && !temEf(c, 'alcMax') ? 99 : temEf(c, 'alcMax') ? Math.min(2, (kP(c) === 'cupido' ? 3 : kP(c) === 'espreitador' ? 99 : 1)) : (temEf(c, 'alcTodo') || alcTT(c)) ? 99 : (kP(c) === 'cupido' ? 3 : kP(c) === 'espreitador' ? 99 : (kP(c) === 'bispo' && !pOff(c, 'Corte Distante')) ? 2 : 1) + alcExtra(c) + (c.traje === 'visor' && !pOff(c, 'Traje Ceifador') ? 1 : 0) + (S.cen === 'parque' && c.pos && NINHOS.includes(c.pos) ? 1 : 0), alcN2 = nevoaAtiva() ? Math.min(2, alc) : alc;
+    const aj = S.ativo[0], alc = kP(c) === 'maleavel' && !(temEf(c, 'alcMax') && !olhoPZ(c)) ? 99 : (temEf(c, 'alcMax') && !olhoPZ(c)) ? Math.min(2, (kP(c) === 'cupido' ? 3 : kP(c) === 'espreitador' ? 99 : 1)) : (temEf(c, 'alcTodo') || alcTT(c)) ? 99 : (kP(c) === 'cupido' ? 3 : kP(c) === 'espreitador' ? 99 : (kP(c) === 'bispo' && !pOff(c, 'Corte Distante')) ? 2 : 1) + alcExtra(c) + (c.traje === 'visor' && !pOff(c, 'Traje Ceifador') ? 1 : 0) + (S.cen === 'parque' && c.pos && NINHOS.includes(c.pos) ? 1 : 0), alcN2 = nevoaAtiva() ? Math.min(2, alc) : alc;
     if (j !== aj && temEf(x, 'intocavel')) return false;
     if (bloqMira(c, x, true)) return false;
     if (linhaBloq(c, x, '🥊 Golpe', '')) return false;
@@ -6835,7 +6837,7 @@ body.mn-calmo .cp-po{display:none}
     if (h0.n === 'Polo Magnético') { const A = poloCaminho(c, true, ap), R = poloCaminho(c, false, ap), set = new Set(A.hit.concat(R.hit)); return { tipo: 'todos', alvos: pecas((j, i, x) => j !== aj && x.pos && set.has(x.pos) && !temEf(x, 'intocavel')) }; }
     if (h0.n === 'Misericórdia Divina') return { tipo: 'todos', alvos: pecas((j, i, x) => j !== aj && !temEf(x, 'intocavel') && (!c.pos || (x.pos && dP(c.pos, x) <= 1))) };
     if (!h0._nev && nevoaAtiva() && !/^PESSOAL$/.test(h.a) && (n > 2 || /TODO/.test(h.a))) return alvosDe(Object.assign({}, h0, { _nev: true, a: /TODO/.test(h.a) ? 'RAIO 2' : h.a.replace(/\d+/, '2') }), false);
-    if (!h0._nev && temEf(c, 'alcMax') && n > 2) return alvosDe(Object.assign({}, h0, { _nev: true, a: h0.a.replace(/\d+/, '2') }), false);
+    if (!h0._nev && (temEf(c, 'alcMax') && !olhoPZ(c)) && n > 2) return alvosDe(Object.assign({}, h0, { _nev: true, a: h0.a.replace(/\d+/, '2') }), false);
     if (kP(c) === 'assobio' && h.n === 'Bico de Aço') return { tipo: 'bico' };
     const pz = !!c.possPor, ok0 = (j) => ld === 'qualquer' || (ld === 'inimigo' ? (j !== aj || pz) : j === aj);
     const XF = { 'Penhora': x => divDe(x) > 0, 'Cobrança': x => divDe(x) > 0, 'Entrega Expressa': x => !x.item }[h0.n];
@@ -6950,6 +6952,7 @@ body.mn-calmo .cp-po{display:none}
   }
   function motivo(h, sup){
     const c = ativoC(), j = S.ativo[0];
+    if (!sup && temEf(c, 'semRef') && (h.t || []).includes('REFORÇO')) return 'Vigília: sem Reforços neste turno';
     if (kP(c) === 'eclipse') { const so = /^Só (Breu|Fresta)\./.exec(limpo(h.d)); if (so && IRM(c)[0] !== so[1]) return 'Só ' + so[1] + ' (toque na peça de ' + so[1] + ' para agir com ela)';
       if (/ENTRE OS DOIS/.test(h.a) && !entreDois(c).length) return 'Breu e Fresta precisam estar a até 6 casas um do outro (e não adjacentes)'; }
     if (kP(c) === 'cambiante' && FORMA_H[h.n] && formaDe(c) !== 'Quimera Primordial' && !FORMA_H[h.n].includes(formaDe(c))) return 'Só em ' + FORMA_H[h.n].join(' ou ') + ' (escolha a forma no painel)';
@@ -7611,6 +7614,7 @@ body.mn-calmo .cp-po{display:none}
     v += auraMod(c, k) + cenMod(c, k) + contraMod(c, k);
     if (k === 'ds' && v < 0 && estrada(c)) v = 0;
     if (k === 'df' && v > 0 && temEf(c, 'semBonusDef')) v = 0;
+    if (k === 'dd' && olhoPZ(c)) v -= penDe(c, 'dd');
     return v;
   }
   // efeitos que só valem contra um personagem: Defesa/deslocamento no turno dele; dados/dano quando o portador ataca ele
@@ -7947,6 +7951,12 @@ body.mn-calmo .cp-po{display:none}
     S.times[1 - j].forEach(x => { if (c.elim || x.elim || kP(x) !== 'medonho' || !x.pos || !c.pos || pOff(x, 'Faixas')) return; const R = rec(x, 'Raio do Pavor'); if (R < 1 || dP(x.pos, c) > R || temEf(c, 'apav')) return;
       aplicarEf(c, { nome: 'Apavorado', autor: CH[x.k].nome, faz: '−1 dado nos ataques, −1 na Defesa contra o time do Medonho e não pode terminar movimentos mais perto do Medonho do que começou', acaba: 'no fim deste turno', exp: { t: 'fim', ref: j + ',' + i, pula: 0 }, mods: { dd: -1, df: -1 }, apav: refDe(x) });
       o.push('😱 ' + CH[c.k].nome + ' começou no Raio do Pavor (' + R + ') do Medonho: Apavorado'); });
+    { const as = S.times[1 - j].find(x => !x.elim && kP(x) === 'assobio' && !pOff(x, 'Vigília'));
+      if (as && c.pos && passarosDe(1 - j).some(z => dist(z.cell, c.pos) === 1)) { const au = CH[as.k].nome, ex = { t: 'fim', ref: j + ',' + i, pula: 0 };
+        const pas = habsDe(c).filter(h => h.x === -1 && !h.c && !h.a && (h.t || []).includes('REFORÇO')).map(h => h.n);
+        novoEf(c, { nome: 'Vigília', autor: au, faz: 'não pode usar Reforços neste turno' + (pas.length ? ' (passivas desligadas: ' + pas.join(', ') + ')' : ''), acaba: 'no fim deste turno', exp: ex, mods: {}, semRef: true });
+        pas.forEach(n => novoEf(c, { nome: 'Vigília: ' + n, autor: au, faz: 'passiva desligada neste turno', acaba: 'no fim deste turno', exp: ex, mods: {}, bloqP: n }));
+        o.push('🐦 ' + CH[c.k].nome + ' começou ao lado de um Pássaro (Vigília): sem Reforços neste turno'); } }
     if (kP(c) === 'manilhas') autoRobs(c);
     if (kP(c) === 'profanacao' && c.casuloCura) { const cu = Math.max(0, Math.min(c.max - c.pv, c.casuloCura - (c.cr || 0))); c.pv += cu; c.casuloCura = 0; o.push('🐛 Casulo rompido: ' + CH[c.k].nome + ' +' + cu + ' PV'); }
     if (kP(c) === 'fundadora') {
@@ -8042,9 +8052,12 @@ body.mn-calmo .cp-po{display:none}
     (c.efs || []).filter(e => e.parD).forEach(e => { const [pj, pi] = e.parD.split(',').map(Number), o = S.times[pj] && S.times[pj][pi]; if (o && !o.elim && o.pos && c.pos && dP(c.pos, o) <= 1) { n += 1; notas.push('Par de Dança com ' + CH[o.k].nome + ': +1 dado'); } });
     if (kP(c) === 'kazan' && c.kz) { n += c.kz; notas.push(c.kz + ' Brasa(s): +' + c.kz + ' dado'); }
     if (kP(c) === 'maligno' && rec(c, 'Peso de Dor') && !pOff(c, 'Peso de Dor')) { n += rec(c, 'Peso de Dor'); notas.push('Peso de Dor: +' + rec(c, 'Peso de Dor') + ' dado'); }
+    if (c.fioDd && olhoPZ(c)) { tirarEfs(c, e => e.fioEf); c.fioDd = 0; notas.push('Olho do Ponto Zero: ignora a penalidade de dados'); }
     if (c.fioDd) { const fn0 = (c.efs || []).filter(e => e.fioEf).map(e => e.nome); tirarEfs(c, e => e.fioEf); n -= c.fioDd; notas.push('−' + c.fioDd + (c.fioDd > 1 ? ' dados' : ' dado') + ' neste teste (' + (fn0.length ? fn0.join(', ') : 'Fio Tenso, Clarão ou Estrondo') + ')'); c.fioDd = 0; }
+    if (c.fumT && olhoPZ(c)) c.fumT = 0;
     if (c.fumT) { n -= 1; c.fumT -= 1; notas.push('💨 Fumaça: −1 dado neste teste'); }
     if (c.aposta) { const v = d(10); c.aposta = false; if (v >= 6) { n += 2; notas.push('🎰 Aposta: o d10 deu ' + v + ', +2 dados'); } else { n -= 1; notas.push('🎰 Aposta: o d10 deu ' + v + ', −1 dado'); } }
+    if (c.manchas && olhoPZ(c)) { notas.push('Olho do Ponto Zero: as Manchas não tiram dados'); c.manchas = 0; }
     if (c.manchas) { n -= c.manchas; notas.push('🎨 ' + c.manchas + (c.manchas > 1 ? ' Manchas' : ' Mancha') + ': −' + c.manchas + (c.manchas > 1 ? ' dados' : ' dado') + ' (somem depois deste teste)'); c.manchas = 0; }
     return { n, notas };
   }
