@@ -9230,7 +9230,7 @@ body.mn-calmo .cp-po{display:none}
   function sofrerDano(t, v, o){
     const q = sofrerDano0(t, v, o);
     if (t && q) t.ultDn = q.real;
-    if (t && kP(t) === 'manilhas' && q && q.real > 0 && !t.elim && t.pv > 0) { const need = (t.pv <= 30 ? 1 : 0) + (t.pv <= 15 ? 1 : 0); if (need > (t.robDesc || 0) + (t.robPend || 0)) { t.robPend = need - (t.robDesc || 0); evento('🃏 Manilhas chegou a ' + t.pv + ' PV: descarte ' + (t.robPend > 1 ? t.robPend + ' robôs' : 'um robô') + ' (botão no painel)'); } }
+    if (t && t.k === 'manilhas' && q && q.real > 0 && !t.elim && t.pv > 0) { const need = (t.pv <= 30 ? 1 : 0) + (t.pv <= 15 ? 1 : 0); if (need > (t.robDesc || 0) + (t.robPend || 0)) { t.robPend = need - (t.robDesc || 0); evento('🃏 Manilhas chegou a ' + t.pv + ' PV: descarte ' + (t.robPend > 1 ? t.robPend + ' robôs' : 'um robô') + ' (botão no painel)'); } }
     if (t && q && q.real > 0 && o && o.ataque) (t.efs || []).filter(e => e.elo).forEach(e => { const g = porRef(e.elo); if (!g || g.elim) return; const b = Math.max(1, Math.floor(q.real / 2)), cu = Math.min(g.max - g.pv, Math.max(0, b - (contagiado(g) ? 2 : 0) - (g.cr || 0))); if (cu > 0) { g.pv += cu; evento('🩸 Elo de Sangue: ' + CH[g.k].nome + ' +' + cu + ' PV'); } });
     if (t && q && q.real > 0) (t.efs || []).filter(e => e.dreno).forEach(e => { const g = porRef(e.dreno); if (!g || g.elim || pOff(g, 'Dreno')) return; const cu = Math.min(g.max - g.pv, Math.max(0, 2 - (g.cr || 0))); if (cu > 0) { g.pv += cu; evento('🐙 Dreno de Energia: ' + CH[g.k].nome + ' +' + cu + ' PV'); } });
     if (t && kP(t) === 'cavalo' && q && q.real > 0 && !(S.ativo && ativoC() === t)) t.cicloD = true;
