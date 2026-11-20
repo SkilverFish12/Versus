@@ -4212,7 +4212,7 @@ body.mn-calmo .cp-po{display:none}
   }
   let S = store.get(CHAVE);
   if (!S || !S.fase) S = novo();
-  let hist = [], rolouEm = -1, etpVista = null;
+  let hist = [], rolouEm = -1, etpVista = null, etpPainel = false;
   const salvar = () => { if (!SECO && !window.TUT_ON) store.set(CHAVE, S); };
   // fim da Multidão (Fechar Nele!): nenhum capturado sobrando ou Semelhante caiu
   function multidaoChecar(){
@@ -4229,6 +4229,8 @@ body.mn-calmo .cp-po{display:none}
     }));
   }
   function mudar(fn, msg){
+    const etpA = etpPainel && S.fase === 'partida' && typeof ETP !== 'undefined' && ETP && ETP.on(); etpPainel = false;
+    const pre0 = etpA && ETP.passoOn() && tela === 'combate' ? JSON.parse(JSON.stringify(S)) : null;
     hist.push(JSON.stringify(S));
     if (hist.length > 80) { hist.shift(); rolouEm--; }
     fn();
@@ -4236,8 +4238,10 @@ body.mn-calmo .cp-po{display:none}
     transVarre();
     multidaoChecar();
     sonhoSync();
-    if (msg) log(typeof msg === 'function' ? msg() : msg);
+    const mtx = msg ? (typeof msg === 'function' ? msg() : msg) : ''; if (msg) log(mtx);
+    if (pre0) etpVista = pre0;
     salvar(); render();
+    if (etpA) ETP.acao(mtx, pre0);
   }
   function log(t){ S.log.push({ r: S.rodada, t }); if (S.log.length > 2000) S.log.shift(); }
   // ── Modo justo (dentro do Turno guiado) ──
@@ -6467,7 +6471,13 @@ body.mn-calmo .cp-po{display:none}
   function cupCurou(c, x){ return Array.isArray(c.cupCura) && c.cupCura.includes(refDe(x)); }
   function cupFx(c){ return kP(c) !== 'cupido' || pOff(c, 'Amor nas Alturas') ? 0 : Math.min(2, S.times.flat().filter(x => x !== c && !x.elim && (x.efs || []).some(e => e.autor === CH[c.k].nome)).length); }
   // inimigos bloqueiam alcance de Golpes e Projéteis de alvo único; Projéteis também param em Obstáculos (2026-11-19)
-  const SEM_BLOQ = ['Tentáculos em Cascata', 'Corte Geométrico', 'Relâmpago', 'Até que a Morte nos Separe'];
+  const SEM_BLOQ = ['Tentáculos em Cascata', 'Corte Geométrico', 'Relâmpago', 'Até que a Morte nos Separe', 'Golpe Flutuante'];
+  function gfDest(c, t){
+    if (!c.pos || !t.pos || dist(c.pos, t.pos) <= 1) return null;
+    const L = linhaHex(c.pos, t.pos), u = L[L.length - 1];
+    if (u && livre(u) && !bloqueada(u)) return u;
+    return vizinhas(t.pos).filter(id => livre(id) && !bloqueada(id)).sort((a, b) => (u ? dist(a, u) - dist(b, u) : 0) || dist(a, c.pos) - dist(b, c.pos))[0] || null;
+  }
   function linhaBloq(c, x, cat, nome){
     if (!c || !x || !c.pos || !x.pos || x === c || SEM_BLOQ.includes(nome)) return false;
     const proj = /Proj/.test(cat || ''), golpe = /Golpe/.test(cat || '');
@@ -6736,6 +6746,7 @@ body.mn-calmo .cp-po{display:none}
     if (h.n === 'Polo Magnético') { const atr = !(r.ops && r.ops[r.opSel[0]] && /Retra/.test(r.ops[r.opSel[0]].nome)); const d0 = poloCaminho(c, atr, r.aprim).dest; return d0 && d0 !== c.pos ? d0 : null; }
     const t = alvos.length ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (ta === 'ALCANCE' && m.cel && /para a casa|teleporta/i.test(mTxt)) return livre(m.cel) ? m.cel : null;
+    if (h.n === 'Golpe Flutuante' && t && t !== c) return gfDest(c, t);
     if (t && t.pos && t !== c) {
       if (/Atravessa o alvo/i.test(mTxt)) {
         const alem = viz(t.pos, dirPara(c.pos, t.pos)); if (alem && livre(alem)) return alem;
@@ -7164,6 +7175,7 @@ body.mn-calmo .cp-po{display:none}
     return 'confirme para usar';
   }
   $('#ptAcao').addEventListener('change', e => { if (e.target.id === 'acApr') { aprimorarMarcado = e.target.checked; rPainel(); } if (e.target.id === 'acCarga') { pagarCargas = e.target.checked; rPainel(); } });
+  $('#ptAcao').addEventListener('click', e => { const b = e.target.closest && e.target.closest('button'); etpPainel = !!b && !b.disabled && !b.dataset.fimturno && b.dataset.ac !== 'mover' && b.dataset.cancelar === undefined && b.dataset.confirmar === undefined; setTimeout(() => { etpPainel = false; }, 0); }, true);
   $('#ptAcao').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b || b.disabled) return;
     if (b.dataset.cancelar !== undefined) return cancelarModo();
@@ -7225,7 +7237,7 @@ body.mn-calmo .cp-po{display:none}
     if (b.dataset.pasv === 'domMover') return iniciarModo({ t: 'mover', gratis: 'Domínio ⚡', desl: 2 });
     if (b.dataset.pasv === 'mover') { const pm = PASM[kP(c)]; return iniciarModo({ t: 'mover', gratis: pm[0], desl: pm[1] || undefined, rumo: kP(c) === 'promessa' ? (c.votoAli || []).map(porRef).filter(x => x && !x.elim && x.pos) : undefined }); }
     if (b.dataset.ac === 'atkest') return iniciarModo({ t: 'atkEst', alvos: estAtacaveis(c).map(z => z.cell) });
-    if (b.dataset.escp) { const [tj, ti] = b.dataset.escp.split(',').map(Number), t = S.times[tj][ti], ek = b.dataset.esck || c.k; if (ESC_TRAVA.includes(ek) && c[escF(c, ek)]) return toast(ESCP[ek][0] + ': o alvo já foi escolhido neste turno.', 2200); mudar(() => aplicarEscolha(c, t, ek), ESCP[ek][1] + ' ' + CH[c.k].nome + ' (' + ESCP[ek][0] + ') escolheu ' + CH[t.k].nome + '.'); if (ETP && ETP.on()) ETP.passo(ESCP[ek][1] + ' ' + CH[c.k].nome + (ek === 'relicario' ? ' escolheu ' + CH[t.k].nome + ': agora é o Consagrado' : ek === 'vale' ? ' protege ' + CH[t.k].nome + ' com Raízes Protetoras' : ek === 'ninguem' ? ' está Lendo Intenções de ' + CH[t.k].nome : ' escolheu ' + CH[t.k].nome + ' (' + ESCP[ek][0] + ')'), 'pas', refDe(t)); return; }
+    if (b.dataset.escp) { const [tj, ti] = b.dataset.escp.split(',').map(Number), t = S.times[tj][ti], ek = b.dataset.esck || c.k; if (ESC_TRAVA.includes(ek) && c[escF(c, ek)]) return toast(ESCP[ek][0] + ': o alvo já foi escolhido neste turno.', 2200); return mudar(() => aplicarEscolha(c, t, ek), ESCP[ek][1] + ' ' + CH[c.k].nome + (ek === 'relicario' ? ' escolheu ' + CH[t.k].nome + ': agora é o Consagrado' : ek === 'vale' ? ' protege ' + CH[t.k].nome + ' com Raízes Protetoras' : ek === 'ninguem' ? ' está Lendo Intenções de ' + CH[t.k].nome : ' escolheu ' + CH[t.k].nome + ' (' + ESCP[ek][0] + ')')); }
     if (b.dataset.leitura !== undefined) { const lEsc = c[escF(c, 'ninguem')], [tj, ti] = lEsc.split(',').map(Number), t = S.times[tj][ti]; return mudar(() => { c.gastas++; c.leitura = true; S.times[S.ativo[0]].forEach(x => { if (x !== c && !x.elim) novoEf(x, { nome: 'Lendo Intenções', autor: CH[c.k].nome, faz: '+1 na Defesa contra o próximo ataque de ' + CH[t.k].nome + ' (some depois do primeiro ataque)', acaba: 'no início do próximo turno de ' + CH[c.k].nome, exp: { t: 'ini', ref: refDe(c) }, contra: lEsc, cmods: { df: 1 }, mods: {} }); }); }, '📡 ' + CH[c.k].nome + ' compartilhou a leitura de ' + CH[t.k].nome + ' com os aliados.'); }
     if (b.dataset.tatesc !== undefined && modo && modo.t === 'tat') { const st = modo, k = b.dataset.tatesc; modo = null;
       if (st.estCell) { mudar(() => { const z = (S.est || []).filter(y => y.tipo === 'Desenho' && y.cell === st.estCell).pop(); if (z) { z.tatN = k; z.info = 'Tatuagem ' + k + ': quem começar o turno aqui recebe (Avessa se for inimigo da Tatuadora).'; } }, '🖋️ Desenho em ' + st.estCell + ': ' + k + '.'); }
@@ -8310,9 +8322,10 @@ body.mn-calmo .cp-po{display:none}
         break;
       case 'Golpe Flutuante': {
         const t0 = alvos.length ? T(alvos[0]) : null; if (!t0 || !t0.pos || !c.pos) break;
-        const dest = dist(c.pos, t0.pos) <= 1 ? c.pos : (vizinhas(t0.pos).filter(livre).sort((a, b) => dist(a, c.pos) - dist(b, c.pos))[0] || c.pos);
+        const dest = gfDest(c, t0) || c.pos;
         const casas = dist(c.pos, dest), base = r.aprim ? 5 : 3;
         linhasR.forEach(l => { if (!ini(l)) return; l.ef.forEach(e => { if (e.k === 'dano') { e.v = base + casas + bonusDn; e.txt = e.v + ' de dano (' + base + ' + ' + casas + (casas === 1 ? ' casa percorrida' : ' casas percorridas') + (bonusDn ? ' + ' + bonusDn + ' de bônus' : '') + ')'; } }); });
+        if (r.aprim) linhasR.forEach(l => { l.ef = l.ef.filter(e => e.k !== 'def'); });
         if (r.aprim) { const L = linhaHex(c.pos, t0.pos).concat([t0.pos]), na = S.times[1 - aj].filter(x => !x.elim && x.pos && L.includes(x.pos) && !temEf(x, 'intocavel'));
           if (na.length) extras.push(supFx('Inimigos na linha (' + na.map(x => nomeC(x)).join(', ') + '): −1 na Defesa até o início do próximo turno de ' + nm, () => na.forEach(x => aplicarEf(x, { nome: 'Golpe Flutuante', autor: nm, faz: '−1 na Defesa', acaba: txtIni, exp: iniT, mods: { df: -1 } })))); }
         break; }
@@ -10032,7 +10045,7 @@ body.mn-calmo .cp-po{display:none}
     // ── animações curtas em cima da peça (ou da casa) depois de cada texto ──
     const nomeDe = x => CH[x.k] ? CH[x.k].nome : '';
     function fxEf(e){
-      const m = e.mods || {}, L = [];
+      const m = Object.assign({}, e.mods || {}, e.cmods || {}), L = [];
       const ad = (v, up, dn) => { if (v > 0) L.push(['▲ ' + up, 'bom']); else if (v < 0) L.push(['▼ ' + (dn || up), 'ruim']); };
       if (e.basPer || m.dn) ad(e.basPer || m.dn, 'DANO'); ad(m.df, 'DEFESA'); ad(m.dd, m.dd > 0 ? 'DADO' : 'DADO'); ad(m.ds, 'DESLOC.');
       if (m.apt && m.apt.some(Boolean)) ad(m.apt.reduce((a, b) => a + b, 0), 'APTIDÃO');
@@ -10056,12 +10069,14 @@ body.mn-calmo .cp-po{display:none}
       if (/elimin|caiu|derrotad/i.test(t)) return { txt: 'K.O.', c: 'dano' };
       if (/Errou|escapou|falhou/i.test(t)) return { txt: '💨', c: 'neutro' };
       if (/Acertou|atingid/i.test(t)) return { txt: '🎯', c: 'ruim' };
-      return { txt: '✦', c: 'neutro' };
+      if (/compartilh/i.test(t)) return { txt: '📡 LEITURA', c: 'bom' };
+      const em = /^\s*(\p{Extended_Pictographic}\uFE0F?)/u.exec(t);
+      return { txt: em ? em[1] : '✦', c: 'neutro' };
     }
     function fxPalpite(it){
       if (!S || !S.times) return null;
-      const t = String(it.html || '').replace(/<[^>]+>/g, ''); let best = null;
-      S.times.forEach((tm, j) => tm.forEach((x, i) => { const n = nomeDe(x), k = n ? t.indexOf(n) : -1; if (k >= 0 && (!best || k < best[0])) best = [k, j + ',' + i]; }));
+      const t = String(it.html || '').replace(/<[^>]+>/g, ''); let best = null; const ult = /escolheu|Intenções de|protege/.test(t);
+      S.times.forEach((tm, j) => tm.forEach((x, i) => { const n = nomeDe(x), k = n ? (ult ? t.lastIndexOf(n) : t.indexOf(n)) : -1; if (k >= 0 && (!best || (ult ? k > best[0] : k < best[0]))) best = [k, j + ',' + i]; }));
       if (!best) return null;
       return Object.assign({ ref: best[1] }, fxRotulo(it));
     }
@@ -10090,6 +10105,7 @@ body.mn-calmo .cp-po{display:none}
         const ref = j + ',' + i, nm = nomeDe(x), tinha = new Set((p.efs || []).map(e => e.nome + '|' + (e.autor || '')));
         (x.efs || []).forEach(e => {
           if (tinha.has(e.nome + '|' + (e.autor || '')) || !e.faz || tudo.includes(e.faz)) return;
+          { const pf = /^([^:]{3,25}):/.exec(e.faz); if (pf && tudo.includes(pf[1])) return; }
           const f = fxEf(e);
           ef.push({ html: realce('✨ ' + nm + ': ' + e.faz + (e.acaba ? ' (' + e.acaba + ')' : '')), cls: f.c === 'ruim' ? 'dano' : '', st: 0, fx: { ref, txt: f.txt, c: f.c } });
         });
@@ -10110,6 +10126,20 @@ body.mn-calmo .cp-po{display:none}
       const sumiu = {}; (pre.est || []).forEach(z => { if (!agora.has(chave(z)) && z.cell) (sumiu[z.tipo] = sumiu[z.tipo] || []).push(z.cell); });
       Object.keys(sumiu).forEach(tp => { if (tudo.includes(tp)) return; const cs = sumiu[tp]; mesa.push({ html: realce('💥 ' + tp + ' sai da mesa (' + cs.join(', ') + ')'), cls: '', st: 2, fx: { cells: cs, txt: '− ' + String(tp).toUpperCase().slice(0, 16), c: 'ruim' } }); });
       return { ef, mesa };
+    }
+    // ação do painel do turno (botões fora das habilidades): texto do registro + o que mudou na mesa
+    function acao(txt, pre){
+      if (!on() || SECO) { etpVista = null; return; }
+      if (!passoOn() || !pre) { etpVista = null; if (txt) passo(txt); return; }
+      if (aberta()) { const p0 = pre; terminar(); pre = p0; }
+      clearTimeout(tPend);
+      const its = pend.splice(0).map(x => Object.assign(x, { st: 0 }));
+      if (txt) its.push({ html: realce(txt), cls: tipoDe(txt), st: /PV|dano|elimin|cura/i.test(txt) ? 1 : 0 });
+      const dif = difMesa(pre, txt ? [txt] : []); dif.ef.forEach(x => its.push(x)); dif.mesa.forEach(x => its.push(x));
+      if (!its.length) { etpVista = null; render(); return; }
+      const ord = its.map((x, n) => [x, n]).sort((a, b) => a[0].st - b[0].st || a[1] - b[1]).map(x => x[0]);
+      etpVista = pre; rBoard();
+      abrir(ord, { pre, hyb: JSON.parse(JSON.stringify(pre)), vis: 0 });
     }
     // antes de aplicar: guarda a mesa como estava, para mostrar por partes
     function prep(){
@@ -10155,7 +10185,7 @@ body.mn-calmo .cp-po{display:none}
       }
       if ((e.key === 'p' || e.key === 'P') && (rodando || lista.children.length)) { e.preventDefault(); limpar(); }
     }, true);
-    return { on, set, ciclo, rotulo, passoOn, prep, passo, titulo, resultado, limpar, aberta };
+    return { on, set, ciclo, rotulo, passoOn, prep, passo, titulo, resultado, acao, limpar, aberta };
   })();
   { const b = $('#mnJusto'); if (b) b.addEventListener('click', () => {
       if (S.auto === false) { toast('O Modo justo faz parte do Turno guiado, que está desligado nesta partida.', 2600); return; }
