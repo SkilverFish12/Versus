@@ -9139,7 +9139,7 @@ body.mn-calmo .cp-po{display:none}
     const optTxt = r.ops ? r.opSel.map(i => r.ops[i].txt).join(' ') : null;
     const optBase = (optTxt && /Na forma, soma:/.test(limpo(h.d))) ? limpo(h.d).split('Na forma, soma:')[0] + ' ' + optTxt : optTxt;
     const ef = efeitos(h, r.aprim, optBase);
-    if (kP(c) === 'reator' && h.n === 'Fissão Descontrolada' && rec(c, 'Cargas')) { ef.dano = (ef.dano || 0) + 2 * rec(c, 'Cargas'); r.notas = r.notas.concat(rec(c, 'Cargas') + ' Carga(s): +' + 2 * rec(c, 'Cargas') + ' de dano'); }
+    if (kP(c) === 'reator' && h.n === 'Fissão Descontrolada' && (rec(c, 'Cargas') - (pagarCargas && rec(c, 'Cargas') >= 2 ? 2 : 0)) > 0) { const cg = (rec(c, 'Cargas') - (pagarCargas && rec(c, 'Cargas') >= 2 ? 2 : 0)); ef.dano = (ef.dano || 0) + 2 * cg; r.notas = r.notas.concat(cg + ' Carga(s): +' + 2 * cg + ' de dano' + (cg < rec(c, 'Cargas') ? ' (2 Cargas pagam a Suprema antes do dano)' : '')); }
     if (h.n === 'Bomba de Magma') { Object.keys(ef).forEach(k => { delete ef[k]; }); if (m.cel && ocupante(m.cel)) r.notas = r.notas.concat('⚠️ A Bomba precisa de uma casa vazia'); }
     if (kP(c) === 'kazan' && c.kz && h.n !== 'Bomba de Magma') { if (/Bomba de Magma/.test(h.n) && ef.dano) { ef.dano += c.kz; r.notas = r.notas.concat(c.kz + ' Brasa(s): +' + c.kz + ' de dano'); } else if (ef.dc) ef.dc = [ef.dc[0], ef.dc[1] + c.kz]; }
     const bonusDn = mod(c, 'dn');
@@ -9275,7 +9275,7 @@ body.mn-calmo .cp-po{display:none}
       if (m.sup) extras.push({ k: 'apice', on: true, txt: '🎶 Compassos passam a 9: Estágio Apogeu' });
       else if (!pOff(c, 'Mantendo o Ritmo')) { const novo = rec(c, 'Compassos') + 1, ant = estR(c), dep = Math.min(3, Math.floor(Math.min(9, novo) / 3)); extras.push({ k: 'compasso', v: 1, on: true, txt: '🎶 +1 Compasso (' + Math.min(9, novo) + '/9)' + (dep > ant ? ' → sobe para ' + ESTAGIOS[dep] : '') }); }
     }
-    if (kP(c) === 'reator' && (h.n === 'Fissão Descontrolada') && rec(c, 'Cargas')) extras.push({ k: 'gastaCargas', v: rec(c, 'Cargas'), on: true, txt: '⚛️ consumir ' + rec(c, 'Cargas') + ' Carga(s)' });
+    if (kP(c) === 'reator' && (h.n === 'Fissão Descontrolada') && (rec(c, 'Cargas') - (pagarCargas && rec(c, 'Cargas') >= 2 ? 2 : 0)) > 0) { const cg = (rec(c, 'Cargas') - (pagarCargas && rec(c, 'Cargas') >= 2 ? 2 : 0)); extras.push({ k: 'gastaCargas', v: cg, on: true, txt: '⚛️ consumir ' + cg + ' Carga(s)' + (cg < rec(c, 'Cargas') ? ' (e mais 2 para pagar a Suprema)' : '') }); }
     if (kP(c) === 'reator' && h.n === 'Blindagem Nuclear' && r.ops && r.ops[r.opSel[0]].cargas) {
       const q = r.ops[r.opSel[0]].cargas;
       extras.push({ k: 'gastaCargas', v: q, on: true, txt: '⚛️ consumir ' + q + ' Carga(s)' });
