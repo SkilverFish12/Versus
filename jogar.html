@@ -9181,6 +9181,15 @@ body.mn-calmo .cp-po{display:none}
           ITENS.forEach((n, k) => l.ef.push(Object.assign(supFx('🎒 recebe ' + n + ' (' + ITEM_TXT[n] + ')', (x, msg) => { if (x.item) return; setItem(x, n); msg.push(CH[x.k].nome + ' recebeu ' + n); }, k === 0), { esc: true, grp: 'item' }))); });
         r.notas = r.notas.concat('Marque um Item por personagem');
         break;
+      case 'Contraprova': case 'Contra Fatos Não Há Argumentos': {
+        const sup = h.n !== 'Contraprova';
+        linhasR.forEach(l => { const en = ini(l); if (en && l.ok === false && !sup) return;
+          const forte = sup && (!en || l.ok !== false), tipo = (en ? 'mal' : 'bem') + (forte ? '2' : ''), n = !sup && r.aprim ? 2 : 1;
+          const qd = forte ? (en ? ' em todo teste' : ' em cada teste') + ' por 2 rodadas' : n > 1 ? ' nos 2 próximos testes' : ' no próximo teste';
+          const txt = (en ? 'rerrola os dados que passaram da Defesa' : 'pode rerrolar 1 dado que não passou') + qd;
+          fx(l, '🔮 ' + txt + (forte ? '' : ' (até o início do próximo turno de ' + nm + ')'), x => { for (let q = 0; q < n; q++) novoEf(x, { nome: h.n + ': ' + (en ? 'rerrolar acertos' : 'rerrolar 1 falha') + (n > 1 ? ' (' + (q + 1) + 'º teste)' : ''), autor: nm, faz: txt,
+            acaba: forte ? 'no fim da rodada ' + (S.rodada + 1) : 'no próximo teste ou no início do próximo turno de ' + nm, exp: forte ? { t: 'rod', ate: S.rodada + 1 } : { t: 'ini', ref: cref }, mods: { cp: tipo } }); }); });
+        break; }
       case 'Venda Casada': {
         const v = r.aprim ? 7 : 5;
         linhasR.forEach(l => { if (!ini(l)) return; l.ef = []; if (!l.ok) return;
@@ -9345,7 +9354,7 @@ body.mn-calmo .cp-po{display:none}
     });
     if (kP(c) === 'oliva' && !pOff(c, 'O X Marca o Lugar') && h.x >= 0) linhasR.forEach(l => { if (l.alvo[0] === aj) return; const dm = /Defesa (\d+)/.exec(l.txt || ''); if (dm && r.dados.filter(x => x >= +dm[1]).length >= 2) l.ef.push(supFx('O X Marca o Lugar: −1 dado contra Azeitona e −1 na Defesa contra ela', t => marcarX(c, t))); });
     if (G2.includes(h.base || h.n)) { const g2 = h.base || h.n; if (c.ofGratis === g2) extras.push(supFx('2ª peça (sem custo)', () => { c.ofGratis = false; })); else if (r.aprim) extras.push(supFx('Medidor: faça a 2ª (toque de novo em ' + (g2 === 'Oficina de Campo' ? 'Barricada, Torreta ou Escudo de Aço' : g2) + ', sem custo)', () => { c.ofGratis = g2; })); }
-    if (m.sup || ['Transmitindo Conhecimento', 'Contendo o Mal', 'Armadilha de Caça', 'Sumir no Mato', 'Sobrecarga', 'Domínio do Vento', 'Forma Líquida', 'Investida Alada', 'Arrasto Telecinético', 'Elo de Sangue', 'Toque Sanguessuga', 'Absolvição', 'Custódia', 'Amor Cego', 'Amor à Primeira Vista', 'Sessão Rápida', 'Tinta Gêmea', 'Relâmpago em Linha', 'Os Olhos da Morte', 'Corrente', 'Transmutação', 'Escudo de Aço', 'Barricada', 'Torreta', 'Impacto Calculado', 'Vácuo Pessoal', 'Ancorado', 'Punho Incandescente', 'Onda Congelante', 'Muralha Térmica', 'Compressão Atômica', 'Aparato de Neodímio', 'Polo Magnético', 'Atração Forçada', 'Ascensão', 'Domínio Gravitacional', 'Borrão', 'Ignição', 'Marca da Brasa', 'Tratamento de Emergência', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto', 'Retrato Vivo', 'Bote', 'Nanobots', 'Campo de Força', 'Penitência', 'Garra Longa', 'Execução Silenciosa', 'Extração Vital', 'Parte da Assimilação', 'Par de Dança', 'Bloqueio Mental', 'Pensamento Intrusivo', 'Pista de Dança', 'Passo de Combate', 'Dreno de Energia', 'Velocidade Impossível', 'Corte Geométrico', 'Amarração', 'Arpéu de Pulso', 'Rede Elétrica', 'Sono Instantâneo', 'Véu de Ilusões', 'Acelerando Movimento', 'Reverter o Tempo', 'Marca Temporal'].concat(NOV6).includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
+    if (m.sup || ['Transmitindo Conhecimento', 'Contendo o Mal', 'Armadilha de Caça', 'Sumir no Mato', 'Sobrecarga', 'Domínio do Vento', 'Forma Líquida', 'Investida Alada', 'Arrasto Telecinético', 'Elo de Sangue', 'Toque Sanguessuga', 'Absolvição', 'Custódia', 'Amor Cego', 'Amor à Primeira Vista', 'Sessão Rápida', 'Tinta Gêmea', 'Relâmpago em Linha', 'Os Olhos da Morte', 'Corrente', 'Transmutação', 'Escudo de Aço', 'Barricada', 'Torreta', 'Impacto Calculado', 'Vácuo Pessoal', 'Ancorado', 'Punho Incandescente', 'Onda Congelante', 'Muralha Térmica', 'Compressão Atômica', 'Aparato de Neodímio', 'Polo Magnético', 'Atração Forçada', 'Ascensão', 'Domínio Gravitacional', 'Borrão', 'Ignição', 'Marca da Brasa', 'Tratamento de Emergência', 'Pó de Escamas', 'Enraizamento', 'Transferência de Seiva', 'Marca Titânica', 'Fenda Espacial', 'Salto no Espaço', 'Cada Um no Seu Quadrado!', 'Relâmpago', 'Passo do Trovão', 'Nuvem Carregada', 'Risada Agonizante', 'Radiação Corporal', 'Fechar Nele!', 'Miasma', 'Pincelada', 'Engolido pelo Breu', 'Puxada pela Fresta', 'Fechar a Sombra', 'Golpe Flutuante', 'Possessão', 'Instinto', 'Retrato Vivo', 'Bote', 'Nanobots', 'Campo de Força', 'Penitência', 'Garra Longa', 'Execução Silenciosa', 'Extração Vital', 'Parte da Assimilação', 'Par de Dança', 'Bloqueio Mental', 'Pensamento Intrusivo', 'Pista de Dança', 'Passo de Combate', 'Dreno de Energia', 'Velocidade Impossível', 'Corte Geométrico', 'Amarração', 'Arpéu de Pulso', 'Rede Elétrica', 'Sono Instantâneo', 'Véu de Ilusões', 'Acelerando Movimento', 'Reverter o Tempo', 'Marca Temporal', 'Contraprova'].concat(NOV6).includes(h.n)) ajustaSup(h, r, c, ch, aj, alvos, linhasR, extras, bonusDn);
     if (m.droneDe) { const xd = S.times[m.droneDe[0]][m.droneDe[1]]; r.notas = (r.notas || []).concat('🛸 O Drone saiu de ' + CH[xd.k].nome + ' e virou Interceptor Tático'); extras.push(supFx('🛸 ' + CH[xd.k].nome + ' perde o efeito do Drone', () => { tirarEfs(xd, e => e.autor === CH.mira.nome); c.droneT = 'k' + (S.tk || 0); })); }
     const alvo1 = alvos.length === 1 && alvos[0][0] !== aj ? S.times[alvos[0][0]][alvos[0][1]] : null;
     if (h.n === 'Execução Silenciosa' && r.aprim && alvo1 && c.pos && alvo1.pos && dist(c.pos, alvo1.pos) > 1 && !pre.some(p => p.k === 'aprox')) pre.push({ k: 'aprox', v: alvos[0], on: true, txt: ch.nome + ' avança até ficar adjacente a ' + CH[alvo1.k].nome + ' (antes do teste)' });
@@ -9480,11 +9489,11 @@ body.mn-calmo .cp-po{display:none}
         }
         if (l.ok === false && kP(t) === 'axioma' && !pOff(t, 'Mentira Tem Perna Curta') && !t.elim && r.ataque && refDe(t)[0] !== refDe(c)[0] && !c.elim) {
           c.df = clamp(c.df - 1, -99, 99);
-          novoEf(c, { nome: 'Mentira Tem Perna Curta', autor: 'Axioma', faz: '−1 na Defesa', acaba: 'no início do próximo turno de Axioma', exp: { t: 'ini', ref: refDe(t) }, mods: { df: -1 } });
+          novoEf(c, { nome: 'Mentira Tem Perna Curta', autor: 'Axioma', faz: '−1 na Defesa', acaba: 'no início do próximo turno de ' + CH[c.k].nome, exp: { t: 'ini', ref: refDe(c) }, mods: { df: -1 } });
           const qa = sofrerDano(c, 2, { psi: true });
           msg.push(CH[c.k].nome + ' errou Axioma: −1 na Defesa e −' + qa.real + ' PV (Dano Psíquico)');
         }
-        if (!t.elim && (r.nome === 'Contraprova' || r.nome === 'Contra Fatos Não Há Argumentos')) {
+        if (false) { // Contraprova: agora criada pela linha 🔮 do quadro (aplicar_1120m)
           const ini = timeDe(t) !== aj, sup = r.nome !== 'Contraprova';
           if (!ini || l.ok !== false || sup) {
             const forte = sup && (!ini || l.ok !== false);
