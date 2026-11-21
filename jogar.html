@@ -6457,6 +6457,7 @@ body.mn-calmo .cp-po{display:none}
     for (let k = 0; k < n; k++) {
       const frente = fila[fila.length - 1];
       let prox = viz(frente.pos, di);
+      if (opt && opt.paraAli && prox && ocupante(prox)) { const [oj, oi] = ocupante(prox), o = S.times[oj][oi]; if (o !== t) { out.push(CH[frente.k].nome + ' colidiu com ' + CH[o.k].nome + ' e parou'); break; } }
       while (prox && ocupante(prox)) {
         const [oj, oi] = ocupante(prox), o = S.times[oj][oi];
         if (fila.includes(o)) break;
@@ -7827,7 +7828,7 @@ body.mn-calmo .cp-po{display:none}
     const e = {};
     const dn = /(?<![−+\-\d])(\d+) de dano(?! a menos)/.exec(base);
     if (dn && !/Dano Contínuo \d+ de dano/.test(txt) && !/causa(?:m)? [−-]/.test(base.slice(Math.max(0, dn.index - 12), dn.index))) e.dano = +dn[1];
-    if (apr) { const m = /\+(\d+) de dano/.exec(apr); if (m && e.dano) e.dano += +m[1]; const m2 = /Causa (\d+) de dano/.exec(apr); if (m2 && e.dano) e.dano = +m2[1]; }
+    if (apr) { const m = /\+(\d+) de dano/.exec(apr); if (m && e.dano) e.dano += +m[1]; const m2 = /Causa (\d+) de dano/.exec(apr); if (m2 && e.dano) e.dano = +m2[1]; const m3 = /^(\d+) de dano\.?$/.exec(apr.trim()); if (m3 && e.dano) e.dano = +m3[1]; }
     if (!e.dano) { const ps = /(\d+) de Dano Psíquico/.exec(base); if (ps) e.dano = +ps[1]; }
     if (/Dano Psíquico/.test(base)) e.psi = true;
     const dc = /Dano Contínuo (\d+) por (\d+)/.exec(txt); if (dc) e.dc = [+dc[1], +dc[2]];
@@ -7858,7 +7859,7 @@ body.mn-calmo .cp-po{display:none}
     if (/avança até ficar adjacente|vai até uma casa adjacente|até uma casa adjacente a ele|para ficar adjacente ao alvo/i.test(base)) e.aprox = true;
     if (/termina na casa onde o alvo estava/i.test(base)) e.ocupar = true;
     const col = /colidir[^.]*?(\d+) de dano/i.exec(base); if (col) e.colisao = +col[1];
-    const blq = /(?:bloqueado|Se bater)[^.]*?\+(\d+) de dano/i.exec(base); if (blq) e.bloqueio = +blq[1];
+    const blq = /(?:bloqueado|Se bater)[^.]*?\+(\d+) de dano/i.exec(base); if (blq) { e.bloqueio = +blq[1]; if (/para ali/i.test(blq[0])) e.paraAli = true; }
     return e;
   }
   // dano recebido: redução, escudo e recursos ligados a dano
@@ -9188,8 +9189,10 @@ body.mn-calmo .cp-po{display:none}
       case 'Saque':
         linhasR.forEach(l => { if (!ini(l) || !l.ok) return; const t = T(l.alvo), refs = (t.efs || []).filter(ehRef);
           const dono = () => !c.item ? c : S.times[aj].find(x => !x.elim && !x.item);
-          if (t.item) fx(l, '🎒 rouba o Item (' + t.item + ') e entrega a ' + (dono() ? nomeC(dono()) : 'ninguém (todos já têm Item)'), (x, msg) => { const dd = dono(); if (!x.item || !dd) return; const it = x.item; setItem(x, null); setItem(dd, it); msg.push(CH[dd.k].nome + ' ficou com ' + it); l.roubou = true; });
-          refs.forEach((e, k) => l.ef.push(supFx('rouba o Reforço ' + e.nome + ' e fica com ele', (x, msg) => { if (l.roubou) return; l.roubou = true; desfazerMods(x, e); x.efs = (x.efs || []).filter(z => z !== e); const cp = Object.assign({}, e, { id: undefined, autor: nm + ' (roubado)' }); delete cp.id; aplicarEf(c, cp); msg.push(nm + ' roubou ' + e.nome); }, !t.item && k === 0))); });
+          const colete = t.item === 'Colete';
+          if (colete) l.txt = (l.txt || '') + ' · o Colete dele é gasto neste golpe (−3 de dano) e não sobra Item para roubar';
+          if (t.item && !colete) fx(l, '🎒 rouba o Item (' + t.item + ') e entrega a ' + (dono() ? nomeC(dono()) : 'ninguém (todos já têm Item)'), (x, msg) => { const dd = dono(); if (!x.item || !dd) return; const it = x.item; setItem(x, null); setItem(dd, it); msg.push(CH[dd.k].nome + ' ficou com ' + it); l.roubou = true; });
+          refs.forEach((e, k) => l.ef.push(supFx('rouba o Reforço ' + e.nome + ' e fica com ele', (x, msg) => { if (l.roubou) return; l.roubou = true; desfazerMods(x, e); x.efs = (x.efs || []).filter(z => z !== e); const cp = Object.assign({}, e, { id: undefined, autor: nm + ' (roubado)' }); delete cp.id; aplicarEf(c, cp); msg.push(nm + ' roubou ' + e.nome); }, (!t.item || colete) && k === 0))); });
         break;
       case 'Mercadoria Proibida':
         linhasR.forEach(l => { l.ef = []; if (ini(l)) return; const t = T(l.alvo), pd = { DEFENSOR: 'Exoesqueleto', COMBATENTE: 'Lança-Chamas', APOIADOR: 'Adrenalina' }[CH[t.k].classe] || 'Adrenalina';
@@ -9556,7 +9559,7 @@ body.mn-calmo .cp-po{display:none}
       posEf.sort((a, b) => (b[1].k === 'empurra' ? dist(orig, b[0].pos) - dist(orig, a[0].pos) : dist(orig, a[0].pos) - dist(orig, b[0].pos)));
       posEf.forEach(([t, ef]) => {
         if (t.elim) return;
-        if (ef.k === 'empurra') msg.push(...empurrar(t, orig, ef.v, { colisao: (r.ef || {}).colisao, bloqueio: (r.ef || {}).bloqueio, time: aj }));
+        if (ef.k === 'empurra') msg.push(...empurrar(t, orig, ef.v, { colisao: (r.ef || {}).colisao, bloqueio: (r.ef || {}).bloqueio, paraAli: (r.ef || {}).paraAli, time: aj }));
         else msg.push(...puxar(t, (r.ef || {}).puxaAparato ? aparatoMaisProximo(t.pos) : c.pos, ef.v));
       });
       (r.extras || []).slice().sort((a, b) => (a.k === 'carona') - (b.k === 'carona')).forEach(ex => {
