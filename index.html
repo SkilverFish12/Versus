@@ -1519,6 +1519,16 @@
   .dd-dados i.cp-sai{position:relative; opacity:.55; animation:rola .45s ease-out both, cpSai .4s .6s both} .dd-dados i.cp-sai::after{content:''; position:absolute; left:-4px; right:-4px; top:50%; border-top:3px solid #e8000d; transform:rotate(-20deg)}
   .dd-dados i.cp-novo{outline:3px dashed #7a3ac8; outline-offset:2px}
   .cp-vem{animation:cpVem .3s .75s ease-out both} @keyframes cpVem{from{opacity:0} to{opacity:1}}
+  .ilu-box{border:3px dashed #7a3ac8; background:#f3ecfb; padding:8px 10px; margin:10px 0 6px; text-align:center}
+  .ilu-box b{display:block; font:400 17px/1.1 Bangers,cursive; letter-spacing:1px; color:#5a2a98}
+  .ilu-box small{display:block; font-size:12.5px; color:#333; margin-top:3px}
+  .ilu-box .dd-dados{margin:8px 0 2px}
+  .dd-dados i.ilu-d{border-color:#5a2a98; box-shadow:3px 3px 0 #5a2a98; width:54px; height:54px; font-size:30px}
+  .dd-dados i.ilu-d.f{background:#e8000d; color:#fff} .dd-dados i.ilu-d.s{background:#c9f2cf; color:#1d7a2e}
+  .ilu-res{font:400 16px/1.1 Bangers,cursive; letter-spacing:1px; margin:6px 0 0; animation:cpVem .3s .55s ease-out both}
+  .ilu-box.falha .ilu-res{color:#e8000d} .ilu-box.segue .ilu-res{color:#1d7a2e}
+  .ilu-vem{animation:cpVem .3s .85s ease-out both}
+  .dd-dados.ilu-off i{opacity:.35; filter:grayscale(1)}
   @keyframes cpSai{from{opacity:1} to{opacity:.45}}
   @keyframes rola{from{transform:rotate(-200deg) scale(.3); opacity:0}to{transform:none; opacity:1}}
   .dd-veredito{text-align:center; font-family:'Bangers',cursive; font-size:28px; letter-spacing:1px; margin-top:12px; line-height:1.1}
@@ -9616,11 +9626,21 @@ body.mn-calmo .cp-po{display:none}
   const sozinho2 = t => !!t.pos && !S.times[timeDe(t)].some(x => x !== t && !x.elim && x.pos && dP(t.pos, x) <= 2);
   const fumacaEntre = (a, b) => { const L = linhaHex(a, b).filter(id => id !== a && id !== b); return (S.est || []).some(z => z.tipo === 'Fumaça' && L.includes(z.cell)); };
   const iluDe = c => (S.est || []).find(z => z.tipo === 'Ilusão' && z.hab === 'Algo Irreal' && z.iluAlvo === refDe(c) && z.cell);
+  function iluPre(r){
+    if (!r.ataque && !r.basico) return ''; const c = r.atkRef ? S.times[r.atkRef[0]][r.atkRef[1]] : ativoC(); const z = c && iluDe(c); if (!z) return '';
+    const auto = z.aprim && z.t1 === S.tk;
+    return '<div class="ilu-box pre"><b>🃏 ' + esc(CH[c.k].nome) + ' está vendo a Ilusão do Golpista</b><small>' + (auto ? 'Primeiro turno depois do Algo Irreal aprimorado: este ataque falha.' : 'Junto com o ataque rola 1 dado da Ilusão: com 1 a 5 o ataque falha, com 6 a 10 segue.') + '</small></div>';
+  }
+  function iluHtml(I){
+    if (!I) return '';
+    if (I.auto) return '<div class="ilu-box falha"><b>🃏 ILUSÃO DO GOLPISTA</b><small>' + esc(I.quem) + ' ataca uma ilusão no primeiro turno (aprimorado)</small><p class="ilu-res">❌ o ataque falha</p></div>';
+    return '<div class="ilu-box ' + (I.falha ? 'falha' : 'segue') + '"><b>🃏 ILUSÃO DO GOLPISTA</b><small>' + esc(I.quem) + ' rola 1 dado · com 1 a 5 o ataque falha</small><div class="dd-dados"><i class="ilu-d ' + (I.falha ? 'f' : 's') + '">' + I.dv + '</i></div><p class="ilu-res">' + (I.falha ? '❌ ' + I.dv + ': era só uma ilusão, o ataque falha' : '✅ ' + I.dv + ': o ataque segue') + '</p></div>';
+  }
   function ilusaoTeste(r){
     if (!r.ataque && !r.basico) return; const c = r.atkRef ? S.times[r.atkRef[0]][r.atkRef[1]] : ativoC(); if (!c) return; const z = iluDe(c); if (!z) return;
     const auto = z.aprim && z.t1 === S.tk, dv = auto ? null : d(10), falha = auto || dv <= 5;
-    reacApos = reacApos || { notas: [], defl: null }; reacApos.notas.push('🃏 Ilusão do Golpista: ' + (auto ? 'primeiro turno, o ataque falha' : 'dado ' + dv + (falha ? ' (1 a 5): o ataque falha' : ': o ataque segue')));
-    if (falha) { reacApos.falha = true; reacApos.aj = timeDe(c); }
+    reacApos = reacApos || { notas: [], defl: null }; reacApos.ilu = { auto, dv, falha, quem: CH[c.k].nome };
+    if (falha) { reacApos.falha = true; reacApos.aj = timeDe(c); reacApos.falhaTxt = '🃏 o ataque falhou (Ilusão' + (auto ? ', primeiro turno' : ': dado ' + dv) + ')'; }
   }
   const habsDe = c => habsBig(CH[kP(c)].habs);
   let simLista = [];
@@ -11163,19 +11183,19 @@ body.mn-calmo .cp-po{display:none}
     if (r.pend && !r.rolado) {
       const opsP = r.ops ? '<div class="rs-ops"><b>' + (r.multi ? (r.nome === 'Armadilha de Caça' ? 'ESCOLHA AS 2 ARMADILHAS (1 marcada = duas iguais)' : 'ESCOLHA OS EFEITOS ANTES DE ROLAR (aprimorado: pode marcar os dois)') : 'ESCOLHA O EFEITO ANTES DE ROLAR') + '</b>' + r.ops.map((o, i) => '<button data-op="' + i + '" class="' + (r.opSel.includes(i) ? 'on' : '') + '"><strong>' + o.nome + '</strong><small>' + o.txt + '</small></button>').join('') + '</div>' : '';
       $('#mAcaoCaixa').innerHTML = '<div class="modal-h"><h3>' + r.titulo + '</h3>' + (r.rolado ? '' : '<button class="modal-x" data-fecha title="Fechar sem usar">✕</button>') + '</div><div class="dd-corpo"><p class="rs-sub">' + r.sub + '</p>' + duelo(r) +
-        (r.notas.length ? '<p class="rs-nota">' + r.notas.join(' · ') + '</p>' : '') + opsP + reacHtml(r) +
+        (r.notas.length ? '<p class="rs-nota">' + r.notas.join(' · ') + '</p>' : '') + iluPre(r) + opsP + reacHtml(r) +
         (r.desc ? '<details class="rs-desc"><summary>O que a ficha diz</summary><p>' + r.desc + '</p></details>' : '') +
         '<p class="rs-nota">' + (r.ops ? 'Escolha o efeito e role os dados.' : 'Confira e role os dados.') + ' Fechar agora não gasta nada.</p>' +
-        '<div class="rd-rodape" style="padding:10px 0 0"><button class="btn-amarelo" id="rsRolar">🎲 ROLAR ' + (r.sub.match(/(\d+) dados?/) || ['', ''])[1] + ' DADO' + (/(^|\D)1 dado\b/.test(r.sub) ? '' : 'S') + '</button></div></div>';
+        '<div class="rd-rodape" style="padding:10px 0 0"><button class="btn-amarelo" id="rsRolar">🎲 ROLAR ' + (r.sub.match(/(\d+) dados?/) || ['', ''])[1] + ' DADO' + (/(^|\D)1 dado\b/.test(r.sub) ? '' : 'S') + (/rola 1 dado da Ilusão/.test(iluPre(r)) ? ' + 🃏 1' : '') + '</button></div></div>';
       if ($('#mAcao').hidden) abrir('mAcao');
       return;
     }
     if (r.dados && r.dados.length) rolouEm = Math.max(rolouEm, hist.length);
     const defL = r.def !== null && r.def !== undefined ? r.def : (() => { const ds = (r.linhas || []).map(l => +((/Defesa (\d+)/.exec(l.txt || '') || [])[1] || 0)).filter(Boolean); return ds.length ? Math.min(...ds) : null; })();
     if (!r.cp && cpUlt && r.dados.length && cpUlt.depois.join() === r.dados.join()) r.cp = cpUlt; cpUlt = null;
-    const cpv = r.cp, dfC = defL !== null ? defL : cpv ? cpv.def : null;
-    const dadosH = r.dados.length ? (cpv ? '<p class="rs-etp2">🔮 CONTRAPROVA · PRIMEIRA ROLAGEM</p><div class="dd-dados dd-cp0">' + cpv.antes.map((x, n) => '<i style="animation-delay:' + n * 70 + 'ms" class="' + (dfC !== null && x >= dfC ? 'hit' : 'miss') + (cpv.idx.includes(n) ? ' cp-sai' : '') + '">' + x + '</i>').join('') + '</div><p class="rs-etp2 cp-vem">🔁 ' + (cpv.mal ? 'acertos rerrolados' : '1 dado que não passou rerrolado') + ' · vale este</p>' : '') +
-      '<div class="dd-dados">' + r.dados.map((x, n) => '<i style="animation-delay:' + (cpv ? (cpv.idx.includes(n) ? 900 + n * 120 : 0) : n * 70) + 'ms" class="' + (defL !== null ? (x >= defL ? 'hit' : 'miss') : (x === r.max ? 'hit' : 'miss')) + (cpv && cpv.idx.includes(n) ? ' cp-novo' : '') + '">' + x + '</i>').join('') + '</div>' + (r.dadosX && r.dadosX.length ? '<p class="rs-etp2">2ª ETAPA · só contra ' + esc(r.xNomes || '') + '</p><div class="dd-dados dd-x">' + r.dadosX.map(x => '<i class="' + (r.xDef != null && x >= r.xDef ? 'hit' : 'miss') + '">' + x + '</i>').join('') + '</div>' : '') : '';
+    const cpv = r.cp, dfC = defL !== null ? defL : cpv ? cpv.def : null, iluX = r.reacT && r.reacT.ilu;
+    const dadosH = r.dados.length ? iluHtml(iluX) + (iluX ? '<p class="rs-etp2 ilu-vem">🎲 DADOS DO ATAQUE' + (iluX.falha ? ' · não valem' : '') + '</p>' : '') + (cpv ? '<p class="rs-etp2">🔮 CONTRAPROVA · PRIMEIRA ROLAGEM</p><div class="dd-dados dd-cp0">' + cpv.antes.map((x, n) => '<i style="animation-delay:' + n * 70 + 'ms" class="' + (dfC !== null && x >= dfC ? 'hit' : 'miss') + (cpv.idx.includes(n) ? ' cp-sai' : '') + '">' + x + '</i>').join('') + '</div><p class="rs-etp2 cp-vem">🔁 ' + (cpv.mal ? 'acertos rerrolados' : '1 dado que não passou rerrolado') + ' · vale este</p>' : '') +
+      '<div class="dd-dados' + (iluX && iluX.falha ? ' ilu-off' : '') + '">' + r.dados.map((x, n) => '<i style="animation-delay:' + ((iluX ? 1000 : 0) + (cpv ? (cpv.idx.includes(n) ? 900 + n * 120 : 0) : n * 70)) + 'ms" class="' + (defL !== null ? (x >= defL ? 'hit' : 'miss') : (x === r.max ? 'hit' : 'miss')) + (cpv && cpv.idx.includes(n) ? ' cp-novo' : '') + '">' + x + '</i>').join('') + '</div>' + (r.dadosX && r.dadosX.length ? '<p class="rs-etp2">2ª ETAPA · só contra ' + esc(r.xNomes || '') + '</p><div class="dd-dados dd-x">' + r.dadosX.map(x => '<i class="' + (r.xDef != null && x >= r.xDef ? 'hit' : 'miss') + '">' + x + '</i>').join('') + '</div>' : '') : '';
     const trav = !!(r.pend && r.rolado);
     const opsH = r.ops ? '<div class="rs-ops' + (trav ? ' trav' : '') + '"><b>' + (trav ? 'EFEITO ESCOLHIDO' : r.multi ? (r.nome === 'Armadilha de Caça' ? 'ARMADILHAS (1ª na casa tocada, 2ª depois)' : 'EFEITOS (aprimorado: pode marcar os dois)') : 'ESCOLHA O EFEITO') + '</b>' + r.ops.map((o, i) => trav && !r.opSel.includes(i) ? '' : '<button ' + (trav ? 'disabled ' : '') + 'data-op="' + i + '" class="' + (r.opSel.includes(i) ? 'on' : '') + '"><strong>' + o.nome + '</strong><small>' + o.txt + '</small></button>').join('') + '</div>' : '';
     let lin = r.linhas.map((l, li) => {
