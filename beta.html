@@ -6335,7 +6335,7 @@ body.mn-calmo .cp-po{display:none}
     if (t.carona) t.carona = null;
     if (kP(t) === 'agentecaos' && !pOff(t, 'Pele de Rocha')) n = Math.min(n, 1);
     const di = opt && opt.di !== undefined ? opt.di : dirPara(origem, t.pos);
-    const fila = [t]; t._armStop = false;
+    const fila = [t], pos0 = t.pos; t._armStop = false;
     for (let k = 0; k < n; k++) {
       const frente = fila[fila.length - 1];
       let prox = viz(frente.pos, di);
@@ -6353,8 +6353,7 @@ body.mn-calmo .cp-po{display:none}
       }
       if (!prox) {
         const resto = n - k, q = Math.min(4, resto * 2);
-        fila.forEach(x => dano(x, q, out));
-        out.push('queda da arena: ' + q + ' de dano');
+        fila.forEach(x => { if (x.elim) return; const qq = sofrerDano(x, q, {}); out.push(CH[x.k].nome + ' sofreu a queda da arena: −' + qq.real + ' PV'); });
         break;
       }
       if (obstaculo(prox)) { out.push('parou num obstáculo'); if (opt && opt.bloqueio) dano(t, opt.bloqueio, out); if (S.cen === 'ferrovelho' && sucataEm(prox)) { out.push('bateu na Sucata'); dano(t, 2, out); } break; }
@@ -6363,8 +6362,8 @@ body.mn-calmo .cp-po{display:none}
       if (S.cen === 'atelie' && fila.some(x => FIOS.includes(x.pos))) { out.push('parou num Fio'); break; }
     }
     if (opt && opt.bloqueio && out.some(x => /colidiu/.test(x))) dano(t, opt.bloqueio, out);
-    out.unshift(CH[t.k].nome + ' foi para ' + t.pos);
-    if (out.some(x => RX_EV.test(x))) evento('Empurrão em ' + CH[t.k].nome + ': ' + out.slice(1).join(', '));
+    const andou = t.pos !== pos0; if (andou) out.unshift(CH[t.k].nome + ' foi para ' + t.pos);
+    if (out.some(x => RX_EV.test(x))) evento(out.slice(andou ? 1 : 0).join(', '));
     return out;
   }
   // puxar ou arrastar em direção a um ponto, até ficar adjacente
@@ -6410,7 +6409,7 @@ body.mn-calmo .cp-po{display:none}
     if (dist(c.pos, t.pos) > 1) return;
     const di = dirPara(c.pos, t.pos); let blq = false;
     for (let k = 0; k < 4; k++) { const nx = viz(t.pos, di);
-      if (!nx) { const q = Math.min(4, (4 - k) * 2); dano(t, q, msg); msg.push('queda da arena: ' + q + ' de dano'); break; }
+      if (!nx) { const q = Math.min(4, (4 - k) * 2); if (!t.elim) { const qq = sofrerDano(t, q, {}); msg.push(nm + ' sofreu a queda da arena: −' + qq.real + ' PV'); } break; }
       const oc = ocupante(nx); if (oc || obstaculo(nx) || bloqueada(nx)) { blq = true; msg.push(nm + ' bateu ' + (oc ? 'em ' + CH[S.times[oc[0]][oc[1]].k].nome : 'num obstáculo')); break; }
       moverPeca(t, nx); }
     msg.push(nm + ' foi para ' + t.pos);
