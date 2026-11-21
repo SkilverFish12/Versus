@@ -9055,8 +9055,8 @@ body.mn-calmo .cp-po{display:none}
       case 'Entrega Expressa':
         linhasR.forEach(l => { if (ini(l)) { l.ef = []; return; } const t = T(l.alvo); l.ef = [];
           if (t.item) { l.txt += ' · já carrega ' + t.item; return; }
-          ITENS.forEach((n, k) => l.ef.push(supFx('🎒 recebe ' + n + ' (' + ITEM_TXT[n] + ')', (x, msg) => { if (x.item) return; setItem(x, n); msg.push(CH[x.k].nome + ' recebeu ' + n); }, k === 0))); });
-        r.notas = r.notas.concat('Marque um Item por personagem (vale o primeiro marcado)');
+          ITENS.forEach((n, k) => l.ef.push(Object.assign(supFx('🎒 recebe ' + n + ' (' + ITEM_TXT[n] + ')', (x, msg) => { if (x.item) return; setItem(x, n); msg.push(CH[x.k].nome + ' recebeu ' + n); }, k === 0), { esc: true, grp: 'item' }))); });
+        r.notas = r.notas.concat('Marque um Item por personagem');
         break;
       case 'Venda Casada': {
         const v = r.aprim ? 7 : 5;
@@ -9069,13 +9069,13 @@ body.mn-calmo .cp-po{display:none}
           const colete = t.item === 'Colete';
           if (colete) l.txt = (l.txt || '') + ' · o Colete dele é gasto neste golpe (−3 de dano) e não sobra Item para roubar';
           if (t.item && !colete) fx(l, '🎒 rouba o Item (' + t.item + ') e entrega a ' + (dono() ? nomeC(dono()) : 'ninguém (todos já têm Item)'), (x, msg) => { const dd = dono(); if (!x.item || !dd) return; const it = x.item; setItem(x, null); setItem(dd, it); msg.push(CH[dd.k].nome + ' ficou com ' + it); l.roubou = true; });
-          refs.forEach((e, k) => l.ef.push(supFx('rouba o Reforço ' + e.nome + ' e fica com ele', (x, msg) => { if (l.roubou) return; l.roubou = true; desfazerMods(x, e); x.efs = (x.efs || []).filter(z => z !== e); const cp = Object.assign({}, e, { id: undefined, autor: nm + ' (roubado)' }); delete cp.id; aplicarEf(c, cp); msg.push(nm + ' roubou ' + e.nome); }, (!t.item || colete) && k === 0))); });
+          refs.forEach((e, k) => l.ef.push(Object.assign(supFx('rouba o Reforço ' + e.nome + ' e fica com ele', (x, msg) => { if (l.roubou) return; l.roubou = true; desfazerMods(x, e); x.efs = (x.efs || []).filter(z => z !== e); const cp = Object.assign({}, e, { id: undefined, autor: nm + ' (roubado)' }); delete cp.id; aplicarEf(c, cp); msg.push(nm + ' roubou ' + e.nome); }, (!t.item || colete) && k === 0), { esc: true, grp: 'ref' }))); });
         break;
       case 'Mercadoria Proibida':
         linhasR.forEach(l => { l.ef = []; if (ini(l)) return; const t = T(l.alvo), pd = { DEFENSOR: 'Exoesqueleto', COMBATENTE: 'Lança-Chamas', APOIADOR: 'Adrenalina' }[CH[t.k].classe] || 'Adrenalina';
-          CONTRAS.forEach(n => l.ef.push(supFx('☠️ Contrabando: ' + n + ' (' + CONTRA_TXT[n] + ')', (x, msg) => { if (l.deu) return; l.deu = true; setContra(x, n); msg.push(CH[x.k].nome + ' recebeu ' + n); }, n === pd)));
-          if (!t.item) ITENS.forEach(n => l.ef.push(supFx('🎒 Item: ' + n, (x, msg) => { if (x.item) return; setItem(x, n); msg.push(CH[x.k].nome + ' recebeu ' + n); }, n === 'Colete'))); });
-        r.notas = r.notas.concat('Marque um Contrabando por personagem (vale o primeiro marcado)');
+          CONTRAS.forEach(n => l.ef.push(Object.assign(supFx('☠️ Contrabando: ' + n + ' (' + CONTRA_TXT[n] + ')', (x, msg) => { if (l.deu) return; l.deu = true; setContra(x, n); msg.push(CH[x.k].nome + ' recebeu ' + n); }, n === pd), { esc: true, grp: 'contra' })));
+          if (!t.item) ITENS.forEach(n => l.ef.push(Object.assign(supFx('🎒 Item: ' + n, (x, msg) => { if (x.item) return; setItem(x, n); msg.push(CH[x.k].nome + ' recebeu ' + n); }, n === 'Colete'), { esc: true, grp: 'item' }))); });
+        r.notas = r.notas.concat('Marque um Contrabando e um Item por personagem');
         break;
       case 'Tentáculos do Abismo': {
         const nd = natDupla(c, h.n) ? 1 : 0;
