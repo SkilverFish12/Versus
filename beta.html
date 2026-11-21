@@ -1516,6 +1516,10 @@
   .dd-dados i.hit{background:var(--yellow); color:var(--red)}
   .dd-dados i.miss{background:#ddd; color:#888}
   .dd-dados i.max{background:var(--red); color:#fff}
+  .dd-dados i.cp-sai{position:relative; opacity:.55; animation:rola .45s ease-out both, cpSai .4s .6s both} .dd-dados i.cp-sai::after{content:''; position:absolute; left:-4px; right:-4px; top:50%; border-top:3px solid #e8000d; transform:rotate(-20deg)}
+  .dd-dados i.cp-novo{outline:3px dashed #7a3ac8; outline-offset:2px}
+  .cp-vem{animation:cpVem .3s .75s ease-out both} @keyframes cpVem{from{opacity:0} to{opacity:1}}
+  @keyframes cpSai{from{opacity:1} to{opacity:.45}}
   @keyframes rola{from{transform:rotate(-200deg) scale(.3); opacity:0}to{transform:none; opacity:1}}
   .dd-veredito{text-align:center; font-family:'Bangers',cursive; font-size:28px; letter-spacing:1px; margin-top:12px; line-height:1.1}
   .dd-veredito.bom{color:#1f8a3a} .dd-veredito.ruim{color:var(--red)}
@@ -7865,10 +7869,16 @@ body.mn-calmo .cp-po{display:none}
       rr.notas = rr.notas.concat('Na roda: ' + roda + (roda === 1 ? ' aliado' : ' aliados') + ' no Raio 2 → cura de ' + cu + ' PV (máximo 4)');
     }
   }
+  const POS_MODOS = ['estrutura', 'pincel', 'mover', 'teleporte', 'arremesso', 'empDir', 'troca', 'ceus', 'brasaLinha', 'copPasso'];
+  let ofPendG = null; const posPend = () => !!(filaPos.length || (modo && POS_MODOS.includes(modo.t)) || (ofPendG && !ofPendG.merged && ofPendG.c.ofGratis && S.ativo && ativoC() === ofPendG.c));
+  function depoisDePosicionar(fn, pre0){ setTimeout(() => { if (!posPend()) return fn(); if (pre0 && etpVista === pre0) { etpVista = null; render(); } const ve = () => { if (posPend()) return setTimeout(ve, 300); if (pre0) etpVista = pre0; fn(); }; ve(); }, 260); }
+  let cpUlt = null;
   function cpAplicar(c, v, def, notas){
-    const cp = cpDe(c);
+    const cp = cpDe(c), v0 = v.slice();
     if (cp.mal) { const k = v.filter(x => x >= def).length; if (k) { v = v.map(x => x >= def ? d(10) : x); notas.push('Contraprova: rerrolou ' + k + (k > 1 ? ' acertos' : ' acerto') + ' (' + v.join(', ') + ')'); } }
     if (cp.bem) { const ix = v.findIndex(x => x < def); if (ix >= 0) { v = v.slice(); v[ix] = d(10); notas.push('Contraprova: rerrolou 1 dado que não passou (' + v.join(', ') + ')'); } }
+    { const idx = v.map((x, n) => n).filter(n => v[n] !== v0[n] || (cp.mal && v0[n] >= def) || (cp.bem && n === v0.findIndex(x => x < def)));
+      cpUlt = idx.length ? { antes: v0, depois: v.slice(), idx, mal: !!cp.mal, def } : null; }
     return v;
   }
   function tirarBonusDef(t, msg){
@@ -9619,7 +9629,10 @@ body.mn-calmo .cp-po{display:none}
     }
     if (r.dados && r.dados.length) rolouEm = Math.max(rolouEm, hist.length);
     const defL = r.def !== null && r.def !== undefined ? r.def : (() => { const ds = (r.linhas || []).map(l => +((/Defesa (\d+)/.exec(l.txt || '') || [])[1] || 0)).filter(Boolean); return ds.length ? Math.min(...ds) : null; })();
-    const dadosH = r.dados.length ? '<div class="dd-dados">' + r.dados.map((x, n) => '<i style="animation-delay:' + n * 70 + 'ms" class="' + (defL !== null ? (x >= defL ? 'hit' : 'miss') : (x === r.max ? 'hit' : 'miss')) + '">' + x + '</i>').join('') + '</div>' + (r.dadosX && r.dadosX.length ? '<p class="rs-etp2">2ª ETAPA · só contra ' + esc(r.xNomes || '') + '</p><div class="dd-dados dd-x">' + r.dadosX.map(x => '<i class="' + (r.xDef != null && x >= r.xDef ? 'hit' : 'miss') + '">' + x + '</i>').join('') + '</div>' : '') : '';
+    if (!r.cp && cpUlt && r.dados.length && cpUlt.depois.join() === r.dados.join()) r.cp = cpUlt; cpUlt = null;
+    const cpv = r.cp, dfC = defL !== null ? defL : cpv ? cpv.def : null;
+    const dadosH = r.dados.length ? (cpv ? '<p class="rs-etp2">🔮 CONTRAPROVA · PRIMEIRA ROLAGEM</p><div class="dd-dados dd-cp0">' + cpv.antes.map((x, n) => '<i style="animation-delay:' + n * 70 + 'ms" class="' + (dfC !== null && x >= dfC ? 'hit' : 'miss') + (cpv.idx.includes(n) ? ' cp-sai' : '') + '">' + x + '</i>').join('') + '</div><p class="rs-etp2 cp-vem">🔁 ' + (cpv.mal ? 'acertos rerrolados' : '1 dado que não passou rerrolado') + ' · vale este</p>' : '') +
+      '<div class="dd-dados">' + r.dados.map((x, n) => '<i style="animation-delay:' + (cpv ? (cpv.idx.includes(n) ? 900 + n * 120 : 0) : n * 70) + 'ms" class="' + (defL !== null ? (x >= defL ? 'hit' : 'miss') : (x === r.max ? 'hit' : 'miss')) + (cpv && cpv.idx.includes(n) ? ' cp-novo' : '') + '">' + x + '</i>').join('') + '</div>' + (r.dadosX && r.dadosX.length ? '<p class="rs-etp2">2ª ETAPA · só contra ' + esc(r.xNomes || '') + '</p><div class="dd-dados dd-x">' + r.dadosX.map(x => '<i class="' + (r.xDef != null && x >= r.xDef ? 'hit' : 'miss') + '">' + x + '</i>').join('') + '</div>' : '') : '';
     const trav = !!(r.pend && r.rolado);
     const opsH = r.ops ? '<div class="rs-ops' + (trav ? ' trav' : '') + '"><b>' + (trav ? 'EFEITO ESCOLHIDO' : r.multi ? (r.nome === 'Armadilha de Caça' ? 'ARMADILHAS (1ª na casa tocada, 2ª depois)' : 'EFEITOS (aprimorado: pode marcar os dois)') : 'ESCOLHA O EFEITO') + '</b>' + r.ops.map((o, i) => trav && !r.opSel.includes(i) ? '' : '<button ' + (trav ? 'disabled ' : '') + 'data-op="' + i + '" class="' + (r.opSel.includes(i) ? 'on' : '') + '"><strong>' + o.nome + '</strong><small>' + o.txt + '</small></button>').join('') + '</div>' : '';
     let lin = r.linhas.map((l, li) => {
@@ -9663,11 +9676,13 @@ body.mn-calmo .cp-po{display:none}
     fechar('mAcao');
     const r = res, c = r.atkRef ? S.times[r.atkRef[0]][r.atkRef[1]] : ativoC(), [aj] = r.atkRef || S.ativo;
     if (r.sup && c && window.VSFX && VSFX.sup) VSFX.sup(c, r.nome);
-    const msg = [], pre0 = ETP && ETP.prep ? ETP.prep() : null;
+    const msg = []; let pre0 = ETP && ETP.prep ? ETP.prep() : null;
+    if (ofPendG && !ofPendG.merged && ofPendG.c === c && c.ofGratis && r.h && G2.includes(r.h.base || r.h.n)) { const o = ofPendG; o.merged = true; ofPendG = null; msg.push(...o.msg); if (o.pre0) { pre0 = o.pre0; if (etpVista) etpVista = pre0; } }
     comRng(r, () => mudar(() => corpoAplicar(r, c, aj, msg), () => (r.nome ? (r.sup ? '★ ' : '✨ ') + CH[c.k].nome + ' usou ' + r.nome : '👊 ' + CH[c.k].nome + ' fez um Ataque Básico') + (msg.length ? ': ' + msg.join(', ') : '') + '.'));
-    if (ETP && ETP.on()) ETP.resultado(r, c, aj, msg, pre0);
+    const ofObj = (c && c.ofGratis && r.h && G2.includes(r.h.base || r.h.n)) ? (ofPendG = { c, msg, pre0 }) : null;
+    depoisDePosicionar(() => { if (ofObj && ofObj.merged) return; if (ofObj && ofPendG === ofObj) ofPendG = null; if (ETP && ETP.on()) ETP.resultado(r, c, aj, msg, pre0);
     else if (pre0) { etpVista = null; render(); }
-    else { msg.filter(x => RX_EV.test(x)).forEach(evento); if (r.sup) toast('★ ' + r.nome.toUpperCase() + ' ★', 2200); }
+    else { msg.filter(x => RX_EV.test(x)).forEach(evento); if (r.sup) toast('★ ' + r.nome.toUpperCase() + ' ★', 2200); } }, pre0);
     if (r.nome === 'Marca Titânica' && r.ops && r.opSel.some(i => r.ops[i].nome === 'Céus') && r.linhas[0] && r.linhas[0].ok) { const al = r.linhas[0].alvo, t = S.times[al[0]][al[1]]; if (!t.elim && t.pos) setTimeout(() => { iniciarModo({ t: 'ceus', alvo: al }); toast('☁️ Céus: toque na casa ao lado de ' + CH[t.k].nome + ' para a direção do empurrão', 3000); }, 60); }
     if (c.possQuer) setTimeout(() => iniciarPossessao(c), 60);
     if (r.brLinha && !c.elim && c.pos) setTimeout(() => { iniciarModo({ t: 'brasaLinha', n: r.brLinha }); toast('🔥 Brasa: toque numa casa ao lado de Kazan para a Linha 3', 3000); }, 70);
