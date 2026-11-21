@@ -7701,7 +7701,9 @@ body.mn-calmo .cp-po{display:none}
       if (modo) { if (x !== ativoC() && (x.robA || 'copas') !== rk && robCell(x, rk)) { if (!x.robVolta) x.robVolta = x.robA || 'copas'; robSwap(x, rk); salvar(); toast('🃏 ' + ROBN[rk] + ' é o robô afetado', 1600); } cliqueModo(robCell(x, rk), tj + ',' + ti); return; }
       selTok = [+tj, +ti]; estSel = null; mudar(() => { robSwap(x, rk); }, '🃏 Agora age ' + ROBN[rk] + '.'); return; }
     const t2 = e.target.closest('[data-tok2]');
-    if (modo && !b && t2) { const [tj, ti] = t2.dataset.tok2.split(',').map(Number); cliqueModo(S.times[tj][ti].pos2, t2.dataset.tok2); return; }
+    if (modo && !b && t2) { const [tj, ti] = t2.dataset.tok2.split(',').map(Number), x = S.times[tj][ti];
+      if (x !== ativoC() && x.pos2 && ['hab', 'basico', 'copiaAtk', 'atkEst'].includes(modo.t)) { if (x.eclVolta === undefined) x.eclVolta = x.irmao ? 1 : 0; [x.pos, x.pos2] = [x.pos2, x.pos]; x.irmao = x.irmao ? 0 : 1; salvar(); toast('🌑 Alvo: ' + IRM(x)[0] + ' (em ' + x.pos + ')', 1600); cliqueModo(x.pos, t2.dataset.tok2); return; }
+      cliqueModo(x.pos2, t2.dataset.tok2); return; }
     if (b && b.dataset.ecltroca !== undefined && selTok) { const c = S.times[selTok[0]][selTok[1]]; if (S.ativo && ativoC() === c && c.trocaT) { toast('🌑 A Troca é uma vez por turno', 2000); return; } mudar(() => { [c.pos, c.pos2] = [c.pos2, c.pos]; if (S.ativo && ativoC() === c) c.trocaT = true; }, '🌑 Breu e Fresta trocaram de lugar (Troca, sem ação' + (S.ativo && ativoC() === c ? ', 1x por turno' : '') + ').'); return; }
     if (b && b.dataset.eclborda && selTok) { const c = S.times[selTok[0]][selTok[1]], de = c.pos, para = b.dataset.eclborda; const at = S.ativo && ativoC() === c; if (at && restam(c) < 1) { toast('Sem ações para mover', 2000); return; } mudar(() => { c.pos = para; if (at) { c.gastas++; c.moveuT = true; } }, '🌑 ' + IRM(c)[0] + ' saiu pela borda em ' + de + ' e voltou em ' + para + (at ? ' (Mover, 1 ação)' : '') + '.'); return; }
     if (t2 && !b) { const [tj, ti] = t2.dataset.tok2.split(',').map(Number); const c = S.times[tj][ti]; selTok = [tj, ti]; estSel = null; mudar(() => { [c.pos, c.pos2] = [c.pos2, c.pos]; c.irmao = c.irmao ? 0 : 1; }, '🌑 Agora age ' + IRM(c)[1] + '.'); return; }
@@ -7797,6 +7799,7 @@ body.mn-calmo .cp-po{display:none}
     if (c && c.semReal) semVolta(c);
     if (c && fantasmaAsp(c)) evento('👻 Aspecto Fantasmagórico: ' + CH[c.k].nome + ' fica Intangível até o próximo turno dele (+1 na Defesa)');
     mudar(() => {
+      S.times.forEach(tm => tm.forEach(x => { if (x.eclVolta !== undefined) { if (!x.elim && x.pos2 && (x.irmao ? 1 : 0) !== x.eclVolta) { [x.pos, x.pos2] = [x.pos2, x.pos]; x.irmao = x.eclVolta; } delete x.eclVolta; } }));
       S.times.forEach(tm => tm.forEach(x => { if (kP(x) === 'manilhas' && x.robVolta) { if (!x.elim && (x.robA || 'copas') !== x.robVolta) robSwap(x, x.robVolta); x.robVolta = null; } }));
       if (kP(c) === 'magnus' || c.k === 'arquiteto') c.sofDesde = 0; if (c.k === 'arquiteto') c.simTk = S.tk;
       ondaMisericordia(c);
