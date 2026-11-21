@@ -6946,7 +6946,7 @@ body.mn-calmo .cp-po{display:none}
         t.forEach(c => { c.elim = true; c.pv = 0; });
         S.fim = { venc: 1 - j, rodada: S.rodada }; S.ativo = null;
         log('🌙 O Sonho de ' + S.nomes[j] + ' acabou: o time inteiro acordou. ' + S.nomes[1 - j] + ' venceu na rodada ' + S.rodada + '.');
-        setTimeout(mostrarFim, 900);
+        fxEspera(mostrarFim, 2600);
       } else t.forEach(c => { c.elim = false; c.pv = nv; });
     });
   }
@@ -6963,6 +6963,7 @@ body.mn-calmo .cp-po{display:none}
     if (est.length) S.est = S.est.filter(z => !est.includes(z));
     if (quem.length || est.length) log('✖ ' + nm + ' saiu: ' + [quem.length ? 'os efeitos dele acabaram em ' + quem.join(', ') : '', est.length ? est.length + (est.length > 1 ? ' Estruturas dele somem' : ' Estrutura dele some') : ''].filter(Boolean).join(' e ') + '.');
   }
+  function fxEspera(fn, ms){ const go = () => { if (typeof ETP !== 'undefined' && ETP && ETP.aberta && ETP.aberta()) return setTimeout(go, 400); fn(); }; setTimeout(go, ms); }
   function eliminar(j, i){
     const c = S.times[j][i];
     if (S.cen === 'ruptura') setTimeout(() => { if (!c.elim) return; S.times.flat().forEach(x => { if (x.duelo === c.k) { x.duelo = null; log('⚔ ' + CH[x.k].nome + ' ficou sem duelante e volta a lutar normalmente.'); } }); c.duelo = null; salvar(); render(); }, 0);
@@ -6973,7 +6974,7 @@ body.mn-calmo .cp-po{display:none}
       if (pe && !(kP(c) === 'magnus' && !c.monstroUsado)) {
         pe.levUsado = true; c.pv = Math.max(1, Math.floor(c.max / 2));
         log('⚰️ Levante-se! ' + CH[c.k].nome + ' chegou a 0 PV, mas Peste recusou: volta com ' + c.pv + ' PV.');
-        setTimeout(() => toast('⚰️ LEVANTE-SE! ' + CH[c.k].nome + ' volta com ' + c.pv + ' PV', 3200), 30);
+        fxEspera(() => toast('⚰️ LEVANTE-SE! ' + CH[c.k].nome + ' volta com ' + c.pv + ' PV', 3200), 900);
         return;
       } }
     if (S.cen === 'cemiterio' && !(kP(c) === 'magnus' && !c.monstroUsado)) {
@@ -7000,11 +7001,11 @@ body.mn-calmo .cp-po{display:none}
     if (S.vez !== null && !disponiveis(S.vez).length) passarVez();
     S.med = S.med.map(m => Math.min(5, m + 1));
     log('💀 ' + CH[c.k].nome + ' está fora de combate. +1 de Medidor para os dois jogadores.');
-    setTimeout(() => toast('💀 ' + CH[c.k].nome + ' FORA DE COMBATE!<br><small style="font-family:Comic Neue;font-weight:700;font-size:13px">+1 de Medidor para os dois jogadores' + (S.cen === 'cratera' ? ' · quem eliminou recupera 10 PV' : '') + '</small>', 3600), 30);
+    fxEspera(() => toast('💀 ' + CH[c.k].nome + ' FORA DE COMBATE!<br><small style="font-family:Comic Neue;font-weight:700;font-size:13px">+1 de Medidor para os dois jogadores' + (S.cen === 'cratera' ? ' · quem eliminou recupera 10 PV' : '') + '</small>', 3600), 1700);
     if (!vivos(j).length) {
       S.fim = { venc: 1 - j, rodada: S.rodada };
       log('🏆 ' + S.nomes[1 - j] + ' venceu na rodada ' + S.rodada + '.');
-      setTimeout(mostrarFim, 900);
+      fxEspera(mostrarFim, 2600);
     }
   }
   $('#ptTimes').addEventListener('click', e => {
@@ -7592,7 +7593,7 @@ body.mn-calmo .cp-po{display:none}
     });
     let selos = '';
     [false, true].forEach(passo => [0, 1].forEach(j => S.times[j].forEach((c, i) => {
-      if (c.elim || !c.pos || !CELL[c.pos] || !!c.carona !== passo) return;
+      if ((c.elim && !(window.FXSEG && FXSEG[j + ',' + i] > Date.now())) || !c.pos || !CELL[c.pos] || !!c.carona !== passo) return;
       if (!c.carona) [c.pos].concat(kP(c) === 'eclipse' && c.pos2 ? [c.pos2] : []).forEach(cel => { if (CER[cel] !== undefined && CELL[cel]) selos += '<circle class="ch-anel ce-anel" cx="' + CELL[cel].x.toFixed(1) + '" cy="' + CELL[cel].y.toFixed(1) + '" r="' + (HS * .93).toFixed(1) + '"/>'; const L = estNa(cel); if (!L.length || !CELL[cel]) return; const q = CELL[cel];
         L.slice(0, 3).forEach((e, n) => { const x = q.x + HS * .72, y = q.y - HS * .05 + n * 17;
           if (e.tipo === 'Domínio' && n === L.findIndex(y => y.tipo === 'Domínio')) selos += '<circle class="ch-anel dm-anel d' + e.dono + '" cx="' + q.x.toFixed(1) + '" cy="' + q.y.toFixed(1) + '" r="' + (HS * .9).toFixed(1) + '"/>';
@@ -11351,6 +11352,12 @@ body.mn-calmo .cp-po{display:none}
     function rodada(n, atraso){ setTimeout(() => { poe('<div class="fx-escuro"></div>', 'fx-camada-it', null, null, 1300, { position: 'absolute', inset: '0' }); poe('RODADA ' + n, 'fx-rodada', null, null, 1300); }, atraso); }
     function depois(){
       const at = foto();
+      // peça que acabou de cair: desenha de novo com ela ainda no tabuleiro, para o golpe e o K.O. acontecerem em cima dela
+      if (at && ant && !pular && !calmo() && !depois.re && S.fase === 'partida' && ant.sig === at.sig) {
+        window.FXSEG = window.FXSEG || {}; const now = Date.now();
+        const falta = Object.keys(at.t).filter(k => at.t[k].elim && ant.t[k] && !ant.t[k].elim && (at.t[k].pos || ant.t[k].pos) && !(FXSEG[k] > now));
+        if (falta.length) { falta.forEach(k => { FXSEG[k] = now + 2500; }); depois.re = true; try { rBoard(); } finally { depois.re = false; } return; }
+      }
       if (!at || S.fase !== 'partida') { ant = at; return; }
       const a0 = ant; ant = at;
       if (a0 && !pular && a0.sig === at.sig) { let dm = 0, el = false, cu = false;
@@ -11379,12 +11386,12 @@ body.mn-calmo .cp-po{display:none}
       }
       // dano, cura e eliminação
       const atk = at.ativo, A = atk && at.t[atk], gA = atk && tokG(svg, atk);
-      let n = 0, lunge = false;
+      let n = 0, lunge = false; const hold = {};
       for (const key in at.t) {
         const x = at.t[key], y = a0.t[key];
         const cell = x.pos || y.pos;
         if (x.pv < y.pv || (x.elim && !y.elim)) {
-          const delay = tMov + 160 + n * 110; n++;
+          const delay = tMov + 160 + n * 110; n++; if (x.elim && !y.elim) hold[key] = delay + 260;
           const inimigo = A && key !== atk && key.split(',')[0] !== atk.split(',')[0];
           if (inimigo && A.pos && cell && CELL[A.pos] && CELL[cell]) {
             const p1 = CELL[A.pos], p2 = CELL[cell], dd = dist(A.pos, cell);
@@ -11411,6 +11418,7 @@ body.mn-calmo .cp-po{display:none}
           setTimeout(() => { const s2 = svgEl(), g = s2 && tokG(s2, key); if (g) { g.classList.add('fx-cura'); setTimeout(() => g.classList.remove('fx-cura'), 950); } }, delay);
         }
       }
+      { const ks = Object.keys(hold); if (ks.length) { window.FXSEG = window.FXSEG || {}; const now = Date.now(); let mx = 0; ks.forEach(k => { FXSEG[k] = now + hold[k]; mx = Math.max(mx, hold[k]); }); setTimeout(() => { if (tela === 'combate') rBoard(); }, mx + 20); } }
     }
     const ARTE_B = ['arte/', '../arte/'];
     function arte(tipo, k){ return new Promise(res => { let i = 0; const im = new Image(); im.onload = () => res(im); im.onerror = () => { i++; if (i < ARTE_B.length) im.src = ARTE_B[i] + tipo + '/' + k + '.webp'; else res(null); }; im.src = ARTE_B[0] + tipo + '/' + k + '.webp'; }); }
