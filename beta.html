@@ -3841,7 +3841,7 @@ body.mn-calmo .cp-po{display:none}
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const store = {
     get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
-    set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+    set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
   };
 
   // ═════════ EFEITOS SONOROS (sintetizados no navegador) ═════════
@@ -5661,7 +5661,8 @@ body.mn-calmo .cp-po{display:none}
         { let cu = aurasEm(c).reduce((v, [, a, ali]) => v + (ali ? a.cura || 0 : 0), 0); if (cu && contagiado(c)) cu = Math.max(0, cu - 2);
         if (cu && c.pv < c.max) { c.pv = Math.min(c.max, c.pv + cu); msg += ' Campo Medicinal: +' + cu + ' PV.'; } }
         { const nv = iniNovos(c, j, i); if (nv.length) { msg += ' ' + nv.join('. ') + '.'; aviso = (aviso ? aviso + ' · ' : '') + nv.join(' · '); } }
-        S.ativo = [j, i]; S.vez = j; S.ult = j;
+        if (c.elim) { c.agiu = true; S.ativo = null; S.vez = j; S.ult = j; const t2 = '💀 ' + CH[c.k].nome + ' caiu no início do turno e não age'; msg += ' ' + t2 + '.'; aviso = (aviso ? aviso + ' · ' : '') + t2; passarVez(); }
+        else { S.ativo = [j, i]; S.vez = j; S.ult = j; }
         S.times.forEach(t => t.forEach(x => { if (kP(x) === 'cavalo' && !x.elim && !x.esc) x.esc = 1; }));
       }, () => msg);
       if (aviso) toast(aviso);
@@ -5841,8 +5842,12 @@ body.mn-calmo .cp-po{display:none}
       trios: S.times.map(t => t.map(c => CH[c.k].nome).join(', ')), txt: regTexto() };
     const i = L.findIndex(x => x.id === it.id); if (i >= 0) L.splice(i, 1);
     L.unshift(it); while (L.length > 30) L.pop();
-    store.set('versus-registros', L); salvar();
-    if (!quieto) toast('🗂️ Partida guardada. Veja em ⋯ › PARTIDAS GUARDADAS ou no menu da capa.', 3000);
+    let ok = store.set('versus-registros', L), tiradas = 0;
+    while (!ok && L.length > 1) { L.pop(); tiradas++; ok = store.set('versus-registros', L); }
+    salvar();
+    if (!ok) { toast('⚠️ Sem espaço no navegador para guardar esta partida. Use 💾 BAIXAR .TXT no ⋯ › HISTÓRICO.', 4200); return false; }
+    if (!quieto || tiradas) toast('🗂️ Partida guardada' + (tiradas ? ' (o navegador estava sem espaço: ' + tiradas + ' partida' + (tiradas > 1 ? 's' : '') + ' mais antiga' + (tiradas > 1 ? 's foram apagadas' : ' foi apagada') + ')' : '') + '. Veja em ⋯ › PARTIDAS GUARDADAS ou no menu da capa.', 3600);
+    return true;
   }
   function copiarTxt(txt, msg){
     const ok = () => toast(msg || '📋 Registro copiado.', 2400);
