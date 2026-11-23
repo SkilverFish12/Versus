@@ -1852,6 +1852,46 @@
   .ini-auto small{display:block; color:#bbb; font-weight:700; font-size:12.5px}
   .ini-sub{margin:8px 0 0 30px; border-style:dashed}
   .ini-sub.off{opacity:.4; pointer-events:none}
+/* 1123: caixinhas viram botões com chave liga/desliga */
+input[type=checkbox]{-webkit-appearance:none; appearance:none; flex:none; position:relative; display:inline-block; width:36px !important; height:20px !important; min-width:36px; margin:0 !important; padding:0; border:2px solid #000; border-radius:999px; background:#5a5a5a; box-shadow:inset 0 2px 0 rgba(0,0,0,.35); cursor:pointer; vertical-align:middle; transition:background .15s; accent-color:auto}
+input[type=checkbox]::before{content:''; position:absolute; top:1px; left:1px; width:14px; height:14px; border-radius:50%; background:#fff; border:1px solid #000; box-sizing:border-box; transition:transform .15s}
+input[type=checkbox]:checked{background:#2a9d5a}
+input[type=checkbox]:checked::before{transform:translateX(16px)}
+input[type=checkbox]:disabled{opacity:.5; cursor:default}
+input[type=checkbox]:focus-visible{outline:3px solid var(--yellow); outline-offset:2px}
+label:has(> input[type=checkbox]){user-select:none; -webkit-user-select:none}
+.ac-apr, .rs-ef label, .ef-imo, .atl-fixo, .pv-psi{border:2px solid #000; background:#fff; color:#111; padding:5px 10px 5px 6px; box-shadow:2px 2px 0 #000; border-radius:4px; cursor:pointer; transition:background .12s, transform .08s, box-shadow .08s}
+.ac-apr:has(> input:checked), .rs-ef label:has(> input:checked), .ef-imo:has(> input:checked), .atl-fixo:has(> input:checked), .pv-psi:has(> input:checked){background:var(--yellow)}
+.ac-apr:not(.off):active, .rs-ef label:active, .ef-imo:active, .atl-fixo:active, .pv-psi:active{transform:translate(1px,1px); box-shadow:1px 1px 0 #000}
+.ac-apr.off{cursor:default; background:#ddd}
+.atl-fixo{margin:0 10px 10px; padding:5px 10px 5px 6px; opacity:1}
+.pv-psi{padding:2px 6px 2px 3px; box-shadow:1px 1px 0 #000}
+.pv-psi input[type=checkbox]{width:26px !important; min-width:26px; height:15px !important}
+.pv-psi input[type=checkbox]::before{width:9px; height:9px}
+.pv-psi input[type=checkbox]:checked::before{transform:translateX(11px)}
+.ini-auto{transition:background .12s, border-color .12s}
+.ini-auto input[type=checkbox]{margin-top:2px !important}
+.ini-auto:has(> input:checked){background:#211d00; box-shadow:inset 0 0 0 2px var(--yellow)}
+.ini-auto:not(:has(> input:checked)){border-color:#555}
+.ini-auto:not(:has(> input:checked)) b{color:#9a9a9a}
+body.justo .rs-ef label:not(.ef-esc-l):has(> input[data-ef]){cursor:default; box-shadow:none; background:#f6f1df; gap:4px}
+body.justo .rs-ef label:not(.ef-esc-l) > input[data-ef]{display:none}
+body.justo .rs-ef label:not(.ef-esc-l):has(> input[data-ef])::before{content:'✓'; font-weight:900; color:#1a7a3a}
+body.justo .rs-ef label:not(.ef-esc-l):has(> input[data-ef]:not(:checked)){opacity:.55; text-decoration:line-through}
+body.justo .rs-ef label:not(.ef-esc-l):has(> input[data-ef]:not(:checked))::before{content:'✕'; color:#b00010}
+/* 1123: Medidor na barra de cima e fim da rodada no QUEM JOGA? */
+.pt-med{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.ptm{display:flex; align-items:center; gap:6px; background:#151515; border:2px solid var(--tc); padding:3px 8px; box-shadow:2px 2px 0 #000}
+.ptm small{font-family:'Bangers',cursive; letter-spacing:1px; font-size:13px; color:var(--tc); max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ptm-p{display:flex; gap:3px}
+.ptm-p i{width:12px; height:14px; transform:skewX(-14deg); background:#333; border:2px solid #555}
+.ptm-p i.on{background:var(--yellow); border-color:#fff; box-shadow:0 0 6px rgba(255,224,0,.7)}
+.ptm b{font-family:'Bangers',cursive; font-weight:400; font-size:18px; color:var(--yellow); min-width:10px}
+.ptm.vez{box-shadow:0 0 0 2px var(--yellow), 2px 2px 0 #000}
+.quem-fim{display:flex; align-items:center; justify-content:center; gap:8px; width:calc(100% - 24px); margin:0 12px 10px; font-size:20px}
+.quem-fim kbd{min-width:20px; height:20px; font-size:12px}
+@media (max-width:600px){ .pt-med{width:100%; order:5; flex-wrap:nowrap; gap:6px} .ptm{flex:1 1 0; min-width:0; justify-content:space-between; padding:3px 6px} .ptm small{max-width:72px; font-size:12px} .ptm-p{gap:2px} .ptm-p i{width:9px} }
+
   body.justo .pv-btns, body.justo .pv-valor, body.justo .st .mini-btn, body.justo .dc-box .mini-btn, body.justo [data-limpar], body.justo .ef-add, body.justo .medidor .mini-btn,
   body.justo .cc-f .btn-med, body.justo [data-tbtirar], body.justo [data-estdel], body.justo #ptAcao [data-ac="estrutura"], body.justo [data-ac2], body.justo .rec .mini-btn,
   body.justo .acoes-turno span, body.justo #mDado [data-aplicar], body.justo [data-efx]:not(.efx-man){display:none!important}
@@ -3845,7 +3885,7 @@ body.mn-calmo .cp-po{display:none}
   <section class="cb-fase" id="f-partida">
     <div class="pt-barra" id="ptBarra">
       <div class="pt-rodada"><small>RODADA</small><b id="ptRodada">1</b></div>
-      <div class="pt-info"><span id="ptInicia"></span><span id="ptVez"></span></div><button class="pt-timer" id="ptTimer" hidden title="Toque para pausar"></button>
+      <div class="pt-info"><span id="ptInicia"></span><span id="ptVez"></span></div><div class="pt-med" id="ptMed"></div><button class="pt-timer" id="ptTimer" hidden title="Toque para pausar"></button>
       <div class="pt-botoes"><button class="btn-ghost sm" id="ptDesfazer" title="Desfazer">↶</button><button class="btn-ghost sm" id="ptResumo" title="Resumo das regras">📋</button><button class="btn-ghost sm" id="ptDados" title="Histórico de dados">🧾</button><button class="btn-amarelo" id="ptFimRodada">FIM DA RODADA ▶</button><button class="btn-ghost sm" id="ptMenu" title="Opções">⋯</button></div>
     </div>
     <div class="pt-cen" id="ptCen"></div>
@@ -3951,6 +3991,7 @@ body.mn-calmo .cp-po{display:none}
 <li><kbd>F</kbd><span>Ficha completa de quem está no cursor ou em turno</span></li>
 <li><kbd>I</kbd><span>Resumo do personagem no cursor</span></li>
 <li><kbd>P</kbd><span>Pula as etapas da ação na tela</span></li>
+<li><kbd>R</kbd><span>Fim da rodada (fora de um turno)</span></li>
 <li><kbd>H</kbd><span>Mostra ou esconde este quadro</span></li>
 </ul><label class="atl-fixo"><input type="checkbox" id="atlFixo"> Deixar sempre aberto</label></div>
 <div class="toast" id="toast" hidden></div>
@@ -4220,7 +4261,7 @@ body.mn-calmo .cp-po{display:none}
         { ic: '📖', t: 'MANUAL', c: 'var(--blue)', d: temHist ? 'As regras, as fichas dos personagens, os cenários e os arquivos do universo.' : 'As regras, as fichas dos personagens e os cenários.', ok: () => temHist ? abrir('manual') : sair('manual') },
         { ic: '📜', t: 'HISTÓRIAS', c: 'var(--estrategista)', trav: true, d: 'O modo história ainda está sendo escrito. Em breve, as aventuras do universo de Versus.' },
         { ic: '🗂️', t: 'PARTIDAS GUARDADAS', c: '#d98a00', d: 'O registro de cada partida terminada: quem jogou, os trios e tudo o que aconteceu, rodada por rodada. Dá para copiar, baixar em .txt ou apagar.', s: (() => { const v = store.get('versus-registros'); return Array.isArray(v) && v.length ? v.length + ' GUARDADA' + (v.length > 1 ? 'S' : '') : ''; })(), ok: () => window.abrirReg && window.abrirReg() },
-        { ic: '🆕', t: 'VERSÕES', c: '#e8000d', d: 'O que mudou nas últimas atualizações do jogo.', s: 'ATUAL: 22/11', ok: () => abrir('versoes') },
+        { ic: '🆕', t: 'VERSÕES', c: '#e8000d', d: 'O que mudou nas últimas atualizações do jogo.', s: 'ATUAL: 23/11', ok: () => abrir('versoes') },
         { ic: '⚙️', t: 'OPÇÕES', c: '#2a9d5a', d: 'Tela cheia, animações, sons e tela de título.', ok: () => abrir('opcoes') },
         { ic: '⭐', t: 'CRÉDITOS', c: '#d98a00', d: 'Quem fez Versus.', ok: () => abrir('creditos') }
       ]}),
@@ -4246,7 +4287,7 @@ body.mn-calmo .cp-po{display:none}
         { ic: '🎚️', t: 'VOLUME DOS EFEITOS', c: '#2a9d5a', d: 'Use ◀ ▶ para baixar ou subir o volume.', v: () => Math.round(SFX.vol() * 100) + '%', mud: dd => { let v = Math.round(SFX.vol() * 10) + (dd < 0 ? -1 : 1); if (v > 10) v = dd === undefined ? 1 : 10; if (v < 1) v = 1; SFX.set({ vol: v / 10 }); SFX.p('clique'); } },
         { volta: 1 }
       ]}),
-      versoes: () => ({ cam: '› VERSÕES', painel: '<h3>VERSÃO ATUAL · 22/11/2026</h3><ul><li>Plano Fantasma: quem vai para o outro plano não afeta mais ninguém, nem com Miasma, auras ou passivas.</li><li>Possessão e Plano Fantasma agora são Mobilidade.</li><li>Memento Mori novo: o alvo sofre +4 de dano de todos os ataques e não recebe curas até o fim do próximo turno da Peste. “Lembre-te que vais Morrer, Criança.”</li><li>Profanação: Tentáculos do Abismo com 3 de dano; Medidor da Tempestade de Escamas dá +2 de dano; Medidor do Casulo cura 2 PV a cada ataque sofrido; Eclosão deixa Gigante por 2 rodadas e o Ataque Básico atinge 2 alvos.</li><li>Escolha dos times: toque no símbolo do cenário, no canto da tela, para ler a arena escolhida.</li><li>Passo a Passo: o que acontece no início e no fim de cada turno e no fim da rodada (cenário, Dano Contínuo, passivas) aparece em ordem, num quadro só dele.</li><li>Quem cai no início do próprio turno (Calor Radiante, Dano Contínuo) não age mais.</li><li>Guardar partida: se o navegador estiver sem espaço, as partidas guardadas mais antigas saem para caber a nova.</li><li>Nova página VERSÕES no menu principal.</li></ul><h3>VERSÃO 21/11/2026</h3><ul><li>Medonho novo: Aura de Pavor, Olhar Medonho com Imóvel, Grito Sem Rosto dentro da Aura e Sem Faixas com Atormentado.</li><li>Golpista: habilidades copiadas (Empréstimo, Cobrança e outras) contam como do personagem de origem.</li><li>Algo Irreal: o dado da Ilusão aparece em destaque no quadro de rolagem.</li><li>Multidão do Semelhante, Breu e Fresta, Rastro Infernal (o jogador monta o trajeto do Kazan), Reator Morto, Axioma e Sobrecarga do Dínamo revisados.</li><li>A peça eliminada fica no tabuleiro até a animação do K.O.; avisos e vitória esperam o Passo a Passo.</li><li>Modo justo: a Contrabandista escolhe Item e Contrabando.</li></ul><h3>VERSÃO 20/11/2026</h3><ul><li>Versão pública com 30 personagens e 13 arenas.</li><li>Golpista vira qualquer personagem: robôs da Manilhas, Breu e Fresta, formas do Cambiante e Monstro de Sangue.</li><li>Bloqueio Mental desliga também as passivas.</li><li>Golpe Flutuante em linha reta, Maleável com alcance 4, Defletir em destaque e Passo a Passo com animações.</li><li>Ajustes em Cambiante, Cavalo, Vale, D.R.I.V.E., Azeitona, Ritmista, Superior, Saltadora, Aquarela, Neodímio, Forasteiro, Sonhadora e Mordida Vampírica.</li></ul><h3>VERSÃO 19/11/2026</h3><ul><li>Etapas das ações: Automáticas ou Passo a Passo.</li><li>Modo justo no Turno guiado.</li><li>Partidas guardadas: o registro de cada partida, para ver, copiar ou baixar.</li><li>Quadro de ataque: quem ataca contra a Defesa de cada alvo, com a chance de acerto.</li></ul>', itens: [ { volta: 1 } ]}),
+      versoes: () => ({ cam: '› VERSÕES', painel: '<h3>VERSÃO ATUAL · 23/11/2026</h3><ul><li>Sem Aberturas: o Invicto só ataca quando o personagem em turno entra ou sai do Raio 1 dele (passar perto no caminho também conta).</li><li>Salto no Espaço: só um personagem salta por vez, a Saltadora ou um aliado.</li><li>As caixinhas de marcar viraram botões com chave liga e desliga.</li><li>O Medidor dos dois jogadores aparece também na barra de cima da partida.</li><li>Fim da rodada mais rápido: quando todos agiram, o botão aparece no quadro QUEM JOGA?, e a tecla R também fecha a rodada.</li><li>Som ao passar o mouse nas arenas.</li></ul><h3>VERSÃO 22/11/2026</h3><ul><li>Plano Fantasma: quem vai para o outro plano não afeta mais ninguém, nem com Miasma, auras ou passivas.</li><li>Possessão e Plano Fantasma agora são Mobilidade.</li><li>Memento Mori novo: o alvo sofre +4 de dano de todos os ataques e não recebe curas até o fim do próximo turno da Peste. “Lembre-te que vais Morrer, Criança.”</li><li>Profanação: Tentáculos do Abismo com 3 de dano; Medidor da Tempestade de Escamas dá +2 de dano; Medidor do Casulo cura 2 PV a cada ataque sofrido; Eclosão deixa Gigante por 2 rodadas e o Ataque Básico atinge 2 alvos.</li><li>Escolha dos times: toque no símbolo do cenário, no canto da tela, para ler a arena escolhida.</li><li>Passo a Passo: o que acontece no início e no fim de cada turno e no fim da rodada (cenário, Dano Contínuo, passivas) aparece em ordem, num quadro só dele.</li><li>Quem cai no início do próprio turno (Calor Radiante, Dano Contínuo) não age mais.</li><li>Guardar partida: se o navegador estiver sem espaço, as partidas guardadas mais antigas saem para caber a nova.</li><li>Nova página VERSÕES no menu principal.</li></ul><h3>VERSÃO 21/11/2026</h3><ul><li>Medonho novo: Aura de Pavor, Olhar Medonho com Imóvel, Grito Sem Rosto dentro da Aura e Sem Faixas com Atormentado.</li><li>Golpista: habilidades copiadas (Empréstimo, Cobrança e outras) contam como do personagem de origem.</li><li>Algo Irreal: o dado da Ilusão aparece em destaque no quadro de rolagem.</li><li>Multidão do Semelhante, Breu e Fresta, Rastro Infernal (o jogador monta o trajeto do Kazan), Reator Morto, Axioma e Sobrecarga do Dínamo revisados.</li><li>A peça eliminada fica no tabuleiro até a animação do K.O.; avisos e vitória esperam o Passo a Passo.</li><li>Modo justo: a Contrabandista escolhe Item e Contrabando.</li></ul><h3>VERSÃO 20/11/2026</h3><ul><li>Versão pública com 30 personagens e 13 arenas.</li><li>Golpista vira qualquer personagem: robôs da Manilhas, Breu e Fresta, formas do Cambiante e Monstro de Sangue.</li><li>Bloqueio Mental desliga também as passivas.</li><li>Golpe Flutuante em linha reta, Maleável com alcance 4, Defletir em destaque e Passo a Passo com animações.</li><li>Ajustes em Cambiante, Cavalo, Vale, D.R.I.V.E., Azeitona, Ritmista, Superior, Saltadora, Aquarela, Neodímio, Forasteiro, Sonhadora e Mordida Vampírica.</li></ul><h3>VERSÃO 19/11/2026</h3><ul><li>Etapas das ações: Automáticas ou Passo a Passo.</li><li>Modo justo no Turno guiado.</li><li>Partidas guardadas: o registro de cada partida, para ver, copiar ou baixar.</li><li>Quadro de ataque: quem ataca contra a Defesa de cada alvo, com a chance de acerto.</li></ul>', itens: [ { volta: 1 } ]}),
       creditos: () => ({ cam: '› CRÉDITOS', painel: '<h3>VERSUS · COMBATES CÔMICOS</h3><p>1ª Edição</p><h3>CRIAÇÃO</h3><p>Derec e Deniel</p><h3>PERSONAGENS E UNIVERSO</h3><p>' + artes.length + ' personagens, ' + DATA.cen.length + ' arenas e um mundo inteiro de histórias.</p><h3>OBRIGADO POR JOGAR!</h3>', itens: [ { volta: 1 } ]})
     };
     let atual = 'raiz';
@@ -4496,6 +4537,7 @@ body.mn-calmo .cp-po{display:none}
       '<p class="cen-lore">' + c.lore + '</p><p class="cen-regra">' + c.regra + '</p></button>';
   }
   function rCenario(){ $('#cenGrid').innerHTML = DATA.cen.map(cenCard).join(''); }
+  { let cenHov = null; const fc = document.getElementById('f-cenario'); if (fc) fc.addEventListener('mouseover', e => { const t = e.target.closest && e.target.closest('[data-cen], #cenSortear, #cenComum'); if (t === cenHov) return; cenHov = t; if (t && window.SFX) SFX.p('clique'); }); }
   function escolherCen(k){
     S.cen = k; S.cenOk = true; salvar();
     $$('.cen-card').forEach(c => c.classList.toggle('sel', c.dataset.cen === k));
@@ -4978,6 +5020,7 @@ body.mn-calmo .cp-po{display:none}
       $('#ptVez').innerHTML = '<b style="color:var(--yellow)">Todos já agiram.</b> Fechem a rodada.';
     }
     $('#ptFimRodada').textContent = 'FIM DA RODADA ▶';
+    { const pm = $('#ptMed'), jv = S.ativo ? S.ativo[0] : S.vez; if (pm) pm.innerHTML = [0, 1].map(j => '<div class="ptm' + (jv === j ? ' vez' : '') + '" style="--tc:var(--j' + j + ')" title="Medidor de ' + esc(nomeJ(j)) + '"><small>⚡ ' + esc(nomeJ(j)) + '</small><span class="ptm-p">' + [1, 2, 3, 4, 5].map(n => '<i class="' + (n <= S.med[j] ? 'on' : '') + '"></i>').join('') + '</span><b>' + S.med[j] + '</b></div>').join(''); }
     $('#ptDesfazer').disabled = !hist.length;
     // cenário
     const cb = $('#ptCen');
@@ -6213,6 +6256,7 @@ body.mn-calmo .cp-po{display:none}
     S.times.forEach(t => t.forEach(x => { if (kP(x) === 'fundadora' && !x.elim && x.posIni === id && S.ativo && ativoC() === x) L.push('⏪ casa onde a Fundadora começou o turno (Retroceder)'); }));
     return id + ': ' + (L.length ? [...new Set(L)].join(' · ') : 'casa vazia'); }
   function rBoard(){
+    if (!etpVista || S !== etpVista) ivTrack();
     if (etpVista && S !== etpVista) { const real = S; S = etpVista; try { return rBoard(); } finally { S = real; } }
     const box = $('#ptBoard');
     $('#ptTabBtn').textContent = mostrarTab ? '▾ ESCONDER TABULEIRO' : '▸ MOSTRAR TABULEIRO';
@@ -6827,7 +6871,16 @@ body.mn-calmo .cp-po{display:none}
   const copiasLivres = c => (S.est || []).filter(z => z.tipo === 'Cópia' && z.dono === S.ativo[0] && z.cell && !(c.copAtk || []).includes(z.id));
   const copiaAlvos = c => pecas((j, i, x) => j !== S.ativo[0] && x.pos && copiasLivres(c).some(z => dP(z.cell, x) === 1));
   // Sem Aberturas: Invicto inimigo do personagem em turno
-  const invictoContra = () => { const aj = S.ativo[0], i = S.times[1 - aj].findIndex(x => !x.elim && kP(x) === 'invicto' && !pOff(x, 'Sem Aberturas')); return i < 0 ? null : [1 - aj, i]; };
+  // só dispara quando o personagem em turno entra ou sai do Raio 1 do Invicto (c.ivT = turno em que isso aconteceu)
+  function ivEm(aj, cell){ return !!cell && !!CELL[cell] && S.times[1 - aj].some(x => !x.elim && kP(x) === 'invicto' && x.pos && CELL[x.pos] && !pOff(x, 'Sem Aberturas') && dist(x.pos, cell) <= 1); }
+  function ivTrack(){ try { const c = S && S.fase === 'partida' && S.ativo && ativoC(); if (!c || c.elim) return; const dentro = ivEm(S.ativo[0], c.pos);
+    if (c.ivTk !== S.tk) { c.ivTk = S.tk; c.ivIn = dentro; c.ivT = null; return; }
+    if (dentro !== c.ivIn) { c.ivIn = dentro; c.ivT = S.tk; } } catch (_) {} }
+  function ivCaminho(c, aj, cells){ if (!S.ativo || ativoC() !== c || !cells.length) return; if (c.ivTk !== S.tk) { c.ivTk = S.tk; c.ivIn = ivEm(aj, cells[0]); c.ivT = null; }
+    let a = ivEm(aj, cells[0]); for (let k = 1; k < cells.length; k++) { const b = ivEm(aj, cells[k]); if (b !== a) c.ivT = S.tk; a = b; } c.ivIn = a; }
+  function invictoIdx(aj){ return S.times[1 - aj].findIndex(x => !x.elim && kP(x) === 'invicto' && !pOff(x, 'Sem Aberturas')); }
+  const invictoContra = () => { const c = ativoC(); if (!c) return null; ivTrack(); const aj = S.ativo[0], i = invictoIdx(aj); return i < 0 || c.ivT !== S.tk ? null : [1 - aj, i]; };
+  const invictoPerto = () => { const c = ativoC(); if (!c) return null; const aj = S.ativo[0], i = invictoIdx(aj); return i >= 0 && ivEm(aj, c.pos) ? [1 - aj, i] : null; };
   function aplicarGuarda(q, t, tipo, red){
     const nm = tipo === 'fardo' ? 'Fardo Aceito' : 'Interceptação', exp = { t: 'ini', ref: refDe(q) };
     t.efs = (t.efs || []).filter(e => !(e.guarda && e.guarda.tipo === tipo));
@@ -6914,8 +6967,8 @@ body.mn-calmo .cp-po{display:none}
     guardasFora().forEach(([j, i]) => { const x = S.times[j][i], g = GUARDA_FORA[x.k]; h += btn('data-guardafora="' + j + ',' + i + '"', g[3], g[0].toUpperCase() + ' (' + CH[x.k].nome + ')', 'fora do turno · antes do ataque rolar · gasta 1 ação do próximo turno de ' + CH[x.k].nome, x.ab <= -2 ? CH[x.k].nome + ' já gastou 2 ações do próximo turno' : x.guardaR === S.rodada ? 'já usada nesta rodada' : ''); });
     if (S.revOfer && S.revOfer.tk === S.tk) { const P = porRef(S.revOfer.p), A = porRef(S.revOfer.a); if (P && A && !P.elim && !A.elim && rec(P, 'Guarda') >= 2) h += btn('data-pasv="revide"', '↩️', 'REVIDE (PROMESSA)', 'gasta 2 Guardas · Ataque Básico em ' + CH[A.k].nome + ' sem gastar ação', ''); }
     if (c.tribunal && c.tribunal.tk === S.tk) { h += btn('data-pasv="multa"', '⚖️', 'MULTA (JUÍZA)', 'Presença de Tribunal · ' + CH[c.k].nome + ' sofre 1 de dano', ''); h += btn('data-pasv="restricao"', '⚖️', 'RESTRIÇÃO (JUÍZA)', 'Presença de Tribunal · ' + CH[c.k].nome + ' sofre −1 casa de deslocamento neste turno', ''); }
-    const iv = invictoContra();
-    if (iv) { const x = S.times[iv[0]][iv[1]]; h += btn('data-pasv="invicto"', '🥊', 'SEM ABERTURAS', 'Invicto ataca ' + CH[c.k].nome + ' (entrou ou saiu do Raio 1 dele) · gasta 1 ação do próximo turno de Invicto', x.ab <= -2 ? 'Invicto já gastou 2 ações do próximo turno' : ''); }
+    const iv = invictoContra(), ivP = !iv && invictoPerto();
+    if (iv || ivP) { const q = iv || ivP, x = S.times[q[0]][q[1]]; h += btn('data-pasv="invicto"', '🥊', 'SEM ABERTURAS', 'Invicto ataca ' + CH[c.k].nome + ' (' + (iv ? (c.ivIn ? 'entrou no' : 'saiu do') : 'está no') + ' Raio 1 dele) · gasta 1 ação do próximo turno de Invicto', !iv ? 'só quando ' + CH[c.k].nome + ' entra ou sai do Raio 1 do Invicto' : x.ab <= -2 ? 'Invicto já gastou 2 ações do próximo turno' : ''); }
     const usou = n => (c.usadas || []).includes(n);
     if (c.item) h += btn('data-pasv="item"', '🎒', 'USAR ITEM: ' + c.item.toUpperCase(), 'Mercado Negro · sem ação · 1 vez por turno · ' + ITEM_TXT[c.item], c.item === 'Colete' ? 'o Colete age sozinho no próximo ataque que acertar' : c.itemT === 'k' + (S.tk || 0) ? 'já usou um Item neste turno' : c.item === 'Gancho' && c.imo ? 'Imóvel' : '');
     if (c.contra) h += btn('data-pasv="contra"', '☠️', 'USAR CONTRABANDO: ' + c.contra.toUpperCase(), 'Mercadoria Proibida · sem ação · uso único · ' + CONTRA_TXT[c.contra], c.contra === 'Bomba de Fumaça' && !c.pos ? 'fora do tabuleiro' : '');
@@ -7239,8 +7292,9 @@ body.mn-calmo .cp-po{display:none}
     return '<div class="quem"' + (tj !== null ? ' style="--tc:var(--j' + tj + ')"' : '') + '><div class="quem-h"><small>' + (tj !== null ? 'VEZ DE ' + esc(nomeJ(tj)).toUpperCase() : 'QUALQUER TIME') + '</small><b>QUEM JOGA?</b></div><div class="quem-g">' +
       L.map(([j, i, c]) => { n++; const ch = CH[c.k], pode = !c.agiu && !S.ativo && (S.vez === j || S.vez === null || !disponiveis(S.vez).length);
         return '<button class="quem-bt' + (c.agiu ? ' agiu' : '') + '" data-quem="' + j + ',' + i + '" style="--ac:' + ch.ac + '"' + (pode ? '' : ' disabled') + '><kbd>' + n + '</kbd><span class="quem-ic">' + icoH(c.k, c) + '</span><span class="quem-tx"><b>' + esc(ch.nome) + '</b><small>' + (c.agiu ? '✓ já agiu' : c.pv + '/' + c.max + ' PV · ' + ch.classe) + '</small></span></button>'; }).join('') +
-      '</div><p class="quem-dica"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> começa o turno · <kbd>F</kbd> ficha completa · <kbd>Q</kbd> volta para cá</p></div>';
+      '</div>' + (S.vez === null && !S.ativo ? '<button class="btn-amarelo quem-fim" data-fimrod>🏁 FIM DA RODADA ▶ <kbd>R</kbd></button>' : '') + '<p class="quem-dica"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> começa o turno · <kbd>F</kbd> ficha completa · <kbd>Q</kbd> volta para cá · <kbd>R</kbd> fim da rodada</p></div>';
   }
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-fimrod]'); if (b) $('#ptFimRodada').click(); });
   document.addEventListener('click', e => { const b = e.target.closest('[data-quem]'); if (!b || b.disabled) return; const x = document.querySelector('#ptTimes [data-initurno="' + b.dataset.quem + '"]'); if (x && !x.disabled) x.click(); });
   function rPainel(){
     const box = $('#ptAcao');
@@ -7418,7 +7472,7 @@ body.mn-calmo .cp-po{display:none}
     if ((b.dataset.pasv === 'multa' || b.dataset.pasv === 'restricao') && c.tribunal) { const mu = b.dataset.pasv === 'multa', rf = S.ativo.join(','); let r0 = 0;
       return mudar(() => { c.tribunal = null; if (mu) r0 = sofrerDano(c, 1, {}).real; else aplicarEf(c, { nome: 'Restrição', autor: 'Juíza', faz: '−1 casa de deslocamento', acaba: 'no fim deste turno', exp: { t: 'fim', ref: rf, pula: 0 }, mods: { ds: -1 } }); }, () => '⚖️ Presença de Tribunal: ' + (mu ? 'Multa, ' + CH[c.k].nome + ' −' + r0 + ' PV' : 'Restrição, ' + CH[c.k].nome + ' −1 casa neste turno') + '.'); }
     if (b.dataset.pasv === 'multidao') { const cs = capturados(c); if (!cs.length || c.multT === 'k' + (S.tk || 0)) return; const t0 = cs[0]; return iniciarModo({ t: 'teleporte', alvo: refDe(t0).split(',').map(Number), de: t0.pos, alc: 3, multi: refDe(c), tit: '👥 Multidão: toque na casa (até 3) para onde ela leva ' + CH[t0.k].nome + (cs.length > 1 ? ' (os outros capturados vão junto)' : '') }); }
-    if (b.dataset.pasv === 'invicto') { const iv = invictoContra(); return ataqueBasico(S.ativo.slice(), { atk: iv, custo: 0, pagaProx: true, tit: 'SEM ABERTURAS' }); }
+    if (b.dataset.pasv === 'invicto') { const iv = invictoContra(); if (!iv) return; return ataqueBasico(S.ativo.slice(), { atk: iv, custo: 0, pagaProx: true, tit: 'SEM ABERTURAS', ivSem: refDe(ativoC()) }); }
     if (b.dataset.pasv === 'oitao') { const ai = alvosDe(H_OITAO, false); const m = { t: 'hab', h: H_OITAO, sup: false, aprim: false, alvosInfo: ai, sel: [] }; iniciarModo(m); return; }
     if (b.dataset.pasv === 'tocaia') { const L = c.pos ? tocaiaAlvos(c) : pecas((j, i, x) => j !== S.ativo[0]); modo = { t: 'hab', h: H_TOCAIA, sup: false, aprim: false, alvosInfo: { tipo: 'todos', alvos: L }, sel: L }; return resolverHab(); }
     if (b.dataset.mndesc) { const [tj, ti, k] = b.dataset.mndesc.split(','), x = S.times[+tj][+ti]; return mudar(() => robDescartar(x, k), '🃏 Manilhas descartou ' + ROBN[k] + '.'); }
@@ -7715,6 +7769,7 @@ body.mn-calmo .cp-po{display:none}
       { let extra = ''; mudar(() => { const jj = timeDe(c), camM = viaCam || (de && kP(c) !== 'eclipse' ? caminhoMover(c, de, cellId) : null), dd = de ? (camM ? camM.length : dist(de, cellId)) : 0; if (c.carona) { c.carona = null; extra += ' Desceu do veículo.'; } if (gr === 'Gancho') { setItem(c, null); c.itemT = 'k' + (S.tk || 0); extra += ' 🪝 Gancho usado.'; } semGat++; try { moverPeca(c, cellId); } finally { semGat--; } c.moveuT = true; c.andou = (c.andou || 0) + dd; if (gr) { if (!['Pista', 'Par de Dança'].includes(gr)) c.usadas = (c.usadas || []).concat(gr); } else { const dob = de && domAp(1 - jj) && domEm(1 - jj, de); c.gastas = Math.min(c.acts, c.gastas + (dob ? 2 : 1)); if (dob) extra += ' Domínio do Superior: o Mover custou 2 ações.'; }
         if (S.bosque && S.bosque.time !== jj && S.rodada <= S.bosque.ate && dd > 1) { const q = sofrerDano(c, 2, {}); extra += ' Bosque Efêmero: −' + q.real + ' PV.'; }
         const cam = de ? (camM || caminho(de, cellId)) : [];
+        if (de) ivCaminho(c, jj, [de].concat(cam));
         if (temEf(c, 'rastro') && de) { S.est = S.est || []; [de].concat(cam.slice(0, -1)).forEach(id => { const oc = ocupante(id); if ((!oc || (viaCam && oc[0] !== jj)) && !obstaculo(id) && !S.est.some(z => z.cell === id && z.tipo === 'Casa Infernal')) S.est.push({ id: Date.now() + '' + d(999) + id, tipo: 'Casa Infernal', cell: id, dono: jj, rastro: true, acaba: 'no início do próximo turno de Kazan' }); }); }
         if (cam.some(id => (S.est || []).some(z => z.tipo === 'Fumaça' && z.dono !== jj && z.cell === id))) { const zf = (S.est || []).find(z => z.tipo === 'Fumaça' && z.dono !== jj && cam.includes(z.cell)), q = sofrerDano(c, 2, {}); c.fumT = Math.max(c.fumT || 0, zf && zf.aprim ? 2 : 1); extra += ' 💨 Fumaça: −' + q.real + ' PV e −1 dado no' + (zf && zf.aprim ? 's 2 próximos testes.' : ' próximo teste.'); }
         if (!c.infT && cam.some(id => (S.est || []).some(z => z.tipo === 'Casa Infernal' && z.dono !== jj && z.cell === id))) { c.infT = true; const q = sofrerDano(c, 5, {}); extra += ' Casa Infernal: −' + q.real + ' PV.'; }
@@ -8359,7 +8414,7 @@ body.mn-calmo .cp-po{display:none}
         titulo: '💘 AMOR AMBÍGUO', sub: ch.nome + ' dispara em ' + CH[t.k].nome + ' · VIS ' + n + ' dados, cura com 6 ou mais',
         dados: v, def: 6, notas: notas.concat(['1 vez por turno em cada aliado: cada dado com 6 ou mais cura 3 PV']), desc: '', basico: true, cupCura: refDe(t),
         linhas: [{ alvo, ok: cu > 0, txt: cu ? ok6 + (ok6 > 1 ? ' dados' : ' dado') + ' → cura ' + cu + ' PV' : 'nenhum dado chegou a 6', ef: cu ? [{ k: 'cura', v: cu, on: true, txt: 'cura ' + cu + ' PV' }] : [] }],
-        extras: [], pre: [], ef: {}, custo: o.custo !== undefined ? o.custo : 1, atkRef: atkR, pagaProx: !!o.pagaProx, nome: null, sup: false, aprim: false, ataque: false, usouDados: true
+        extras: [], pre: [], ef: {}, custo: o.custo !== undefined ? o.custo : 1, atkRef: atkR, pagaProx: !!o.pagaProx, ivSem: o.ivSem || null, nome: null, sup: false, aprim: false, ataque: false, usouDados: true
       });
     }
     const hits = v.filter(x => x >= def).length;
@@ -8382,7 +8437,7 @@ body.mn-calmo .cp-po{display:none}
       dados: v, def, notas, desc: '', hitsBrasa: hits, basico: true, bas: { per: 2 + (o.porAcerto || 0), bonus: bonus + (covarde ? 2 : 0), apt },
       linhas: [{ alvo, ok: hits > 0, txt: hits ? hits + (hits > 1 ? ' acertos' : ' acerto') + ' → ' + dano + ' de dano' : 'errou', ef: (kP(c) === 'oliva' && !pOff(c, 'O X Marca o Lugar') && hits >= 2 ? [supFx('O X Marca o Lugar: −1 dado contra Azeitona e −1 na Defesa contra ela', x => marcarX(c, x))] : []).concat(incont ? [{ k: 'acao', v: -1, on: true, txt: 'Incontestável: −1 ação no próximo turno' }, supFx('Incontestável: perde os bônus na Defesa', (t2, msg) => tirarBonusDef(t2, msg))] : []).concat(kP(c) === 'peste' && hits ? [{ k: 'contagio', v: 1, on: true, txt: 'Toque Pestilente: Contagiado (−1 na Defesa e curas −2) por 2 rodadas' }] : []).concat(hits && dano ? [{ k: 'dano', v: dano, on: true, txt: dano + ' de dano' }].concat(
         !pOff(c, 'Manoplas Eletromagnéticas') && ch.habs.some(x => !x.c && /acerta um Ataque Básico, empurra/.test(x.d)) && t.pos ? [{ k: 'empurra', v: hits, on: true, txt: '↗ empurrar ' + hits + (hits > 1 ? ' casas' : ' casa') + ' (Manoplas)' }] : []) : []) }].concat(comprL),
-      extras: [], pre: [], ef: {}, custo: o.custo !== undefined ? o.custo : 1, atkRef: atkR, pagaProx: !!o.pagaProx, nome: null, sup: false, aprim: false, ataque: true, usouDados: true
+      extras: [], pre: [], ef: {}, custo: o.custo !== undefined ? o.custo : 1, atkRef: atkR, pagaProx: !!o.pagaProx, ivSem: o.ivSem || null, nome: null, sup: false, aprim: false, ataque: true, usouDados: true
     });
     };
     mostrarResultado({ titulo: '👊 ATAQUE BÁSICO' + (o.tit ? ' · ' + o.tit : ''), sub: ch.nome + ' ataca ' + CH[t.k].nome + ' · ' + APT[apt] + ' ' + n + (n > 1 ? ' dados' : ' dado') + ' contra Defesa ' + def, dados: [], def, notas: notas.slice(), desc: '', basico: true, linhas: [], extras: [], pre: [], ef: {}, pend, usouDados: true, custo: 0, atkRef: atkR, alvoB: alvo, ataque: true, refazer: na => ataqueBasico(na, o) });
@@ -8899,7 +8954,7 @@ body.mn-calmo .cp-po{display:none}
         const mm = r.m || {}, dest = mm.cel; if (!dest) break; const RS = r.aprim ? 6 : 4;
         for (let k = extras.length - 1; k >= 0; k--) if (extras[k].k === 'mover') extras.splice(k, 1);
         const qs = S.times[aj].filter(x => x !== c && !x.elim && x.pos && c.pos && dist(x.pos, c.pos) <= RS).concat([c]);
-        qs.forEach(x => extras.push(supFx((x === c ? nm + ' salta para ' + dest : CH[x.k].nome + ' salta para ' + dest + ' no lugar da Saltadora (marque este e desmarque o dela)'), msg => { if (ocupante(dest) || !livre(dest)) return; moverPeca(x, dest); msg.push(CH[x.k].nome + ' saltou para ' + dest); }, x === c)));
+        qs.forEach(x => extras.push(Object.assign(supFx((x === c ? nm + ' salta para ' + dest : CH[x.k].nome + ' salta para ' + dest + ' no lugar da Saltadora'), msg => { if (ocupante(dest) || !livre(dest)) return; moverPeca(x, dest); msg.push(CH[x.k].nome + ' saltou para ' + dest); }, x === c), { grpEx: 'salto' })));
         break; }
       case 'Marca Titânica': {
         const sel = r.ops ? r.opSel.map(i => r.ops[i].nome) : [];
@@ -9550,6 +9605,7 @@ body.mn-calmo .cp-po{display:none}
       if (r.nome && c.carona) { const v = porRef(c.carona), l0 = (r.linhas || []).find(l => l.alvo[0] !== aj), t0 = l0 && S.times[l0.alvo[0]][l0.alvo[1]];
         const cel = v && v.pos ? vizinhas(v.pos).filter(id => livre(id) && !bloqueada(id)).sort((a, b) => (t0 && t0.pos ? dist(a, t0.pos) - dist(b, t0.pos) : 0))[0] : null;
         c.carona = null; if (cel) c.pos = cel; msg.push(CH[c.k].nome + ' desceu do veículo' + (cel ? ' em ' + cel : '')); }
+      if (r.ivSem) { const av = porRef(r.ivSem); if (av) av.ivT = null; }
       if (r.pagaProx) { c.ab = clamp((c.ab || 0) - 1, -4, 2); c.abPago = (c.abPago || 0) + 1; msg.push(CH[c.k].nome + ' gastou 1 ação do próximo turno'); }
       if (r.nome) { c.usadas = c.usadas || []; c.usadas.push((r.h && r.h.base) || r.nome); if (r.h && (r.h.base === 'Mugë, “magia”' || r.h.base === 'Jogo de Mão')) c.usadas.push(r.nome); if (r.h && r.h.simul) c.usadas.push('Simulacro'); if (!r.sup && r.h && r.h.c) S.usoHab = (S.usoHab || []).slice(-40).concat([{ n: r.nome, tk: S.tk }]); }
       if (r.sup) { S.med[aj] -= 3; c.med = true; c.sup = true; if (!SECO && document.body.classList.contains('mn-calmo')) supBanner(r.nome, CH[c.k].nome); }
@@ -9876,7 +9932,7 @@ body.mn-calmo .cp-po{display:none}
     const x = e.target;
     if (x.dataset.ef) { const [li, ei] = x.dataset.ef.split(',').map(Number), L = res.linhas[li].ef, ef = L[ei]; ef.on = x.checked;
       if (ef.grp && x.checked) { const outros = L.filter(q => q !== ef && q.grp === ef.grp && q.on); while (outros.length >= (ef.max || 1)) { outros.shift().on = false; } document.querySelectorAll('#mAcao input[data-ef]').forEach(i => { const [a, b] = i.dataset.ef.split(',').map(Number); if (a === li) i.checked = !!L[b].on; }); } }
-    if (x.dataset.ex) res.extras[+x.dataset.ex].on = x.checked;
+    if (x.dataset.ex) { const ex = res.extras[+x.dataset.ex]; if (ex.grpEx) { x.checked = true; res.extras.forEach(q => { if (q.grpEx === ex.grpEx) q.on = q === ex; }); document.querySelectorAll('#mAcao input[data-ex]').forEach(i => { i.checked = !!res.extras[+i.dataset.ex].on; }); } else ex.on = x.checked; }
     if (x.dataset.pre) res.pre[+x.dataset.pre].on = x.checked;
     if (x.dataset.ef || x.dataset.ex || x.dataset.pre) { const o = $('#rsPrev'), n = prevHtml(res); if (o) o.outerHTML = n || '<div id="rsPrev"></div>'; else if (n) { const a = $('#mAcaoCaixa .rs-desc') || $('#rsAplicar').parentNode; a.insertAdjacentHTML('beforebegin', n); } }
   });
@@ -10508,7 +10564,8 @@ body.mn-calmo .cp-po{display:none}
     $('#atlX').addEventListener('click', () => { mostra(false); fixo.checked = false; try { localStorage.setItem('versus-atalhos', '0'); } catch (_) {} });
     fixo.addEventListener('change', () => { try { localStorage.setItem('versus-atalhos', fixo.checked ? '1' : '0'); } catch (_) {} if (fixo.checked) mostra(true); });
     document.addEventListener('keydown', e => { if (e.altKey || e.ctrlKey || e.metaKey || e.repeat || tela !== 'combate') return; const a = document.activeElement; if (a && a.matches && a.matches('input:not([type=checkbox]), textarea, select')) return;
-      if (e.key === 'h' || e.key === 'H' || e.key === '?') { e.preventDefault(); mostra(box.hidden); } }, true);
+      if (e.key === 'h' || e.key === 'H' || e.key === '?') { e.preventDefault(); mostra(box.hidden); }
+      if ((e.key === 'r' || e.key === 'R') && S.fase === 'partida' && !S.ativo && !S.fim && !document.querySelector('.modal:not([hidden])')) { e.preventDefault(); $('#ptFimRodada').click(); } }, true);
   })();
   window.KBNAV = (function(){
     let foco = null, sig = null, ultimo = null, ativo = false, dicaT = null, dicaVista = {}, ctxAnt = null, memo = {};
