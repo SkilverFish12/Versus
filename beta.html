@@ -4164,7 +4164,7 @@ body.mn-calmo .cp-po{display:none}
         { ic: '🎚️', t: 'VOLUME DOS EFEITOS', c: '#2a9d5a', d: 'Use ◀ ▶ para baixar ou subir o volume.', v: () => Math.round(SFX.vol() * 100) + '%', mud: dd => { let v = Math.round(SFX.vol() * 10) + (dd < 0 ? -1 : 1); if (v > 10) v = dd === undefined ? 1 : 10; if (v < 1) v = 1; SFX.set({ vol: v / 10 }); SFX.p('clique'); } },
         { volta: 1 }
       ]}),
-      versoes: () => ({ cam: '› VERSÕES', painel: '<h3>VERSÃO ATUAL · 23/11/2026</h3><ul><li>Atração Forçada: você escolhe para qual Aparato o personagem é puxado (antes ia sempre para o mais perto). Fora do turno, dá para usar com Medidor (+4 de dano em inimigo) e tocar no Aparato de destino.</li><li>Aparato de Neodímio com Medidor: depois do primeiro, o Neodímio coloca ou reposiciona mais 2 Aparatos (até 5 casas). Toque numa casa vazia para um novo, ou num Aparato seu e depois na casa nova.</li><li>Aparato de Neodímio no chão ou num aliado não rola mais dados (não precisa de teste).</li><li>Sem Aberturas: o Invicto só ataca quando o personagem em turno entra ou sai do Raio 1 dele (passar perto no caminho também conta).</li><li>Salto no Espaço: só um personagem salta por vez, a Saltadora ou um aliado.</li><li>As caixinhas de marcar viraram botões com chave liga e desliga.</li><li>O Medidor dos dois jogadores aparece também na barra de cima da partida.</li><li>Fim da rodada mais rápido: quando todos agiram, o botão aparece no quadro QUEM JOGA?, e a tecla R também fecha a rodada.</li><li>Som ao passar o mouse nas arenas.</li></ul><h3>VERSÃO 22/11/2026</h3><ul><li>Plano Fantasma: quem vai para o outro plano não afeta mais ninguém, nem com Miasma, auras ou passivas.</li><li>Possessão e Plano Fantasma agora são Mobilidade.</li><li>Memento Mori novo: o alvo sofre +4 de dano de todos os ataques e não recebe curas até o fim do próximo turno da Peste. “Lembre-te que vais Morrer, Criança.”</li><li>Profanação: Tentáculos do Abismo com 3 de dano; Medidor da Tempestade de Escamas dá +2 de dano; Medidor do Casulo cura 2 PV a cada ataque sofrido; Eclosão deixa Gigante por 2 rodadas e o Ataque Básico atinge 2 alvos.</li><li>Escolha dos times: toque no símbolo do cenário, no canto da tela, para ler a arena escolhida.</li><li>Passo a Passo: o que acontece no início e no fim de cada turno e no fim da rodada (cenário, Dano Contínuo, passivas) aparece em ordem, num quadro só dele.</li><li>Quem cai no início do próprio turno (Calor Radiante, Dano Contínuo) não age mais.</li><li>Guardar partida: se o navegador estiver sem espaço, as partidas guardadas mais antigas saem para caber a nova.</li><li>Nova página VERSÕES no menu principal.</li></ul><h3>VERSÃO 21/11/2026</h3><ul><li>Medonho novo: Aura de Pavor, Olhar Medonho com Imóvel, Grito Sem Rosto dentro da Aura e Sem Faixas com Atormentado.</li><li>Golpista: habilidades copiadas (Empréstimo, Cobrança e outras) contam como do personagem de origem.</li><li>Algo Irreal: o dado da Ilusão aparece em destaque no quadro de rolagem.</li><li>Multidão do Semelhante, Breu e Fresta, Rastro Infernal (o jogador monta o trajeto do Kazan), Reator Morto, Axioma e Sobrecarga do Dínamo revisados.</li><li>A peça eliminada fica no tabuleiro até a animação do K.O.; avisos e vitória esperam o Passo a Passo.</li><li>Modo justo: a Contrabandista escolhe Item e Contrabando.</li></ul><h3>VERSÃO 20/11/2026</h3><ul><li>Versão pública com 30 personagens e 13 arenas.</li><li>Golpista vira qualquer personagem: robôs da Manilhas, Breu e Fresta, formas do Cambiante e Monstro de Sangue.</li><li>Bloqueio Mental desliga também as passivas.</li><li>Golpe Flutuante em linha reta, Maleável com alcance 4, Defletir em destaque e Passo a Passo com animações.</li><li>Ajustes em Cambiante, Cavalo, Vale, D.R.I.V.E., Azeitona, Ritmista, Superior, Saltadora, Aquarela, Neodímio, Forasteiro, Sonhadora e Mordida Vampírica.</li></ul><h3>VERSÃO 19/11/2026</h3><ul><li>Etapas das ações: Automáticas ou Passo a Passo.</li><li>Modo justo no Turno guiado.</li><li>Partidas guardadas: o registro de cada partida, para ver, copiar ou baixar.</li><li>Quadro de ataque: quem ataca contra a Defesa de cada alvo, com a chance de acerto.</li></ul>', itens: [ { volta: 1 } ]}),
+      versoes: () => ({ cam: '› VERSÕES', painel: '<h3>VERSÃO ATUAL · 23/11/2026</h3><ul><li>Reverter o Tempo na própria Lady Bispo não tira mais o Além do Tempo (reforços não contam como Penalidade).</li><li>Animações: no início e no fim do turno e no fim da rodada, os PV não “voltam” antes de mostrar o dano; cada parte do dano (queda, Choque Térmico etc.) aparece com o seu número.</li><li>Atração Forçada: você escolhe para qual Aparato o personagem é puxado (antes ia sempre para o mais perto). Fora do turno, dá para usar com Medidor (+4 de dano em inimigo) e tocar no Aparato de destino.</li><li>Aparato de Neodímio com Medidor: depois do primeiro, o Neodímio coloca ou reposiciona mais 2 Aparatos (até 5 casas). Toque numa casa vazia para um novo, ou num Aparato seu e depois na casa nova.</li><li>Aparato de Neodímio no chão ou num aliado não rola mais dados (não precisa de teste).</li><li>Sem Aberturas: o Invicto só ataca quando o personagem em turno entra ou sai do Raio 1 dele (passar perto no caminho também conta).</li><li>Salto no Espaço: só um personagem salta por vez, a Saltadora ou um aliado.</li><li>As caixinhas de marcar viraram botões com chave liga e desliga.</li><li>O Medidor dos dois jogadores aparece também na barra de cima da partida.</li><li>Fim da rodada mais rápido: quando todos agiram, o botão aparece no quadro QUEM JOGA?, e a tecla R também fecha a rodada.</li><li>Som ao passar o mouse nas arenas.</li></ul><h3>VERSÃO 22/11/2026</h3><ul><li>Plano Fantasma: quem vai para o outro plano não afeta mais ninguém, nem com Miasma, auras ou passivas.</li><li>Possessão e Plano Fantasma agora são Mobilidade.</li><li>Memento Mori novo: o alvo sofre +4 de dano de todos os ataques e não recebe curas até o fim do próximo turno da Peste. “Lembre-te que vais Morrer, Criança.”</li><li>Profanação: Tentáculos do Abismo com 3 de dano; Medidor da Tempestade de Escamas dá +2 de dano; Medidor do Casulo cura 2 PV a cada ataque sofrido; Eclosão deixa Gigante por 2 rodadas e o Ataque Básico atinge 2 alvos.</li><li>Escolha dos times: toque no símbolo do cenário, no canto da tela, para ler a arena escolhida.</li><li>Passo a Passo: o que acontece no início e no fim de cada turno e no fim da rodada (cenário, Dano Contínuo, passivas) aparece em ordem, num quadro só dele.</li><li>Quem cai no início do próprio turno (Calor Radiante, Dano Contínuo) não age mais.</li><li>Guardar partida: se o navegador estiver sem espaço, as partidas guardadas mais antigas saem para caber a nova.</li><li>Nova página VERSÕES no menu principal.</li></ul><h3>VERSÃO 21/11/2026</h3><ul><li>Medonho novo: Aura de Pavor, Olhar Medonho com Imóvel, Grito Sem Rosto dentro da Aura e Sem Faixas com Atormentado.</li><li>Golpista: habilidades copiadas (Empréstimo, Cobrança e outras) contam como do personagem de origem.</li><li>Algo Irreal: o dado da Ilusão aparece em destaque no quadro de rolagem.</li><li>Multidão do Semelhante, Breu e Fresta, Rastro Infernal (o jogador monta o trajeto do Kazan), Reator Morto, Axioma e Sobrecarga do Dínamo revisados.</li><li>A peça eliminada fica no tabuleiro até a animação do K.O.; avisos e vitória esperam o Passo a Passo.</li><li>Modo justo: a Contrabandista escolhe Item e Contrabando.</li></ul><h3>VERSÃO 20/11/2026</h3><ul><li>Versão pública com 30 personagens e 13 arenas.</li><li>Golpista vira qualquer personagem: robôs da Manilhas, Breu e Fresta, formas do Cambiante e Monstro de Sangue.</li><li>Bloqueio Mental desliga também as passivas.</li><li>Golpe Flutuante em linha reta, Maleável com alcance 4, Defletir em destaque e Passo a Passo com animações.</li><li>Ajustes em Cambiante, Cavalo, Vale, D.R.I.V.E., Azeitona, Ritmista, Superior, Saltadora, Aquarela, Neodímio, Forasteiro, Sonhadora e Mordida Vampírica.</li></ul><h3>VERSÃO 19/11/2026</h3><ul><li>Etapas das ações: Automáticas ou Passo a Passo.</li><li>Modo justo no Turno guiado.</li><li>Partidas guardadas: o registro de cada partida, para ver, copiar ou baixar.</li><li>Quadro de ataque: quem ataca contra a Defesa de cada alvo, com a chance de acerto.</li></ul>', itens: [ { volta: 1 } ]}),
       creditos: () => ({ cam: '› CRÉDITOS', painel: '<h3>VERSUS · COMBATES CÔMICOS</h3><p>1ª Edição</p><h3>CRIAÇÃO</h3><p>Derec e Deniel</p><h3>PERSONAGENS E UNIVERSO</h3><p>' + artes.length + ' personagens, ' + DATA.cen.length + ' arenas e um mundo inteiro de histórias.</p><h3>OBRIGADO POR JOGAR!</h3>', itens: [ { volta: 1 } ]})
     };
     let atual = 'raiz';
@@ -5795,13 +5795,13 @@ body.mn-calmo .cp-po{display:none}
     if (e.target.id === 'rdOk') fecharRodada();
   });
   // Passo a Passo: o que entrou no registro durante uma passagem (início/fim de turno, fim de rodada) vira um quadro em ordem
-  const etpPre = () => (typeof ETP !== 'undefined' && ETP && ETP.bloco && ETP.passoOn() && tela === 'combate' && S.fase === 'partida') ? { S: JSON.parse(JSON.stringify(S)), last: S.log[S.log.length - 1] } : null;
+  const etpPre = () => { const p = (typeof ETP !== 'undefined' && ETP && ETP.bloco && ETP.passoOn() && tela === 'combate' && S.fase === 'partida') ? { S: JSON.parse(JSON.stringify(S)), last: S.log[S.log.length - 1] } : null; if (p) etpVista = p.S; return p; };
   function etpLog(p, tit, sub, ac, limpa, so){
     if (!p) return false;
     const k = S.log.lastIndexOf(p.last), L = [];
     S.log.slice(k + 1).forEach(x => { const t = limpa ? limpa(String(x.t)) : String(x.t); if (!t) return; t.split(/(?<=[a-zà-ú0-9)\]]|PV)\.\s+|;\s+/).map(s => s.trim().replace(/\.$/, '')).filter(Boolean).forEach(s => L.push(s)); });
-    if (!L.length || (so && !L.some(t => !so.test(t)))) return false;
-    return ETP.bloco(tit, sub, ac, L, p.S);
+    if (!L.length || (so && !L.some(t => !so.test(t)))) { if (etpVista === p.S) { etpVista = null; render(); } return false; }
+    const ok = ETP.bloco(tit, sub, ac, L, p.S); if (!ok && etpVista === p.S) { etpVista = null; render(); } return ok;
   }
   function fecharRodada(){
     fechar('mRodada');
@@ -8428,7 +8428,7 @@ body.mn-calmo .cp-po{display:none}
     Object.keys(m).forEach(k => { if (k === 'imo') { if (m.imo) t.imo = true; } else if (LIM[k]) t[k] = clamp((t[k] || 0) + m[k], LIM[k][0], LIM[k][1]); });
     novoEf(t, Object.assign({ autor: '', mods: {} }, e));
   }
-  const ehPen = e => { const m = e.mods || {}; if (m.est) return false; return !!(m.imo || m.dr > 0 || m.cr > 0 || ['df', 'dd', 'dn', 'ds'].some(k => m[k] < 0) || (e.contra && e.cmods && Object.values(e.cmods).some(v => v < 0)) || e.marcado || e.teia || e.nohab || e.nomed || e.zeraDano || e.meioDano); };
+  const ehPen = e => { const m = e.mods || {}; if (m.est || e.at || e.moverTodo) return false; return !!(m.imo || m.dr > 0 || m.cr > 0 || ['df', 'dd', 'dn', 'ds'].some(k => m[k] < 0) || (e.contra && e.cmods && Object.values(e.cmods).some(v => v < 0)) || e.marcado || e.teia || e.nohab || e.nomed || e.zeraDano || e.meioDano); };
   const ehRef = e => { const m = e.mods || {}; if (m.est || ehPen(e)) return false; return !!(m.red > 0 || ['df', 'dd', 'dn', 'ds'].some(k => m[k] > 0) || e.guarda || e.at || e.moverTodo); };
   function tirarEfs(x, pred){ const sai = (x.efs || []).filter(pred); sai.forEach(e => desfazerMods(x, e)); x.efs = (x.efs || []).filter(e => !sai.includes(e)); return sai.length; }
   function limparPen(x){ let n = tirarEfs(x, ehPen); if (x.dcn) { x.dcn = 0; x.dcv = 0; n++; } if (x.imo && !(x.efs || []).some(e => e.mods && e.mods.imo)) x.imo = false; return n; }
@@ -10005,7 +10005,7 @@ body.mn-calmo .cp-po{display:none}
       if (!S.times) return null;
       const t = {};
       S.times.forEach((tm, j) => tm.forEach((c, i) => { t[j + ',' + i] = { k: c.k, pv: c.pv, pos: c.pos || null, elim: !!c.elim }; }));
-      return { t, ativo: S.ativo ? S.ativo.join(',') : null, rodada: S.rodada, sig: Object.keys(t).map(k => t[k].k).join('|') };
+      return { t, ativo: S.ativo ? S.ativo.join(',') : null, rodada: S.rodada, sig: Object.keys(t).map(k => t[k].k).join('|'), logN: (S.log || []).length, vista: !!(etpVista && S === etpVista) };
     }
     const svgEl = () => document.querySelector('#ptBoard svg.tb-svg');
     function ponto(svg, x, y){ const m = svg.getScreenCTM(); if (!m) return null; const p = svg.createSVGPoint(); p.x = x; p.y = y; const q = p.matrixTransform(m); return { x: q.x, y: q.y, k: m.a }; }
@@ -10027,6 +10027,18 @@ body.mn-calmo .cp-po{display:none}
       }, atraso);
     }
     function rodada(n, atraso){ setTimeout(() => { poe('<div class="fx-escuro"></div>', 'fx-camada-it', null, null, 1300, { position: 'absolute', inset: '0' }); poe('RODADA ' + n, 'fx-rodada', null, null, 1300); }, atraso); }
+    // partes do dano de um personagem, lidas do registro desta mudança (só quando somam o total)
+    function partesDano(a0, at, key, v){
+      if (!a0 || a0.vista || at.vista || !S.log) return null; const [j, i] = key.split(',').map(Number), c = S.times[j] && S.times[j][i]; if (!c) return null;
+      const nm = CH[c.k].nome.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), re = new RegExp(nm + '[^.;,¦]{0,40}?[−-](\\d+) PV', 'g'), L = [];
+      S.log.slice(a0.logN).forEach(l => { let m; re.lastIndex = 0; while ((m = re.exec(String(l.t)))) L.push(+m[1]); });
+      const soma = X => X.length > 1 && X.length <= 5 && X.reduce((a, b) => a + b, 0) === v;
+      if (soma(L)) return L;
+      // só ele perdeu PV nesta mudança: vale todo −N PV do registro
+      const sos = Object.keys(at.t).filter(k => a0.t[k] && at.t[k].pv < a0.t[k].pv); if (sos.length !== 1 || sos[0] !== key) return null;
+      const L2 = []; S.log.slice(a0.logN).forEach(l => { const r2 = /[−-](\d+) PV/g; let m; while ((m = r2.exec(String(l.t)))) L2.push(+m[1]); });
+      return soma(L2) ? L2 : null;
+    }
     function depois(){
       const at = foto();
       // peça que acabou de cair: desenha de novo com ela ainda no tabuleiro, para o golpe e o K.O. acontecerem em cima dela
@@ -10079,7 +10091,7 @@ body.mn-calmo .cp-po{display:none}
           if (cell && CELL[cell]) {
             setTimeout(() => { const s2 = svgEl(); if (!s2) return; svgAdd(s2, 'circle', { class: 'fx-anel', cx: CELL[cell].x, cy: CELL[cell].y, r: HS * .8 }, 500); const g = tokG(s2, key); if (g) { g.classList.remove('fx-hit'); void g.getBBox(); g.classList.add('fx-hit'); setTimeout(() => g.classList.remove('fx-hit'), 450); } }, delay);
             const v = y.pv - Math.max(0, x.pv);
-            if (v > 0) numero(svg, cell, v, false, delay);
+            if (v > 0) { const ps = partesDano(a0, at, key, v); if (ps) ps.forEach((pv, k) => numero(svg, cell, pv, false, delay + k * 420)); else numero(svg, cell, v, false, delay); }
           }
           if (x.elim && !y.elim && cell && CELL[cell]) {
             const [j, i] = key.split(',').map(Number), c = S.times[j][i], p = ponto(svg, CELL[cell].x, CELL[cell].y);
@@ -10251,7 +10263,9 @@ body.mn-calmo .cp-po{display:none}
     function abrir(itens, c0){
       if (!dlg) criarDlg();
       dq = itens; dk = 0; ctx = c0 || null; tit = null; travado = false;
-      dq.forEach(it => { if (it.tit) return; if (ctx && it.st === 1 && it.pvRef === undefined) { const g = fxPalpite(it); it.pvRef = g ? g.ref : null; } if (it.fx && !it.fx.ref && !it.fx.cells) it.fx = null; if (!it.fx && !(ctx && it.st === 1)) it.fx = fxPalpite(it); else if (it.fx && !it.fx.txt) Object.assign(it.fx, fxRotulo(it)); });
+      dq.forEach(it => { if (it.tit) return; if (ctx && it.st === 1 && it.pvRef === undefined) { const g = fxPalpite(it); it.pvRef = g ? g.ref : null; } });
+      { const ult = {}; dq.forEach((it, n) => { if (!it.tit && it.st === 1 && it.pvRef != null) [].concat(it.pvRef).forEach(r => { ult[r] = n; }); }); dq.forEach((it, n) => { if (!it.tit && it.st === 1 && it.pvRef != null) it.fimRefs = [].concat(it.pvRef).filter(r => ult[r] === n); }); }
+      dq.forEach(it => { if (it.tit) return; if (it.fx && !it.fx.ref && !it.fx.cells) it.fx = null; if (!it.fx && !(ctx && it.st === 1)) it.fx = fxPalpite(it); else if (it.fx && !it.fx.txt) Object.assign(it.fx, fxRotulo(it)); });
       capa.classList.add('on'); dlg.classList.add('on'); desenhar();
     }
     function estagio(st){ ctx.vis = st; etpVista = st >= 2 ? null : st === 1 ? ctx.hyb : ctx.pre; rBoard(); }
@@ -10261,14 +10275,20 @@ body.mn-calmo .cp-po{display:none}
       const muda = ctx && (it.st > ctx.vis || (it.st === 1 && ctx.vis <= 1));
       if (!muda && !it.fx) return;
       travado = true; dlg.classList.add('anim');
-      const go = () => { if (muda) { if (it.st === 1) pvParcial(it.pvRef, it.pos); estagio(it.st); } if (it.fx) setTimeout(() => fxTocar(it.fx, it), muda ? 380 : 0); };
+      const go = () => { if (muda) { if (it.st === 1) pvParcial(it); estagio(it.st); } if (it.fx) setTimeout(() => fxTocar(it.fx, it), muda ? 380 : 0); };
       tAnim = setTimeout(go, calmo() ? 0 : 420);
       setTimeout(() => { travado = false; if (dlg) dlg.classList.remove('anim'); }, calmo() ? 150 : muda ? 1100 : 750);
     }
     // PV mudam aos poucos: cada texto de dano/cura mostra só o personagem dele (ou todos, se não der para saber)
-    function pvParcial(ref, pos){
-      const h = ctx && ctx.hyb; if (!h || !h.times) return; const R = ref == null ? null : [].concat(ref);
-      S.times.forEach((t, j) => t.forEach((x, i) => { if (R && !R.includes(j + ',' + i)) return; const y = h.times[j] && h.times[j][i]; if (y) { y.pv = x.pv; y.elim = x.elim; if (pos) { y.pos = x.pos; y.pos2 = x.pos2; } } }));
+    // o valor vem do próprio texto (−3 PV, +2 PV, 4 de dano); o último texto de cada personagem acerta o total
+    function pvParcial(it){
+      const ref = it.pvRef, pos = it.pos, h = ctx && ctx.hyb; if (!h || !h.times) return; const R = ref == null ? null : [].concat(ref);
+      const t = String(it.html || '').replace(/<[^>]+>/g, ''), m1 = /([−+-])\s?(\d+) PV/.exec(t), m2 = !m1 && /(\d+) de dano/.exec(t), dv = m1 ? +m1[2] * (m1[1] === '+' ? 1 : -1) : m2 ? -m2[1] : null;
+      S.times.forEach((tm, j) => tm.forEach((x, i) => { const k = j + ',' + i; if (R && !R.includes(k)) return; const y = h.times[j] && h.times[j][i]; if (!y) return;
+        const fim = !it.fimRefs || it.fimRefs.includes(k);
+        if (!fim) { if (R && R.length === 1 && dv !== null) y.pv = Math.max(0, Math.min(y.max || 999, y.pv + dv)); }
+        else { y.pv = x.pv; y.elim = x.elim; }
+        if (pos) { y.pos = x.pos; y.pos2 = x.pos2; } }));
     }
     function avancar(){
       if (travado || !dq.length) return;
@@ -10427,11 +10447,12 @@ body.mn-calmo .cp-po{display:none}
         if (aberta() || $$('.modal').some(m => !m.hidden)) { tPend = setTimeout(vai, 400); return; }
         clearTimeout(tPend);
         const ja = L.join(' ¦ '), extra = pend.splice(0).filter(x => !ja.includes(String(x.html).replace(/<[^>]+>/g, '').replace(/^\S+\s/, '').slice(0, 22)));
-        const quem = S.times.flatMap((t, j) => t.map((x, i) => [CH[x.k].nome, j + ',' + i])).sort((a, b) => b[0].length - a[0].length);
+        const quem = S.times.flatMap((t, j) => t.map((x, i) => [CH[x.k].nome, j + ',' + i])).sort((a, b) => b[0].length - a[0].length), subRef = (quem.find(q => q[0] === sub) || [])[1];
         const its = L.map(t => { const rs = []; let r0 = t; quem.forEach(([n, ref]) => { if (r0.includes(n)) { rs.push(ref); r0 = r0.split(n).join(' '); } });
+          if (!rs.length && subRef && /[−+]\d+ PV|\d+ de dano/.test(t)) rs.push(subRef);
           const mv = rs.length && /→|vai para|desliz|puxad|puxou|escorreg|empurrad|caiu da arena/i.test(t), pv = rs.length && !/Medidor/.test(t) && /PV|dano|elimin|caiu|derrotad|[−+]\d/i.test(t);
           return { html: realce(t), cls: tipoDe(t), st: mv || pv ? 1 : 0, pos: !!mv, pvRef: mv || pv ? rs : undefined }; }).concat(extra.map(x => Object.assign(x, { st: 0 })));
-        if (!its.length) return;
+        if (!its.length) { etpVista = null; render(); return; }
         its.unshift({ tit: true, ac: ac || '#e8b400', html: '<small>' + esc(sub || '') + '</small><b>' + esc(tit) + '</b>', st: 0 });
         etpVista = pre; rBoard();
         abrir(its, { pre, hyb: JSON.parse(JSON.stringify(pre)), vis: 0 });
