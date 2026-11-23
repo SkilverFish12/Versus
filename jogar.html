@@ -4020,6 +4020,45 @@ body.mn-calmo .cp-po{display:none}
     set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
   };
 
+  // ═════════ MÚSICA E NARRAÇÃO (arquivos em audio/) ═════════
+  window.MUS = (function(){
+    const B = 'audio/';
+    const OPM = Object.assign({ mus: true, vm: .5, voz: true, vv: 1 }, store.get('versus-musica') || {});
+    const salvarM = () => store.set('versus-musica', OPM);
+    let trilha = null, ligou = false, vozA = null, abaixa = false;
+    const volT = () => Math.max(0, Math.min(1, OPM.vm * (abaixa ? .3 : 1)));
+    function aplicar(){
+      if (!ligou) return;
+      if (OPM.mus) {
+        if (!trilha) { trilha = new Audio(B + 'trilha.mp3'); trilha.loop = true; trilha.preload = 'auto'; }
+        trilha.volume = volT();
+        if (trilha.paused) trilha.play().catch(() => {});
+      } else if (trilha) trilha.pause();
+    }
+    function voz(nome){
+      if (!OPM.voz || !nome) return;
+      try { if (vozA) { vozA.pause(); vozA.onended = null; } } catch (_) {}
+      const a = new Audio(B + nome + '.mp3'); vozA = a; a.volume = OPM.vv;
+      abaixa = true; aplicar();
+      const fim = () => { if (vozA === a) { abaixa = false; aplicar(); } };
+      a.onended = fim; a.onerror = fim;
+      a.play().catch(fim);
+    }
+    // o navegador só deixa tocar som depois do primeiro toque/tecla
+    function liberar(){
+      if (ligou) return; ligou = true;
+      document.removeEventListener('pointerdown', liberar, true); document.removeEventListener('keydown', liberar, true);
+      aplicar();
+      if (typeof tela !== 'undefined' && tela === 'capa') voz('capa');
+    }
+    document.addEventListener('pointerdown', liberar, true); document.addEventListener('keydown', liberar, true);
+    return {
+      voz, liberar,
+      on: () => OPM.mus, vol: () => OPM.vm, vozOn: () => OPM.voz,
+      set(o){ Object.assign(OPM, o); salvarM(); aplicar(); }
+    };
+  })();
+
   // ═════════ EFEITOS SONOROS (sintetizados no navegador) ═════════
   window.SFX = (function(){
     let ctx = null, master = null, nbuf = null, ult = {};
@@ -4090,6 +4129,7 @@ body.mn-calmo .cp-po{display:none}
     const b = document.body.classList;
     b.remove('em-capa', 'em-livro', 'em-manual', 'em-historia', 'em-combate');
     if (t !== 'capa' && typeof MN !== 'undefined') MN.sair();
+    if (t !== 'combate' && typeof render !== 'undefined') render.vozF = null;
     if (t === 'capa') { b.add('em-capa'); atualizarCapa(); }
     else if (t === 'combate') { b.add('em-combate'); render(); }
     else { b.add('em-livro', 'em-' + t); livros[t].ativar(); }
@@ -4262,7 +4302,7 @@ body.mn-calmo .cp-po{display:none}
         { ic: '📜', t: 'HISTÓRIAS', c: 'var(--estrategista)', trav: true, d: 'O modo história ainda está sendo escrito. Em breve, as aventuras do universo de Versus.' },
         { ic: '🗂️', t: 'PARTIDAS GUARDADAS', c: '#d98a00', d: 'O registro de cada partida terminada: quem jogou, os trios e tudo o que aconteceu, rodada por rodada. Dá para copiar, baixar em .txt ou apagar.', s: (() => { const v = store.get('versus-registros'); return Array.isArray(v) && v.length ? v.length + ' GUARDADA' + (v.length > 1 ? 'S' : '') : ''; })(), ok: () => window.abrirReg && window.abrirReg() },
         { ic: '🆕', t: 'VERSÕES', c: '#e8000d', d: 'O que mudou nas últimas atualizações do jogo.', s: 'ATUAL: 23/11', ok: () => abrir('versoes') },
-        { ic: '⚙️', t: 'OPÇÕES', c: '#2a9d5a', d: 'Tela cheia, animações, sons e tela de título.', ok: () => abrir('opcoes') },
+        { ic: '⚙️', t: 'OPÇÕES', c: '#2a9d5a', d: 'Tela cheia, animações, música, narração, sons e tela de título.', ok: () => abrir('opcoes') },
         { ic: '⭐', t: 'CRÉDITOS', c: '#d98a00', d: 'Quem fez Versus.', ok: () => abrir('creditos') }
       ]}),
       tutorial: () => ({ cam: '› TUTORIAL', itens: [
@@ -4282,12 +4322,14 @@ body.mn-calmo .cp-po{display:none}
         { ic: '✨', t: 'ANIMAÇÕES', c: '#2a9d5a', d: 'Reduzidas deixam o fundo quase parado e tiram as transições.', v: () => OP.calmo ? 'REDUZIDAS' : 'COMPLETAS', mud: () => { OP.calmo = !OP.calmo; salvarOp(); aplicarOp(); } },
         { ic: '🎞️', t: 'ETAPAS DAS AÇÕES', c: '#2a9d5a', d: 'Mostra o nome da habilidade e cada passo do que aconteceu: acerto, dano com as reduções, empurrões e passivas. AUTOMÁTICAS passam sozinhas. PASSO A PASSO mostra um texto por vez numa caixa embaixo: toque para ver a animação daquela parte e seguir. Dá para pular com PULAR ou a tecla P.', v: () => ETP ? ETP.rotulo() : 'DESLIGADAS', mud: () => { if (ETP) ETP.ciclo(); } },
         { ic: '🎬', t: 'TELA DE TÍTULO', c: '#2a9d5a', d: 'Mostrar o “pressione para começar” ao abrir o jogo, ou ir direto ao menu.', v: () => OP.pular ? 'PULAR' : 'MOSTRAR', mud: () => { OP.pular = !OP.pular; salvarOp(); } },
-        { ic: '🎵', t: 'MÚSICA', c: '#555', trav: true, d: 'Trilha sonora: em breve.' },
+        { ic: '🎵', t: 'MÚSICA', c: '#2a9d5a', d: 'A trilha sonora que toca o tempo todo, da capa ao combate.', v: () => MUS.on() ? 'LIGADA' : 'DESLIGADA', mud: () => { MUS.set({ mus: !MUS.on() }); } },
+        { ic: '🎚️', t: 'VOLUME DA MÚSICA', c: '#2a9d5a', d: 'Use ◀ ▶ para baixar ou subir o volume da trilha.', v: () => Math.round(MUS.vol() * 100) + '%', mud: dd => { let v = Math.round(MUS.vol() * 10) + (dd < 0 ? -1 : 1); if (v > 10) v = dd === undefined ? 1 : 10; if (v < 1) v = 1; MUS.set({ vm: v / 10 }); } },
+        { ic: '🎙️', t: 'NARRAÇÃO', c: '#2a9d5a', d: 'A voz que anuncia a capa, os cenários, os personagens escolhidos no Draft e a tela VS. A música abaixa enquanto ela fala.', v: () => MUS.vozOn() ? 'LIGADA' : 'DESLIGADA', mud: () => { MUS.set({ voz: !MUS.vozOn() }); if (MUS.vozOn()) MUS.voz('capa'); } },
         { ic: '🔊', t: 'EFEITOS SONOROS', c: '#2a9d5a', d: 'Sons de menu, dados, acertos, empurrões, Supremas e vitória, criados no próprio jogo.', v: () => SFX.on() ? 'LIGADOS' : 'DESLIGADOS', mud: () => { SFX.set({ on: !SFX.on() }); SFX.p('confirmar'); } },
         { ic: '🎚️', t: 'VOLUME DOS EFEITOS', c: '#2a9d5a', d: 'Use ◀ ▶ para baixar ou subir o volume.', v: () => Math.round(SFX.vol() * 100) + '%', mud: dd => { let v = Math.round(SFX.vol() * 10) + (dd < 0 ? -1 : 1); if (v > 10) v = dd === undefined ? 1 : 10; if (v < 1) v = 1; SFX.set({ vol: v / 10 }); SFX.p('clique'); } },
         { volta: 1 }
       ]}),
-      versoes: () => ({ cam: '› VERSÕES', painel: '<h3>VERSÃO ATUAL · 23/11/2026</h3><ul><li>Textos do SOBRE revistos: todo personagem agora cita um feito ou evento da sua história e pelo menos outro personagem.</li><li>Kazan: Levantar Voo virou a passiva Asas Grandiosas. Ele sempre atravessa personagens e obstáculos ao se mover e não é afetado por armadilhas, tinta, fumaça nem Casas Infernais no caminho; uma vez por turno, ao pousar depois de mover 2 casas ou mais, empurra 1 casa os inimigos adjacentes.</li><li>Imóvel: Avanço Temerário (e outras habilidades em linha que levam o personagem) não movem mais quem está Imóvel; o ataque sai só no adjacente.</li><li>Saltadora com artes novas: ficha, emblema, tela de combate e Suprema.</li><li>Peso da Relíquia soma +3 de dano sozinho contra quem feriu o Consagrado desde o último turno da Relicário. Textos de Revólver Sônico (Medidor), Interceptação e Fardo Aceito mais claros.</li><li>Correções: Plano Fantasma mira inimigos; Passo a Passo não trava mais quando há um modo de mirar aberto.</li><li>Correções do Medidor: Levantar Voo dá +4 casas; Dilaceração, Avanço Temerário e Chamas do Rei usam o Dano Contínuo aprimorado; Peso da Relíquia tira 1 casa de deslocamento; Blindagem Nuclear dá +1 na Defesa aos aliados adjacentes.</li><li>Correções: Blindagem Nuclear sem Cargas dá +1 casa (dava +2) e só dá Defesa com Cargas; Marca Titânica e Ponta Ácida com Medidor aplicam 2 efeitos (não 3); Xeque-Mate só tira ação na colisão; Interceptação e Fardo Aceito não miram o próprio personagem; Armadilha de Caça não cai na casa dele; Bomba de Magma só em casa vazia.</li><li>Passo a Passo: o Dano Contínuo aparece depois do dano do golpe, explicado (perde PV no início de cada turno), com o rótulo 🩸 DANO CONTÍNUO.</li><li>Kazan tem Suprema nova, Chuva de Magma: 3 bolas de fogo (+1 por Brasa) a até 4 casas; inimigo que começar o turno no Raio 1 de uma sofre 5 de dano. Substitui o Rastro Infernal.</li><li>Reverter o Tempo na própria Lady Bispo não tira mais o Além do Tempo (reforços não contam como Penalidade).</li><li>Animações: no início e no fim do turno e no fim da rodada, os PV não “voltam” antes de mostrar o dano; cada parte do dano (queda, Choque Térmico etc.) aparece com o seu número.</li><li>Atração Forçada: você escolhe para qual Aparato o personagem é puxado (antes ia sempre para o mais perto). Fora do turno, dá para usar com Medidor (+4 de dano em inimigo) e tocar no Aparato de destino.</li><li>Aparato de Neodímio com Medidor: depois do primeiro, o Neodímio coloca ou reposiciona mais 2 Aparatos (até 5 casas). Toque numa casa vazia para um novo, ou num Aparato seu e depois na casa nova.</li><li>Aparato de Neodímio no chão ou num aliado não rola mais dados (não precisa de teste).</li><li>Sem Aberturas: o Invicto só ataca quando o personagem em turno entra ou sai do Raio 1 dele (passar perto no caminho também conta).</li><li>Salto no Espaço: só um personagem salta por vez, a Saltadora ou um aliado.</li><li>As caixinhas de marcar viraram botões com chave liga e desliga.</li><li>O Medidor dos dois jogadores aparece também na barra de cima da partida.</li><li>Fim da rodada mais rápido: quando todos agiram, o botão aparece no quadro QUEM JOGA?, e a tecla R também fecha a rodada.</li><li>Som ao passar o mouse nas arenas.</li></ul><h3>VERSÃO 22/11/2026</h3><ul><li>Plano Fantasma: quem vai para o outro plano não afeta mais ninguém, nem com Miasma, auras ou passivas.</li><li>Possessão e Plano Fantasma agora são Mobilidade.</li><li>Memento Mori novo: o alvo sofre +4 de dano de todos os ataques e não recebe curas até o fim do próximo turno da Peste. “Lembre-te que vais Morrer, Criança.”</li><li>Profanação: Tentáculos do Abismo com 3 de dano; Medidor da Tempestade de Escamas dá +2 de dano; Medidor do Casulo cura 2 PV a cada ataque sofrido; Eclosão deixa Gigante por 2 rodadas e o Ataque Básico atinge 2 alvos.</li><li>Escolha dos times: toque no símbolo do cenário, no canto da tela, para ler a arena escolhida.</li><li>Passo a Passo: o que acontece no início e no fim de cada turno e no fim da rodada (cenário, Dano Contínuo, passivas) aparece em ordem, num quadro só dele.</li><li>Quem cai no início do próprio turno (Calor Radiante, Dano Contínuo) não age mais.</li><li>Guardar partida: se o navegador estiver sem espaço, as partidas guardadas mais antigas saem para caber a nova.</li><li>Nova página VERSÕES no menu principal.</li></ul><h3>VERSÃO 21/11/2026</h3><ul><li>Medonho novo: Aura de Pavor, Olhar Medonho com Imóvel, Grito Sem Rosto dentro da Aura e Sem Faixas com Atormentado.</li><li>Golpista: habilidades copiadas (Empréstimo, Cobrança e outras) contam como do personagem de origem.</li><li>Algo Irreal: o dado da Ilusão aparece em destaque no quadro de rolagem.</li><li>Multidão do Semelhante, Breu e Fresta, Rastro Infernal (o jogador monta o trajeto do Kazan), Reator Morto, Axioma e Sobrecarga do Dínamo revisados.</li><li>A peça eliminada fica no tabuleiro até a animação do K.O.; avisos e vitória esperam o Passo a Passo.</li><li>Modo justo: a Contrabandista escolhe Item e Contrabando.</li></ul><h3>VERSÃO 20/11/2026</h3><ul><li>Versão pública com 30 personagens e 13 arenas.</li><li>Golpista vira qualquer personagem: robôs da Manilhas, Breu e Fresta, formas do Cambiante e Monstro de Sangue.</li><li>Bloqueio Mental desliga também as passivas.</li><li>Golpe Flutuante em linha reta, Maleável com alcance 4, Defletir em destaque e Passo a Passo com animações.</li><li>Ajustes em Cambiante, Cavalo, Vale, D.R.I.V.E., Azeitona, Ritmista, Superior, Saltadora, Aquarela, Neodímio, Forasteiro, Sonhadora e Mordida Vampírica.</li></ul><h3>VERSÃO 19/11/2026</h3><ul><li>Etapas das ações: Automáticas ou Passo a Passo.</li><li>Modo justo no Turno guiado.</li><li>Partidas guardadas: o registro de cada partida, para ver, copiar ou baixar.</li><li>Quadro de ataque: quem ataca contra a Defesa de cada alvo, com a chance de acerto.</li></ul>', itens: [ { volta: 1 } ]}),
+      versoes: () => ({ cam: '› VERSÕES', painel: '<h3>VERSÃO ATUAL · 23/11/2026</h3><ul><li>Trilha sonora e narração: a música toca da capa ao combate, e uma voz anuncia a capa, a escolha do cenário e cada cenário, o começo do Draft, cada personagem escolhido e a tela VS. Opções ganhou MÚSICA, VOLUME DA MÚSICA e NARRAÇÃO.</li><li>Textos do SOBRE revistos: todo personagem agora cita um feito ou evento da sua história e pelo menos outro personagem.</li><li>Kazan: Levantar Voo virou a passiva Asas Grandiosas. Ele sempre atravessa personagens e obstáculos ao se mover e não é afetado por armadilhas, tinta, fumaça nem Casas Infernais no caminho; uma vez por turno, ao pousar depois de mover 2 casas ou mais, empurra 1 casa os inimigos adjacentes.</li><li>Imóvel: Avanço Temerário (e outras habilidades em linha que levam o personagem) não movem mais quem está Imóvel; o ataque sai só no adjacente.</li><li>Saltadora com artes novas: ficha, emblema, tela de combate e Suprema.</li><li>Peso da Relíquia soma +3 de dano sozinho contra quem feriu o Consagrado desde o último turno da Relicário. Textos de Revólver Sônico (Medidor), Interceptação e Fardo Aceito mais claros.</li><li>Correções: Plano Fantasma mira inimigos; Passo a Passo não trava mais quando há um modo de mirar aberto.</li><li>Correções do Medidor: Levantar Voo dá +4 casas; Dilaceração, Avanço Temerário e Chamas do Rei usam o Dano Contínuo aprimorado; Peso da Relíquia tira 1 casa de deslocamento; Blindagem Nuclear dá +1 na Defesa aos aliados adjacentes.</li><li>Correções: Blindagem Nuclear sem Cargas dá +1 casa (dava +2) e só dá Defesa com Cargas; Marca Titânica e Ponta Ácida com Medidor aplicam 2 efeitos (não 3); Xeque-Mate só tira ação na colisão; Interceptação e Fardo Aceito não miram o próprio personagem; Armadilha de Caça não cai na casa dele; Bomba de Magma só em casa vazia.</li><li>Passo a Passo: o Dano Contínuo aparece depois do dano do golpe, explicado (perde PV no início de cada turno), com o rótulo 🩸 DANO CONTÍNUO.</li><li>Kazan tem Suprema nova, Chuva de Magma: 3 bolas de fogo (+1 por Brasa) a até 4 casas; inimigo que começar o turno no Raio 1 de uma sofre 5 de dano. Substitui o Rastro Infernal.</li><li>Reverter o Tempo na própria Lady Bispo não tira mais o Além do Tempo (reforços não contam como Penalidade).</li><li>Animações: no início e no fim do turno e no fim da rodada, os PV não “voltam” antes de mostrar o dano; cada parte do dano (queda, Choque Térmico etc.) aparece com o seu número.</li><li>Atração Forçada: você escolhe para qual Aparato o personagem é puxado (antes ia sempre para o mais perto). Fora do turno, dá para usar com Medidor (+4 de dano em inimigo) e tocar no Aparato de destino.</li><li>Aparato de Neodímio com Medidor: depois do primeiro, o Neodímio coloca ou reposiciona mais 2 Aparatos (até 5 casas). Toque numa casa vazia para um novo, ou num Aparato seu e depois na casa nova.</li><li>Aparato de Neodímio no chão ou num aliado não rola mais dados (não precisa de teste).</li><li>Sem Aberturas: o Invicto só ataca quando o personagem em turno entra ou sai do Raio 1 dele (passar perto no caminho também conta).</li><li>Salto no Espaço: só um personagem salta por vez, a Saltadora ou um aliado.</li><li>As caixinhas de marcar viraram botões com chave liga e desliga.</li><li>O Medidor dos dois jogadores aparece também na barra de cima da partida.</li><li>Fim da rodada mais rápido: quando todos agiram, o botão aparece no quadro QUEM JOGA?, e a tecla R também fecha a rodada.</li><li>Som ao passar o mouse nas arenas.</li></ul><h3>VERSÃO 22/11/2026</h3><ul><li>Plano Fantasma: quem vai para o outro plano não afeta mais ninguém, nem com Miasma, auras ou passivas.</li><li>Possessão e Plano Fantasma agora são Mobilidade.</li><li>Memento Mori novo: o alvo sofre +4 de dano de todos os ataques e não recebe curas até o fim do próximo turno da Peste. “Lembre-te que vais Morrer, Criança.”</li><li>Profanação: Tentáculos do Abismo com 3 de dano; Medidor da Tempestade de Escamas dá +2 de dano; Medidor do Casulo cura 2 PV a cada ataque sofrido; Eclosão deixa Gigante por 2 rodadas e o Ataque Básico atinge 2 alvos.</li><li>Escolha dos times: toque no símbolo do cenário, no canto da tela, para ler a arena escolhida.</li><li>Passo a Passo: o que acontece no início e no fim de cada turno e no fim da rodada (cenário, Dano Contínuo, passivas) aparece em ordem, num quadro só dele.</li><li>Quem cai no início do próprio turno (Calor Radiante, Dano Contínuo) não age mais.</li><li>Guardar partida: se o navegador estiver sem espaço, as partidas guardadas mais antigas saem para caber a nova.</li><li>Nova página VERSÕES no menu principal.</li></ul><h3>VERSÃO 21/11/2026</h3><ul><li>Medonho novo: Aura de Pavor, Olhar Medonho com Imóvel, Grito Sem Rosto dentro da Aura e Sem Faixas com Atormentado.</li><li>Golpista: habilidades copiadas (Empréstimo, Cobrança e outras) contam como do personagem de origem.</li><li>Algo Irreal: o dado da Ilusão aparece em destaque no quadro de rolagem.</li><li>Multidão do Semelhante, Breu e Fresta, Rastro Infernal (o jogador monta o trajeto do Kazan), Reator Morto, Axioma e Sobrecarga do Dínamo revisados.</li><li>A peça eliminada fica no tabuleiro até a animação do K.O.; avisos e vitória esperam o Passo a Passo.</li><li>Modo justo: a Contrabandista escolhe Item e Contrabando.</li></ul><h3>VERSÃO 20/11/2026</h3><ul><li>Versão pública com 30 personagens e 13 arenas.</li><li>Golpista vira qualquer personagem: robôs da Manilhas, Breu e Fresta, formas do Cambiante e Monstro de Sangue.</li><li>Bloqueio Mental desliga também as passivas.</li><li>Golpe Flutuante em linha reta, Maleável com alcance 4, Defletir em destaque e Passo a Passo com animações.</li><li>Ajustes em Cambiante, Cavalo, Vale, D.R.I.V.E., Azeitona, Ritmista, Superior, Saltadora, Aquarela, Neodímio, Forasteiro, Sonhadora e Mordida Vampírica.</li></ul><h3>VERSÃO 19/11/2026</h3><ul><li>Etapas das ações: Automáticas ou Passo a Passo.</li><li>Modo justo no Turno guiado.</li><li>Partidas guardadas: o registro de cada partida, para ver, copiar ou baixar.</li><li>Quadro de ataque: quem ataca contra a Defesa de cada alvo, com a chance de acerto.</li></ul>', itens: [ { volta: 1 } ]}),
       creditos: () => ({ cam: '› CRÉDITOS', painel: '<h3>VERSUS · COMBATES CÔMICOS</h3><p>1ª Edição</p><h3>CRIAÇÃO</h3><p>Derec e Deniel</p><h3>PERSONAGENS E UNIVERSO</h3><p>' + artes.length + ' personagens, ' + DATA.cen.length + ' arenas e um mundo inteiro de histórias.</p><h3>OBRIGADO POR JOGAR!</h3>', itens: [ { volta: 1 } ]})
     };
     let atual = 'raiz';
@@ -4515,6 +4557,7 @@ body.mn-calmo .cp-po{display:none}
     });
     const lbl = { cenario: 'CENÁRIO', iniciativa: 'INICIATIVA', draft: 'ESCOLHA DOS TIMES', partida: 'RODADA ' + S.rodada };
     chap.innerHTML = 'COMBATE · <b>' + lbl[f] + '</b>';
+    if (f !== render.vozF) { render.vozF = f; if (f === 'cenario') MUS.voz('cenario'); else if (f === 'draft') MUS.voz('draft'); }
     if (f === 'cenario') rCenario();
     if (f === 'iniciativa') rIniciativa();
     if (f === 'draft') rDraft();
@@ -4539,7 +4582,7 @@ body.mn-calmo .cp-po{display:none}
   function rCenario(){ $('#cenGrid').innerHTML = DATA.cen.map(cenCard).join(''); }
   { let cenHov = null; const fc = document.getElementById('f-cenario'); if (fc) fc.addEventListener('mouseover', e => { const t = e.target.closest && e.target.closest('[data-cen], #cenSortear, #cenComum'); if (t === cenHov) return; cenHov = t; if (t && window.SFX) SFX.p('clique'); }); }
   function escolherCen(k){
-    S.cen = k; S.cenOk = true; salvar();
+    S.cen = k; S.cenOk = true; salvar(); if (k) MUS.voz('cen/' + k);
     $$('.cen-card').forEach(c => c.classList.toggle('sel', c.dataset.cen === k));
     setTimeout(() => { S.fase = 'iniciativa'; salvar(); render(); window.scrollTo(0, 0); }, 380);
   }
@@ -4713,7 +4756,7 @@ body.mn-calmo .cp-po{display:none}
   function escolher(k){
     if (!podeEscolher(k)) return;
     const j = vezDraft();
-    S.picks.push({ j, key: k }); SFX.p('confirmar'); salvar(); render();
+    S.picks.push({ j, key: k }); SFX.p('confirmar'); MUS.voz('voz/' + k); salvar(); render();
     toast('<span style="color:' + corJ(j) + '">' + nomeJ(j) + '</span> escolheu ' + CH[k].icon + ' ' + CH[k].nome, 1500);
   }
   var drPag = 0, drPagN = '';
@@ -4902,6 +4945,7 @@ body.mn-calmo .cp-po{display:none}
     S.vez = iniciador(1); S.ini = S.vez; S.ult = null;
     S.fase = 'partida';
     window.VSFX && setTimeout(() => VSFX.vs(), 60);
+    MUS.voz('vs');
     sonhoInicio();
     if (S.cen === 'quarentena') S.times.forEach(t => t.forEach(c => { c.cr = (c.cr || 0) + 2; }));
     log('Partida começou' + (S.cen ? ' em ' + CEN[S.cen].nome : ' na arena comum') + '. ' + S.nomes[S.prim] + ' tem a iniciativa.');
