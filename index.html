@@ -13358,10 +13358,8 @@ body.mn-calmo .cp-cenas img.zoom{animation:none}
   window.TUT = TUT;
 
   // ═════════ INÍCIO ═════════
-  const h0 = location.hash.slice(1);
-  if (TELAS.includes(h0)) ir(h0, false);
-  else if (h0 && abrirPagina(h0)) {}
-  else ir('capa', false);
+  // recarregar a página sempre volta para a capa (a partida salva continua guardada)
+  ir('capa', false);
   history.replaceState({ t: tela }, '', '#' + tela);
   if (S.fase === 'partida' && S.fim && tela === 'combate') setTimeout(mostrarFim, 300);
 })();
