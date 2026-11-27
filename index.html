@@ -7026,7 +7026,7 @@ body.mn-calmo .cp-cenas img.zoom{animation:none}
         const dnM = x.monsDn || 0;
         Promise.resolve(dnM >= 10).then(ok => {
           if (x.elim || x.pv > 0) return;
-          if (!ok) log('🩸 O Monstro de Sangue causou ' + dnM + ' de dano (precisava de 10): ' + CH[x.k].nome + ' é eliminado.');
+          if (!ok) log('🩸 O Monstro de Sangue causou ' + dnM + ' de dano (precisava de 10): ' + CH[x.k].nome + ' cai.');
           if (ok) { x.pv = Math.min(15, x.max); log('🩸 O Monstro de Sangue causou ' + dnM + ' de dano: Magnus voltou com 15 PV.'); toast('🩸 MAGNUS VOLTOU COM 15 PV!', 2600); if (ETP && ETP.on()) ETP.passo('🩸 ' + CH[x.k].nome + ' volta do Monstro de Sangue com +15 PV', 'cura'); }
           else { const [a, b2] = refDe(x).split(',').map(Number); eliminar(a, b2); }
           salvar(); render();
